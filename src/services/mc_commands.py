@@ -56,6 +56,22 @@ class McCommands:
         self._aliases_setup_done = False
         self._report.set_status("ComponentInitialized")
 
+    def url(self):
+        return self._cluster.url()
+
+    def cluster_info(self):
+        report = self._report.get_sub_report("admin_info", init_status="in function")
+        self._need_aliases()
+
+        result = {}
+
+        def on_success(line_json):
+            nonlocal result
+            result = line_json["info"]
+
+        self._run_command(report, "admin", "info", McCommands.ALIAS_CLUSTER, on_success=on_success)
+        return result
+
     def _setup_aliases(self):
         self._mc_alias(McCommands.ALIAS_LOCAL, self._local)
         self._mc_alias(McCommands.ALIAS_CLUSTER, self._cluster)

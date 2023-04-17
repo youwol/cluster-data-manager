@@ -14,13 +14,6 @@ def main(task: str):
         raise RuntimeError(f"Unknown task {task}")
 
 
-if __name__ == '__main__':
-    if len(sys.argv) != 2:
-        raise RuntimeError("entry_point.py expect exactly one argument")
-    arg = sys.argv[1]
-    main(arg)
-
-
 def get_task_backup():
     from tasks import get_task_backup_builder
     builder = get_task_backup_builder()
@@ -43,3 +36,10 @@ def get_task_setup_restore():
     from tasks import get_task_setup_restore_builder
     builder = get_task_setup_restore_builder()
     return builder()
+
+
+if __name__ == '__main__':
+    if len(sys.argv) != 2:
+        raise RuntimeError("entry_point.py expect exactly one argument")
+    arg = sys.argv[1]
+    main(arg)

@@ -9,7 +9,7 @@ class TaskBackupS3(TaskS3):
     RELATIVE_PATH = "minio"
 
     def __init__(self, report: Report, path_work_dir: Path, mc_commands: McCommands, buckets: [str]):
-        super().__init__(report, path_work_dir, mc_commands, buckets)
+        super().__init__(path_work_dir, mc_commands, buckets)
         self._report = report.get_sub_report("BackupS3", default_status_level="NOTIFY",
                                              init_status="ComponentInitialized")
 
@@ -28,3 +28,9 @@ class TaskBackupS3(TaskS3):
 
     def task_path_dir_and_archive_item(self):
         return self._task_path_dir_and_archive_item(on_missing=OnPathDirMissing.ERROR)
+
+    def metadata(self):
+        return {
+            "url": self._mc_commands.url(),
+            "info": self._mc_commands.cluster_info(),
+        }

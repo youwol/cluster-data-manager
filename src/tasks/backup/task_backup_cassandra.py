@@ -41,3 +41,9 @@ class TaskBackupCassandra(TaskCassandra):
 
     def task_path_dir_and_archive_item(self):
         return self._task_path_dir_and_archive_item(OnPathDirMissing.CREATE)
+
+    def metadata(self):
+        return {
+            "host": self._cqlsh_commands.show_host(),
+            "versions": self._cqlsh_commands.show_version()
+        }

@@ -26,6 +26,25 @@ class CqlshCommands:
         self._instance = instance
         self._report.debug(f"using instance {instance.get_host()}")
 
+    def show_host(self):
+        report = self._report.get_sub_report(f"show_host", init_status="in function")
+        code, out, err = self.run_command(report, "SHOW HOST;")
+        if code == 0:
+            report.set_status("Done")
+            return str(out)
+        else:
+            raise RuntimeError(f"Failure: {err}")
+
+    def show_version(self):
+        report = self._report.get_sub_report(f"show_version", init_status="in function")
+        code, out, err = self.run_command(report, "SHOW VERSION;")
+        if code == 0:
+            report.set_status("Done")
+            return str(out)
+        else:
+            raise RuntimeError(f"Failure: {err}")
+
+
     def backup_ddl(self, keyspace: str, path_file: Path):
         report = self._report.get_sub_report(f"backup_ddl_{keyspace}", init_status="in function")
         report.debug(f"will store ddl in {path_file}")
@@ -59,8 +78,8 @@ class CqlshCommands:
         report.debug(f"checking keyspace {keyspace}")
         code, out, err = self.run_command(report, f"CONSISTENCY ALL; DESCRIBE {keyspace};")
         if code == 0:
-            diff = [line for line in filter_first_line(out).split("\n\n")
-                    if line not in path_file.read_text('utf8').split("\n\n")]
+            diff = [line for line in filter_first_line(out).split("\n\n") if
+                    line not in path_file.read_text('utf8').split("\n\n")]
             if len(diff) > 0:
                 raise RuntimeError(f"keyspace {keyspace} not correctly restored, diff are {diff}")
         else:
@@ -89,7 +108,7 @@ class CqlshCommands:
                 report.debug(f"Copied {count} / {total} lines ")
 
         self.run_command_with_handler(report, f"CONSISTENCY ALL; COPY {table} TO STDOUT;", on_line=on_line)
-        if (count-1) != total:
+        if (count - 1) != total:
             raise RuntimeError(f"Wrong count of rows : expected {total}, got {count}")
         path_file.write_text(filter_first_line(out))
         report.set_status("Done")
@@ -134,12 +153,8 @@ class CqlshCommands:
         else:
             args = ["-e", cql]
         report.debug(f"cql='{cql}', args='{args}', stdin='{stdin}'")
-        result = subprocess.run(
-            [*self._cqlsh, *self._instance.as_args_array(), *args],
-            input=stdin,
-            capture_output=True,
-            text=True
-        )
+        result = subprocess.run([*self._cqlsh, *self._instance.as_args_array(), *args], input=stdin,
+            capture_output=True, text=True)
         report.debug(f"return_code={result.returncode}")
         report.debug(f"out={result.stdout}")
         report.debug(f"err={result.stderr}")

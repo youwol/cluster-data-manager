@@ -29,6 +29,9 @@ class TaskBackup:
         self._path_log_file = path_log_file
 
     def run(self):
+        self._archive.add_metadata("cassandra", self._task_backup_cassandra.metadata())
+        self._archive.add_metadata("s3", self._task_backup_s3.metadata())
+
         self._cluster_maintenance.start_maintenance_mode()
         self._task_backup_cassandra.run()
         self._task_backup_s3.run()
