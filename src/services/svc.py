@@ -131,15 +131,49 @@ def get_archiver_builder():
 
 def get_cluster_maintenance_builder():
     report_builder = get_report_builder()
+    k8s_api_builder = get_kubernetes_api_builder()
+    maintenance_ingress_name = env.not_empty_string(env.maintenance_ingress_name)
+    maintenance_ingress_namespace = env.not_empty_string(env.maintenance_ingress_namespace)
+    maintenance_ingress_class_name = env.not_empty_string(env.maintenance_ingress_class_name)
+    maintenance_config_map_name = env.not_empty_string(env.maintenance_config_map_name)
+    maintenance_config_map_namespace = env.not_empty_string(env.maintenance_config_map_namespace)
+    maintenance_config_map_key = env.not_empty_string(env.maintenance_config_map_key)
+    maintenance_config_map_value = env.not_empty_string(env.maintenance_config_map_value)
 
     def builder():
         from services import svc_context
         if svc_context.cluster_maintenance is None:
-            from .cluster_maintenance import ClusterMaintenance
+            from .cluster_maintenance import ClusterMaintenance, MaintenanceDetails
+            maintenance_details = MaintenanceDetails(
+                ingress_name=maintenance_ingress_name,
+                ingress_namespace=maintenance_ingress_namespace,
+                ingress_class_name=maintenance_ingress_class_name,
+                config_map_name=maintenance_config_map_name,
+                config_map_namespace=maintenance_config_map_namespace,
+                config_map_key=maintenance_config_map_key,
+                config_map_value=maintenance_config_map_value
+            )
+
             svc_context.cluster_maintenance = ClusterMaintenance(
-                report=report_builder()
+                report=report_builder(),
+                k8s_api=k8s_api_builder(),
+                maintenance_details=maintenance_details
             )
 
         return svc_context.cluster_maintenance
+
+    return builder
+
+
+def get_kubernetes_api_builder():
+    report_builder = get_report_builder()
+
+    def builder():
+        from services import svc_context
+        if svc_context.kubernetes_api is None:
+            from .kubernetes_api import KubernetesApi
+            svc_context.kubernetes_api = KubernetesApi(report=report_builder())
+
+        return svc_context.kubernetes_api
 
     return builder

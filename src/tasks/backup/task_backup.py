@@ -32,10 +32,9 @@ class TaskBackup:
         self._archive.add_metadata("cassandra", self._task_backup_cassandra.metadata())
         self._archive.add_metadata("s3", self._task_backup_s3.metadata())
 
-        self._cluster_maintenance.start_maintenance_mode()
-        self._task_backup_cassandra.run()
-        self._task_backup_s3.run()
-        self._cluster_maintenance.stop_maintenance_mode()
+        with self._cluster_maintenance:
+            self._task_backup_cassandra.run()
+            self._task_backup_s3.run()
 
         self._archive.add_dir_item(*self._task_backup_cassandra.task_path_dir_and_archive_item())
         self._archive.add_dir_item(*self._task_backup_s3.task_path_dir_and_archive_item())
