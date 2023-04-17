@@ -31,6 +31,11 @@ class TaskSetup:
 
     def _setup_last_archive(self):
         archives = self._google_drive.list_archives()
+
+        if len(archives) == 0:
+            self._report.warning("No archive found. Skipping setup")
+            return
+
         last_archive = sorted(archives, key=lambda arc: arc['name'])[len(archives) - 1]
         self._report.notify(f"using last archive : {last_archive['name']} ({last_archive['id']})")
         self.__setup_archive(last_archive['id'])
