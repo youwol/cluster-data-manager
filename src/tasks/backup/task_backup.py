@@ -1,6 +1,7 @@
+"""The backup task itself."""
 from pathlib import Path
 
-from services.archiver import NewArchive
+from services.archiver import ArchiveCreator
 from services.cluster_maintenance import ClusterMaintenance
 from services.google_drive import GoogleDrive
 from tasks.backup.task_backup_cassandra import TaskBackupCassandra
@@ -8,11 +9,15 @@ from tasks.backup.task_backup_s3 import TaskBackupS3
 
 
 class TaskBackup:
+    """TaskBackup.
+
+    Prepare archive metadata, run subtasks and upload archive to Google Drive.
+    """
 
     def __init__(self,
                  task_backup_s3: TaskBackupS3,
                  task_backup_cassandra: TaskBackupCassandra,
-                 archive: NewArchive,
+                 archive: ArchiveCreator,
                  google_drive: GoogleDrive,
                  google_drive_upload_file_name: str,
                  google_drive_upload_folder: str,
@@ -29,8 +34,16 @@ class TaskBackup:
         self._path_log_file = path_log_file
 
     def run(self):
-        self._archive.add_metadata("cassandra", self._task_backup_cassandra.metadata())
+        """Run the task."""
+        self._archive.add_metadata("cql", self._task_backup_cassandra.metadata())
         self._archive.add_metadata("s3", self._task_backup_s3.metadata())
+        self._archive.add_metadata(
+            "GoogleDrive",
+            {
+                "account": self._google_drive.account(),
+                "driveID": self._google_drive.drive_id()
+            }
+        )
 
         with self._cluster_maintenance:
             self._task_backup_cassandra.run()

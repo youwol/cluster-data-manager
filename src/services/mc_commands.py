@@ -1,3 +1,4 @@
+"""Main class and ancillary classes for service mc_commands."""
 import datetime
 import json
 import subprocess
@@ -7,67 +8,129 @@ from typing import Any
 from services.reporting import Report
 
 
-def default_on_error(json: Any):
-    raise RuntimeError(f"error {json}")
+class S3Credentials:
+    """Represent credentials for S3."""
 
+    def __init__(self, access_key: str, secret_key: str):
+        self._access_key = access_key
+        self._secret_key = secret_key
 
-def default_on_success(json: Any):
-    pass
+    def access_key(self) -> str:
+        """Simple getter.
+
+        Returns:
+            str: the access key.
+        """
+        return self._access_key
+
+    def secret_key(self) -> str:
+        """Simple getter.
+
+        Returns:
+            str: the secret key.
+        """
+        return self._secret_key
 
 
 class S3Instance:
+    """Represent a S3 service to connect to."""
 
-    def __init__(self, access_key: str, secret_key: str, host: str, tls: bool = True, port: int = "9000"):
-        self._access_key = access_key
-        self._secret_key = secret_key
+    def __init__(self, credentials: S3Credentials, host: str, tls: bool = True, port: int = "9000"):
+        self._credentials = credentials
         self._host = host
         self._tls = tls
         self._port = port
 
-    def url(self):
+    def url(self) -> str:
+        """Simple getter.
+
+        Returns:
+            str: the URL, constructed from the host, tls and port attributes.
+        """
         return f"http{'s' if self._tls else ''}://{self._host}:{self._port}"
 
-    def access_key(self):
-        return self._access_key
+    def credentials(self) -> S3Credentials:
+        """Simple getter.
 
-    def secret_key(self):
-        return self._secret_key
+        Returns:
+            S3Credentials: the credentials.
+        """
+        return self._credentials
 
 
 class MinioLocalInstance(S3Instance):
-    def __init__(self, access_key, secret_key, tls: bool, port: int):
-        super().__init__(access_key, secret_key, host="localhost", tls=tls, port=port)
+    """Represent a local S3 service to connect, with host hardcoded to localhost."""
+
+    def __init__(self, access_key, secret_key, port: int):
+        super().__init__(credentials=S3Credentials(access_key, secret_key), host="localhost", tls=True, port=port)
+
+
+class MinioClientPaths:
+    """Represent the paths for a Minio client (mc) binary."""
+
+    def __init__(self, path_bin: Path, path_config: Path):
+        self._path_bin = path_bin
+        self._path_config = path_config
+
+    def path_bin(self) -> Path:
+        """Simple getter.
+
+        Returns:
+            Path: the path of the binary mc.
+        """
+        return self._path_bin
+
+    def path_config(self) -> Path:
+        """Simple getter.
+
+        Returns:
+            Path: the path of mc config directory.
+        """
+        return self._path_config
 
 
 class McCommands:
+    """Execute S3 commands, using Minio client (mc)."""
+
     ALIAS_LOCAL = "local"
 
     ALIAS_CLUSTER = "cluster"
 
-    def __init__(self, report: Report, path_mc: Path, path_mc_config: Path, local: MinioLocalInstance,
-                 cluster: S3Instance):
+    def __init__(self, report: Report, mc_paths: MinioClientPaths, local: MinioLocalInstance, cluster: S3Instance):
         self._report = report.get_sub_report(task="McCommands", init_status="InitializingComponent")
-        self._path_mc = path_mc
+        self._path_mc = mc_paths.path_bin()
         self._report.debug(f"using binary {self._path_mc}")
-        self._path_mc_config = path_mc_config
+        self._path_mc_config = mc_paths.path_config()
         self._report.debug(f"using config {self._path_mc_config}")
         self._local = local
         self._cluster = cluster
         self._aliases_setup_done = False
         self._report.set_status("ComponentInitialized")
 
-    def url(self):
+    def cluster_url(self) -> str:
+        """Simple getter.
+
+        Returns:
+            str: the cluster instance URL.
+        """
         return self._cluster.url()
 
-    def cluster_info(self):
+    def cluster_info(self) -> Any:
+        """Return information about the cluster instance.
+
+        Execute 'mc admin info' and return the JSON output as an object.
+
+        Returns:
+            Any: admin infos for the cluster.
+        """
         report = self._report.get_sub_report("admin_info", init_status="in function")
         self._need_aliases()
 
         result = {}
 
-        def on_success(line_json):
+        def on_success(json_doc):
             nonlocal result
-            result = line_json["info"]
+            result = json_doc["info"]
 
         self._run_command(report, "admin", "info", McCommands.ALIAS_CLUSTER, on_success=on_success)
         return result
@@ -82,9 +145,15 @@ class McCommands:
             self._setup_aliases()
 
     def set_reporter(self, report: Report):
+        """TODO: to be removed"""
         self._report = report.get_sub_report(task="McCommands", init_status=report.get_status())
 
-    def backup_bucket(self, bucket):
+    def backup_bucket(self, bucket: str):
+        """Mirror a cluster instance bucket locally.
+
+        Args:
+            bucket (str): the bucket name.
+        """
         self._need_aliases()
         report = self._report.get_sub_report(f"backup_{bucket}", init_status="in function")
         source = f"{McCommands.ALIAS_CLUSTER}/{bucket}"
@@ -98,7 +167,15 @@ class McCommands:
 
         report.set_status("exit function")
 
-    def restore_bucket(self, bucket, remove_existing_bucket=False):
+    def restore_bucket(self, bucket: str, remove_existing_bucket=False):
+        """Mirror a local bucket into the cluster instance.
+
+        If remove_existing_bucket is provided and True, the cluster instance bucket will be removed first.
+
+        Args:
+            bucket (str): the bucket name.
+            remove_existing_bucket (bool): if provided and True, remove the cluster bucket before mirroring.
+        """
         self._need_aliases()
         report = self._report.get_sub_report("restore", init_status="in function")
         source = f"{McCommands.ALIAS_LOCAL}/{bucket}"
@@ -116,6 +193,7 @@ class McCommands:
         report.set_status("exit function")
 
     def stop_local(self):
+        """Stop the local minio instance."""
         self._need_aliases()
         report = self._report.get_sub_report("stop_local", init_status="in function")
         self._run_command(report, "admin", "service", "stop", McCommands.ALIAS_LOCAL)
@@ -131,13 +209,13 @@ class McCommands:
 
         last_message_timestamp = datetime.datetime.now().timestamp()
 
-        def on_success_mirror(json: Any):
+        def on_success_mirror(json_doc: Any):
             # report.debug(f"json={json}")
             nonlocal last_message_timestamp
             now = datetime.datetime.now().timestamp()
-            if 'target' in json and (now - last_message_timestamp > 5):
+            if 'target' in json_doc and (now - last_message_timestamp > 5):
                 last_message_timestamp = now
-                transferred_objects = json['totalCount']
+                transferred_objects = json_doc['totalCount']
                 report.debug(f"transferred {transferred_objects} objects on {source_bucket_objects}")
 
         report.set_status("Transfert")
@@ -161,40 +239,41 @@ class McCommands:
         bucket_size = 0
         bucket_objects = 0
 
-        def on_success_du(json: Any):
-            report.debug(f"json={json}")
+        def on_success_du(json_doc: Any):
             nonlocal bucket_size
-            bucket_size = json['size']
             nonlocal bucket_objects
-            bucket_objects = json['objects']
+            report.debug(f"json={json_doc}")
+            bucket_size = json_doc['size']
+            bucket_objects = json_doc['objects']
 
         self._run_command(report, "du", "--versions", bucket, on_success=on_success_du)
         return bucket_objects, bucket_size
 
     def _mc_alias(self, alias: str, instance: S3Instance):
         report = self._report.get_sub_report(f"_mc_alias_{alias}", init_status="in function")
-        self._run_command(report, "alias", "set", alias, instance.url(), instance.access_key(), instance.secret_key())
+        self._run_command(
+            report,
+            "alias", "set", alias,
+            instance.url(),
+            instance.credentials().access_key(), instance.credentials().secret_key()
+        )
         report.set_status("exit function")
 
-    def _run_command(self, report: Report, *args, on_error=default_on_error, on_success=default_on_success):
+    def _run_command(self, report: Report, *args, on_success=None):
         report = report.get_sub_report("_run_command", init_status="in function")
         report.debug(f"args={args}")
         with subprocess.Popen([self._path_mc, '--json', '--config-dir', self._path_mc_config, *args],
                               stdout=subprocess.PIPE) as popen:
             for line in popen.stdout:
                 # report.debug(f"line={line}")
-                line_json = json.loads(line)
-                status = line_json['status']
+                json_doc = json.loads(line)
+                status = json_doc['status']
                 if status == 'error':
-                    error_type = line_json['error']['type']
-                    if error_type == 'fatal':
-                        report.fatal(f"{line}")
-                        raise RuntimeError(f"failure when running mc command : {line_json['error']}")
-                    else:
-                        report.debug(f"error : {line}")
-                        on_error(line_json)
-                elif status == 'success':
-                    on_success(line_json)
+                    report.fatal(f"{line}")
+                    raise RuntimeError(f"failure when running mc command : {json_doc['error']}")
+                if status == 'success':
+                    if on_success is not None:
+                        on_success(json_doc)
                 else:
                     raise RuntimeError(f"Unknown status in mc output : {line}")
 

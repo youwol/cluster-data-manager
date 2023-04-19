@@ -1,3 +1,4 @@
+"""Main class for setup task."""
 import os
 from pathlib import Path
 from typing import Optional
@@ -8,6 +9,13 @@ from services.reporting import Report
 
 
 class TaskSetup:
+    """Task setup.
+
+    Will download an archive and extract the specified item(s).
+
+    Notes:
+      Can be call with or without an archive name: in the latter case the last archive will be downloaded.
+    """
     def __init__(self,
                  report: Report,
                  path_work_dir: Path,
@@ -24,6 +32,7 @@ class TaskSetup:
         self._report = report.get_sub_report("Setup", default_status_level="NOTIFY", init_status="ComponentInitialized")
 
     def run(self):
+        """Run setup task : download archive & extract item(s)."""
         if self._archive_name is None:
             self._setup_last_archive()
         else:
@@ -36,9 +45,9 @@ class TaskSetup:
             self._report.warning("No archive found. Skipping setup")
             return
 
-        last_archive = sorted(archives, key=lambda arc: arc['name'])[len(archives) - 1]
-        self._report.notify(f"using last archive : {last_archive['name']} ({last_archive['id']})")
-        self.__setup_archive(last_archive['id'])
+        last_archive = sorted(archives, key=lambda arc: arc.name())[len(archives) - 1]
+        self._report.notify(f"using last archive : {last_archive.name()} ({last_archive.file_id()})")
+        self.__setup_archive(last_archive.file_id())
 
     def _setup_explicit_archive(self, archive_name):
         archive_id = self._google_drive.get_archive_id(archive_name)

@@ -1,3 +1,4 @@
+"""Main class for the backup task of cassandra."""
 from pathlib import Path
 
 from services.cqlsh_commands import CqlshCommands
@@ -6,6 +7,10 @@ from tasks.common import OnPathDirMissing, TaskCassandra
 
 
 class TaskBackupCassandra(TaskCassandra):
+    """Subtask for backup cassandra.
+
+    Dump the keyspaces DDL and the tables data in CSV format.
+    """
 
     def __init__(self, report: Report,
                  path_work_dir: Path,
@@ -17,6 +22,7 @@ class TaskBackupCassandra(TaskCassandra):
                                              init_status="ComponentInitialized")
 
     def run(self):
+        """Run the task"""
         self._report.set_status("Running")
 
         self._report.debug(f"keyspaces={self._keyspaces}")
@@ -39,10 +45,20 @@ class TaskBackupCassandra(TaskCassandra):
 
         self._report.set_status("Done")
 
-    def task_path_dir_and_archive_item(self):
+    def task_path_dir_and_archive_item(self) -> tuple[Path, str]:
+        """Simple getter
+
+        Returns:
+            tuple[Path, str]: the relative dir for cassandra and 'cql'
+        """
         return self._task_path_dir_and_archive_item(OnPathDirMissing.CREATE)
 
     def metadata(self):
+        """Simple getter
+
+        Returns:
+            dict: metadata form cqlsh_commands
+        """
         return {
             "host": self._cqlsh_commands.show_host(),
             "versions": self._cqlsh_commands.show_version()

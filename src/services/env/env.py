@@ -1,9 +1,22 @@
 import os
+import sys
 from dotenv import load_dotenv
 from pathlib import Path
 from typing import Optional
 
 load_dotenv()
+
+
+class FileCreationError(RuntimeError):
+
+    def __init__(self, msg):
+        super().__init__(msg)
+
+
+def file(env_name: str):
+    path = not_empty_string(env_name)
+
+    return Path(path)
 
 
 def creating_file(env_name: str):
@@ -13,10 +26,10 @@ def creating_file(env_name: str):
 
     try:
         result.touch(exist_ok=False)
-    except FileExistsError:
-        raise RuntimeError(f"Env {env_name} set but path '{path} already exists")
-    except OSError as e:
-        raise RuntimeError(f"Env {env_name} set but failed to touch path '{path} : {e.strerror}")
+    except FileExistsError as error:
+        raise FileCreationError(f"Env {env_name} set but path '{path} already exists") from error
+    except OSError as error:
+        raise FileCreationError(f"Env {env_name} set but failed to touch path '{path} : {error.strerror}") from error
 
 
 def existing_path(env_name: str):
@@ -36,7 +49,7 @@ def non_existing_path(env_name: str):
     result = Path(path)
 
     if result.exists():
-        raise RuntimeError(f"Env {env_name} set but path '{path}' exists")
+        raise FileExistsError(f"Env {env_name} set but path '{path}' exists")
 
     return result
 
@@ -80,8 +93,7 @@ def boolean(env_name: str, default: bool = None):
     if v is None:
         if default is None:
             raise RuntimeError(f"Env {env_name} not set")
-        else:
-            return default
+        return default
 
     if v in true_strings:
         return True
@@ -98,8 +110,7 @@ def integer(env_name: str, default: int = None):
     if v is None:
         if default is None:
             raise RuntimeError(f"Env {env_name} not set")
-        else:
-            return default
+        return default
 
     if str(int(v)) == v:
         return int(v)
@@ -111,3 +122,13 @@ def strings_list(env_name, sep: str = ":"):
     string_list = not_empty_string(env_name)
 
     return string_list.split(sep)
+
+
+def arg_task_name():
+    check_args()
+    return sys.argv[1]
+
+
+def check_args():
+    if len(sys.argv) != 2:
+        raise RuntimeError(f"{sys.argv[0]} expect exactly one argument")

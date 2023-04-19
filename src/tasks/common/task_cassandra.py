@@ -1,10 +1,15 @@
+"""Parent class for cassandra tasks."""
 from pathlib import Path
 
 from services.cqlsh_commands import CqlshCommands
-from .task import Task, OnPathDirMissing
+from .task import OnPathDirMissing, Task
 
 
 class TaskCassandra(Task):
+    """Parent class for cassandra tasks.
+
+    Define relative paths for the tasks.
+    """
     RELATIVE_PATH = "cql"
     RELATIVE_PATH_SCHEMA = "cql/schema"
     RELATIVE_PATH_DATA = "cql/data"
@@ -14,9 +19,6 @@ class TaskCassandra(Task):
         self._cqlsh_commands = cqlsh_commands
         self._keyspaces = keyspaces
         self._tables = tables
-
-    def run(self):
-        raise NotImplementedError("Abstract class")
 
     def _task_path_dir_and_archive_item(self, on_missing: OnPathDirMissing):
         return self._path_dir_maybe_exists(TaskCassandra.RELATIVE_PATH,

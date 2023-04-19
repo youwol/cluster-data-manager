@@ -1,45 +1,24 @@
-import sys
+"""Entry point for the docker image.
 
+It has a main function, and expect exactly one command line argument : the name of the task to run.
+"""
 
-def main(task: str):
-    if task == "backup":
-        get_task_backup().run()
-    elif task == "setup_backup":
-        get_task_setup_backup().run()
-    elif task == "setup_restore":
-        get_task_setup_restore().run()
-    elif task == "restore":
-        get_task_restore().run()
-    else:
-        raise RuntimeError(f"Unknown task {task}")
+from services import env
+from tasks import get_task_backup, get_task_restore, get_task_setup_backup, get_task_setup_restore
 
-
-def get_task_backup():
-    from tasks import get_task_backup_builder
-    builder = get_task_backup_builder()
-    return builder()
-
-
-def get_task_restore():
-    from tasks import get_task_restore_builder
-    builder = get_task_restore_builder()
-    return builder()
-
-
-def get_task_setup_backup():
-    from tasks import get_task_setup_backup_builder
-    builder = get_task_setup_backup_builder()
-    return builder()
-
-
-def get_task_setup_restore():
-    from tasks import get_task_setup_restore_builder
-    builder = get_task_setup_restore_builder()
-    return builder()
-
+tasks_getter = {
+    "setup_backup": get_task_setup_backup,
+    "backup": get_task_backup,
+    "setup_restore": get_task_setup_restore,
+    "restore": get_task_restore,
+}
 
 if __name__ == '__main__':
-    if len(sys.argv) != 2:
-        raise RuntimeError("entry_point.py expect exactly one argument")
-    arg = sys.argv[1]
-    main(arg)
+
+    TASK_NAME = env.arg_task_name()
+
+    if TASK_NAME not in tasks_getter:
+        raise RuntimeError(f"Unknown task {TASK_NAME}")
+
+    task = tasks_getter[TASK_NAME]()
+    task.run()
