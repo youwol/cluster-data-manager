@@ -48,7 +48,7 @@ class OidcClient:
         self._client_id = oidc_client_config.client_id()
         self._client_secret = oidc_client_config.client_secret()
         self._openid_configuration = None
-        self._report = report.get_sub_report(task="KeycloakClient", init_status="Component Initialized")
+        self._report = report.get_sub_report(task="OidcClient", init_status="Component Initialized")
 
     def grant_client_credentials_tokens(self) -> Any:
         """Grant client_credentials tokens.
@@ -57,15 +57,67 @@ class OidcClient:
             Any: the tokens.
         """
         report = self._report.get_sub_report(task="grant_client_credentials_tokens", init_status="in function")
-        body = urllib.parse.urlencode(
-            {
-                "grant_type": "client_credentials",
-                "client_id": self._client_id,
-                "client_secret": self._client_secret,
-                "scope": "openid"
-            }
-        ).encode()
-        req = urllib.request.Request(self._get_token_endpoint(), body)
+        params = {
+            "grant_type": "client_credentials",
+            "client_id": self._client_id,
+            "scope": "openid"
+        }
+        if self._client_secret is not None:
+            params["client_secret"] = self._client_secret
+
+        req = urllib.request.Request(self._get_token_endpoint(), urllib.parse.urlencode(params).encode())
+        report.debug("calling endpoint")
+        with urllib.request.urlopen(req) as resp:
+            report.debug("decoding response")
+            result = json.loads(resp.read().decode())
+            report.set_status("exit function")
+            return result
+
+    def grant_password_tokens(self, username: str, password: str) -> Any:
+        """Grant password tokens.
+
+        Returns:
+            Any: the tokens.
+        """
+        report = self._report.get_sub_report(task="grant_password_tokens", init_status="in function")
+        params = {
+            "grant_type": "password",
+            "client_id": self._client_id,
+            "scope": "openid",
+            "username": username,
+            "password": password
+        }
+        if self._client_secret is not None:
+            params["client_secret"] = self._client_secret
+
+        req = urllib.request.Request(self._get_token_endpoint(), urllib.parse.urlencode(params).encode())
+        report.debug("calling endpoint")
+        with urllib.request.urlopen(req) as resp:
+            report.debug("decoding response")
+            result = json.loads(resp.read().decode())
+            report.set_status("exit function")
+            return result
+
+    def refresh_tokens(self, refresh_token: str) -> Any:
+        """Refreshs tokens
+
+        Args:
+            refresh_token (str): the refresh token (must not have been expired)
+
+        Returns:
+            Any: fresh tokens.
+        """
+        report = self._report.get_sub_report(task="refresh_tokens", init_status="in function")
+        params = {
+            "grant_type": "refresh_token",
+            "client_id": self._client_id,
+            "scope": "openid",
+            "refresh_token": refresh_token
+        }
+        if self._client_secret is not None:
+            params["client_secret"] = self._client_secret
+
+        req = urllib.request.Request(self._get_token_endpoint(), urllib.parse.urlencode(params).encode())
         report.debug("calling endpoint")
         with urllib.request.urlopen(req) as resp:
             report.debug("decoding response")
