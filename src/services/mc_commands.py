@@ -2,6 +2,7 @@
 import datetime
 import json
 import subprocess
+import time
 from pathlib import Path
 from typing import Any
 
@@ -228,10 +229,14 @@ class McCommands:
 
         target_bucket_objects, target_bucket_size = self._du_bucket(report, target)
         if source_bucket_objects != target_bucket_objects or source_bucket_size != target_bucket_size:
-            msg = f"Mirror {source} to {target} failed: expected {source_bucket_objects} / {source_bucket_size} " \
-                  f"actual {target_bucket_objects} / {target_bucket_size}"
-            report.fatal(msg)
-            raise RuntimeError(msg)
+            time.sleep(5)
+            target_bucket_objects, target_bucket_size = self._du_bucket(report, target)
+            if source_bucket_objects != target_bucket_objects or source_bucket_size != target_bucket_size:
+                msg = f"Mirror {source} to {target} failed:" \
+                      f" expected {source_bucket_objects} / {source_bucket_size}" \
+                      f" actual {target_bucket_objects} / {target_bucket_size}"
+                report.fatal(msg)
+                raise RuntimeError(msg)
 
         report.set_status("exit function")
 
