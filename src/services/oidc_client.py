@@ -56,7 +56,7 @@ class OidcClient:
         Returns:
             Any: the tokens.
         """
-        report = self._report.get_sub_report(task="service_account_tokens", init_status="in function")
+        report = self._report.get_sub_report(task="grant_client_credentials_tokens", init_status="in function")
         body = urllib.parse.urlencode(
             {
                 "grant_type": "client_credentials",

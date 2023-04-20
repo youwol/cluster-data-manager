@@ -4,7 +4,8 @@ Use get_<task>() to obtain a configured instance of TaskSetup for a given task.
 """
 from typing import Any
 
-from services import env, get_archiver_builder, get_google_drive_builder, get_report_builder
+from configuration import EnvVars, env_utils
+from services import get_archiver_builder, get_google_drive_builder, get_report_builder
 from tasks.setup.task_setup import TaskSetup
 
 
@@ -34,7 +35,7 @@ def get_task_setup_backup() -> TaskSetup:
     archiver_builder = get_archiver_builder()
     google_drive_builder = get_google_drive_builder()
 
-    path_work_dir = env.existing_path(env.path_work_dir)
+    path_work_dir = env_utils.existing_path(EnvVars.PATH_WORK_DIR)
 
     context.backup = TaskSetup(report=report_builder(), path_work_dir=path_work_dir,
                                archiver=archiver_builder(), google_drive=google_drive_builder(),
@@ -59,8 +60,8 @@ def get_task_setup_restore() -> Any:
     archiver_builder = get_archiver_builder()
     google_drive_builder = get_google_drive_builder()
 
-    path_work_dir = env.existing_path(env.path_work_dir)
-    archive_name = env.not_empty_string(env.archive_name)
+    path_work_dir = env_utils.existing_path(EnvVars.PATH_WORK_DIR)
+    archive_name = env_utils.not_empty_string(EnvVars.ARCHIVE_NAME)
 
     context.restore = TaskSetup(report=report_builder(), path_work_dir=path_work_dir,
                                       archiver=archiver_builder(), google_drive=google_drive_builder(),

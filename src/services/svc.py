@@ -7,7 +7,7 @@ Notes:
 """
 from typing import Callable, Optional
 
-from services import env
+from configuration import EnvVars, env_utils
 from services.archiver import Archiver
 from services.cluster_maintenance import ClusterMaintenance, MaintenanceDetails
 from services.cqlsh_commands import CqlInstance, CqlshCommands
@@ -43,8 +43,9 @@ def get_report_builder() -> Callable[[], Report]:
     if context.report is not None:
         return lambda: context.report
 
-    path_log_file = env.file(env.path_log_file)
-    task_name = env.arg_task_name()
+    path_log_file = env_utils.file(EnvVars.PATH_LOG_FILE)
+    task_name = env_utils.arg_task_name()
+
 
     def builder() -> Report:
         if context.report is None:
@@ -65,14 +66,14 @@ def get_cqlsh_commands_builder() -> Callable[[], CqlshCommands]:
         return lambda: context.cqlsh_commands
 
     report_builder = get_report_builder()
-    cqlsh_command = env.not_empty_string(env.cqlsh_command)
-    cql_instance_host = env.maybe_string(env.cql_host)
+    cqlsh_command = env_utils.not_empty_string(EnvVars.CQLSH_COMMAND)
+    cql_instance_host = env_utils.maybe_string(EnvVars.CQL_HOST)
 
     def builder() -> CqlshCommands:
         if context.cqlsh_commands is None:
             cql_instance = CqlInstance(host=cql_instance_host)
             context.cqlsh_commands = CqlshCommands(report=report_builder(),
-                                                   instance=cql_instance,
+                                                   cql_instance=cql_instance,
                                                    cqlsh=cqlsh_command)
         return context.cqlsh_commands
 
@@ -90,11 +91,16 @@ def get_mc_commands_builder() -> Callable[[], McCommands]:
         return lambda: context.mc_commands
 
     report_builder = get_report_builder()
-    path_mc = env.existing_path(env.path_mc)
-    path_mc_config = env.existing_path(env.path_mc_config)
-    local_access_key = env.not_empty_string(env.minio_local_access_key)
-    local_secret_key = env.not_empty_string(env.minio_local_secret_key)
-    local_port = env.integer(env.minio_local_port, 9000)
+    path_mc = env_utils.existing_path(EnvVars.PATH_MC)
+    path_mc_config = env_utils.existing_path(EnvVars.PATH_MC_CONFIG)
+    local_access_key = env_utils.not_empty_string(EnvVars.MINIO_LOCAL_ACCESS_KEY)
+    local_secret_key = env_utils.not_empty_string(EnvVars.MINIO_LOCAL_SECRET_KEY)
+    local_port = env_utils.integer(EnvVars.MINIO_LOCAL_PORT, 9000)
+    s3_access_key = env_utils.not_empty_string(EnvVars.S3_ACCESS_KEY)
+    s3_secret_key = env_utils.not_empty_string(EnvVars.S3_SECRET_KEY)
+    s3_host = env_utils.not_empty_string(EnvVars.S3_HOST)
+    s3_port = env_utils.integer(EnvVars.S3_PORT, 9000)
+    s3_tls = env_utils.boolean(EnvVars.S3_TLS, True)
 
     def builder() -> McCommands:
         if context.mc_commands is None:
@@ -106,12 +112,12 @@ def get_mc_commands_builder() -> Callable[[], McCommands]:
 
             cluster = S3Instance(
                 credentials=S3Credentials(
-                    access_key=env.not_empty_string(env.s3_access_key),
-                    secret_key=env.not_empty_string(env.s3_secret_key),
+                    access_key=s3_access_key,
+                    secret_key=s3_secret_key,
                 ),
-                host=env.not_empty_string(env.s3_host),
-                port=env.integer(env.s3_port, 9000),
-                tls=env.boolean(env.s3_tls, True),
+                host=s3_host,
+                port=s3_port,
+                tls=s3_tls,
             )
 
             mc_paths = MinioClientPaths(
@@ -121,8 +127,8 @@ def get_mc_commands_builder() -> Callable[[], McCommands]:
 
             context.mc_commands = McCommands(report=report_builder(),
                                              mc_paths=mc_paths,
-                                             local=local,
-                                             cluster=cluster)
+                                             minio_instance=local,
+                                             s3_instance=cluster)
 
         return context.mc_commands
 
@@ -139,9 +145,9 @@ def get_oidc_client_builder() -> Callable[[], OidcClient]:
         return lambda: context.oidc_client
 
     report_builder = get_report_builder()
-    issuer = env.not_empty_string(env.oidc_issuer)
-    client_id = env.not_empty_string(env.oidc_client_id)
-    client_secret = env.not_empty_string(env.oidc_client_secret)
+    issuer = env_utils.not_empty_string(EnvVars.OIDC_ISSUER)
+    client_id = env_utils.not_empty_string(EnvVars.OIDC_CLIENT_ID)
+    client_secret = env_utils.not_empty_string(EnvVars.OIDC_CLIENT_SECRET)
 
     def builder() -> OidcClient:
         if context.oidc_client is None:
@@ -165,7 +171,7 @@ def get_google_drive_builder() -> Callable[[], GoogleDrive]:
 
     report_builder = get_report_builder()
     oidc_client_builder = get_oidc_client_builder()
-    drive_id = env.not_empty_string(env.google_drive_id)
+    drive_id = env_utils.not_empty_string(EnvVars.GOOGLE_DRIVE_ID)
 
     def builder() -> GoogleDrive:
         if context.google_drive is None:
@@ -189,8 +195,8 @@ def get_archiver_builder() -> Callable[[], Archiver]:
         return lambda: context.archiver
 
     report_builder = get_report_builder()
-    path_work_dir = env.existing_path(env.path_work_dir)
-    job_uuid = env.not_empty_string(env.job_uuid)
+    path_work_dir = env_utils.existing_path(EnvVars.PATH_WORK_DIR)
+    job_uuid = env_utils.not_empty_string(EnvVars.JOB_UUID)
 
     def builder() -> Archiver:
         if context.archiver is None:
@@ -213,12 +219,12 @@ def get_cluster_maintenance_builder() -> Callable[[], ClusterMaintenance]:
 
     report_builder = get_report_builder()
     k8s_api_builder = get_kubernetes_api_builder()
-    maintenance_namespace = env.not_empty_string(env.maintenance_namespace)
-    maintenance_ingress_name = env.not_empty_string(env.maintenance_ingress_name)
-    maintenance_ingress_class_name = env.not_empty_string(env.maintenance_ingress_class_name)
-    maintenance_config_map_name = env.not_empty_string(env.maintenance_config_map_name)
-    maintenance_config_map_key = env.not_empty_string(env.maintenance_config_map_key)
-    maintenance_config_map_value = env.not_empty_string(env.maintenance_config_map_value)
+    maintenance_namespace = env_utils.not_empty_string(EnvVars.MAINTENANCE_NAMESPACE)
+    maintenance_ingress_name = env_utils.not_empty_string(EnvVars.MAINTENANCE_INGRESS_NAME)
+    maintenance_ingress_class_name = env_utils.not_empty_string(EnvVars.MAINTENANCE_INGRESS_CLASS_NAME)
+    maintenance_config_map_name = env_utils.not_empty_string(EnvVars.MAINTENANCE_CONFIG_MAP_NAME)
+    maintenance_config_map_key = env_utils.not_empty_string(EnvVars.MAINTENANCE_CONFIG_MAP_KEY)
+    maintenance_config_map_value = env_utils.not_empty_string(EnvVars.MAINTENANCE_CONFIG_MAP_VALUE)
 
     def builder() -> ClusterMaintenance:
         if context.cluster_maintenance is None:

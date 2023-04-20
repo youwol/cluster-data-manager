@@ -5,7 +5,8 @@ Use get_restore_task() to obtain a configured instance for TaskRestore.
 """
 from typing import Callable, Optional
 
-from services import env, get_cqlsh_commands_builder, get_mc_commands_builder, get_report_builder
+from configuration import EnvVars, env_utils
+from services import get_cqlsh_commands_builder, get_mc_commands_builder, get_report_builder
 from tasks.restore.task_restore import TaskRestore
 from tasks.restore.task_restore_cassandra import TaskRestoreCassandra
 from tasks.restore.task_restore_s3 import TaskRestoreS3
@@ -33,9 +34,9 @@ def get_task_restore_s3_builder() -> Callable[[], TaskRestoreS3]:
     report_builder = get_report_builder()
     mc_commands_builder = get_mc_commands_builder()
 
-    path_work_dir = env.existing_path(env.path_work_dir)
-    s3_buckets = env.strings_list(env.s3_buckets)
-    overwrite = env.boolean(env.restore_overwrite, False)
+    path_work_dir = env_utils.existing_path(EnvVars.PATH_WORK_DIR)
+    s3_buckets = env_utils.strings_list(EnvVars.S3_BUCKETS)
+    overwrite = env_utils.boolean(EnvVars.RESTORE_OVERWRITE, False)
 
     def builder() -> TaskRestoreS3:
         if context.s3 is None:
@@ -59,10 +60,10 @@ def get_task_restore_cassandra_builder() -> Callable[[], TaskRestoreCassandra]:
     report_builder = get_report_builder()
     cqlsh_commands_builder = get_cqlsh_commands_builder()
 
-    path_work_dir = env.existing_path(env.path_work_dir)
-    keyspaces = env.strings_list(env.cql_keyspaces)
-    tables = env.strings_list(env.cql_tables)
-    overwrite = env.boolean(env.restore_overwrite, False)
+    path_work_dir = env_utils.existing_path(EnvVars.PATH_WORK_DIR)
+    keyspaces = env_utils.strings_list(EnvVars.CQL_KEYSPACES)
+    tables = env_utils.strings_list(EnvVars.CQL_TABLES)
+    overwrite = env_utils.boolean(EnvVars.RESTORE_OVERWRITE, False)
 
     def builder() -> TaskRestoreCassandra:
         if context.cassandra is None:

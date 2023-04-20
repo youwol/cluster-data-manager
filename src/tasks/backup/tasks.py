@@ -6,7 +6,8 @@ Use get_<task>_builder() to obtain a nullary builder for a subtask.
 import datetime
 from typing import Callable, Optional
 
-from services import env, get_archiver_builder, get_cluster_maintenance_builder, get_cqlsh_commands_builder, \
+from configuration import EnvVars, env_utils
+from services import get_archiver_builder, get_cluster_maintenance_builder, get_cqlsh_commands_builder, \
     get_google_drive_builder, get_mc_commands_builder, get_report_builder
 from tasks.backup.task_backup import TaskBackup
 from tasks.backup.task_backup_cassandra import TaskBackupCassandra
@@ -34,8 +35,8 @@ def get_task_backup_s3_builder() -> Callable[[], TaskBackupS3]:
 
     report_builder = get_report_builder()
     mc_commands_builder = get_mc_commands_builder()
-    path_work_dir = env.existing_path(env.path_work_dir)
-    buckets = env.strings_list(env.s3_buckets)
+    path_work_dir = env_utils.existing_path(EnvVars.PATH_WORK_DIR)
+    buckets = env_utils.strings_list(EnvVars.S3_BUCKETS)
 
     def builder() -> TaskBackupS3:
 
@@ -58,9 +59,9 @@ def get_task_backup_cassandra_builder() -> Callable[[], TaskBackupCassandra]:
 
     report_builder = get_report_builder()
     cqlsh_commands_builder = get_cqlsh_commands_builder()
-    path_work_dir = env.existing_path(env.path_work_dir)
-    keyspaces = env.strings_list(env.cql_keyspaces)
-    tables = env.strings_list(env.cql_tables)
+    path_work_dir = env_utils.existing_path(EnvVars.PATH_WORK_DIR)
+    keyspaces = env_utils.strings_list(EnvVars.CQL_KEYSPACES)
+    tables = env_utils.strings_list(EnvVars.CQL_TABLES)
 
     def builder() -> TaskBackupCassandra:
         if context.cassandra is None:
@@ -89,9 +90,9 @@ def get_task_backup() -> TaskBackup:
     google_drive_builder = get_google_drive_builder()
     cluster_maintenance_builder = get_cluster_maintenance_builder()
 
-    path_log_file = env.not_empty_string(env.path_log_file)
-    job_uuid = env.not_empty_string(env.job_uuid)
-    type_backup = env.not_empty_string(env.type_backup)
+    path_log_file = env_utils.not_empty_string(EnvVars.PATH_WORK_DIR)
+    job_uuid = env_utils.not_empty_string(EnvVars.JOB_UUID)
+    type_backup = env_utils.not_empty_string(EnvVars.TYPE_BACKUP)
     google_drive_upload_file_name = f"{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}_{job_uuid}.tgz"
     google_drive_upload_folder = type_backup
 

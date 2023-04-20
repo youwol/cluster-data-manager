@@ -16,9 +16,9 @@ class MaintenanceDetails:
     def __init__(
             self,
             ingress_ref: KubernetesIngressRef,
-            ingress_class_name, config_map_value_ref:
-            KubernetesConfigMapValueRef,
-            config_map_value
+            ingress_class_name: str,
+            config_map_value_ref: KubernetesConfigMapValueRef,
+            config_map_value: str
     ):
         self._ingress_ref = ingress_ref
         self._ingress_class_name = ingress_class_name

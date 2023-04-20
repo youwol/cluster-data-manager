@@ -2,8 +2,7 @@
 
 It has a main function, and expect exactly one command line argument : the name of the task to run.
 """
-
-from services import env
+from configuration import env_utils
 from tasks import get_task_backup, get_task_restore, get_task_setup_backup, get_task_setup_restore
 
 tasks_getter = {
@@ -15,7 +14,7 @@ tasks_getter = {
 
 if __name__ == '__main__':
 
-    TASK_NAME = env.arg_task_name()
+    TASK_NAME = env_utils.arg_task_name()
 
     if TASK_NAME not in tasks_getter:
         raise RuntimeError(f"Unknown task {TASK_NAME}")

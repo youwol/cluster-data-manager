@@ -62,7 +62,7 @@ class MinioLocalInstance(S3Instance):
     """Represent a local S3 service to connect, with host hardcoded to localhost."""
 
     def __init__(self, access_key, secret_key, port: int):
-        super().__init__(credentials=S3Credentials(access_key, secret_key), host="localhost", tls=True, port=port)
+        super().__init__(credentials=S3Credentials(access_key, secret_key), host="localhost", tls=False, port=port)
 
 
 class MinioClientPaths:
@@ -96,14 +96,15 @@ class McCommands:
 
     ALIAS_CLUSTER = "cluster"
 
-    def __init__(self, report: Report, mc_paths: MinioClientPaths, local: MinioLocalInstance, cluster: S3Instance):
+    def __init__(self, report: Report, mc_paths: MinioClientPaths, minio_instance: MinioLocalInstance,
+                 s3_instance: S3Instance):
         self._report = report.get_sub_report(task="McCommands", init_status="InitializingComponent")
         self._path_mc = mc_paths.path_bin()
         self._report.debug(f"using binary {self._path_mc}")
         self._path_mc_config = mc_paths.path_config()
         self._report.debug(f"using config {self._path_mc_config}")
-        self._local = local
-        self._cluster = cluster
+        self._local = minio_instance
+        self._cluster = s3_instance
         self._aliases_setup_done = False
         self._report.set_status("ComponentInitialized")
 

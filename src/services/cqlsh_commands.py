@@ -36,11 +36,11 @@ class CqlInstance:
 class CqlshCommands:
     """ Execute CQL statements, using cqlsh."""
 
-    def __init__(self, report: Report, cqlsh: str, instance: CqlInstance):
+    def __init__(self, report: Report, cqlsh: str, cql_instance: CqlInstance):
         self._report = report.get_sub_report("CqlshCommands", init_status="InitializingComponent")
         self._cqlsh = cqlsh.split(" ")
-        self._instance = instance
-        self._report.debug(f"using instance {instance.get_host()}")
+        self._instance = cql_instance
+        self._report.debug(f"using instance {cql_instance.get_host()}")
 
     def show_host(self) -> str:
         """Run statement 'SHOW HOST;' and return the output.
