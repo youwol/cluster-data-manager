@@ -36,9 +36,6 @@ RUN pip install -r requirements.txt
 ## Final image
 #
 FROM python:3.11-slim
-# Our application directory
-WORKDIR /opt/app
-
 # Copy previously setup venv (should have the same path ?) and use it
 COPY --from=python-builder /opt/venv /opt/venv
 ENV PATH=/opt/venv/bin:$PATH
@@ -46,20 +43,29 @@ ENV PATH=/opt/venv/bin:$PATH
 # Copy previously downloaded minio-client
 COPY --from=python-builder /opt/minio-client /opt/minio-client
 
+RUN useradd -m -d /opt/app data-manager
+
+
+# Our application directory
+WORKDIR /opt/app
+
+# Our work dir
+RUN mkdir -p /var/tmp/app
+RUN chown -R data-manager /var/tmp/app
+RUN chown -R data-manager /opt/minio-client/config
+VOLUME ["/var/tmp/app"]
+
 # Copy our application sources
-RUN mkdir -p /opt/app
 COPY src /opt/app
 
 # Environment for our application
 ENV PATH_MINIO_CLIENT="/opt/minio-client/bin/mc"
 ENV PATH_MINIO_CLIENT_CONFIG="/opt/minio-client/config"
 ENV CQLSH_COMMAND="/opt/venv/bin/cqlsh"
-RUN mkdir -p /var/tmp/app
 ENV PATH_LOG_FILE="/var/tmp/app/entry_point.log"
 ENV PATH_WORK_DIR="/var/tmp/app"
 
-VOLUME ["/var/tmp/app"]
-
+USER data-manager
 # Start our script
 # - python is taken from /opt/venv/bin (see ENV PATH above)
 # - entry_point.py is in /opt/app (see WORKDIR above)
