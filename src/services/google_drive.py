@@ -1,4 +1,5 @@
 """Main class and ancillary classes for service google_drive."""
+import datetime
 import io
 import json
 from google.auth.identity_pool import Credentials
@@ -83,13 +84,20 @@ class GoogleDrive:
         report = self._report.get_sub_report("OidcCredentials")
         path_credentials_source_file = Path("/tmp/oidc_tokens.json")
 
+        if path_credentials_source_file.exists():
+            report.notify("found existing file : checking expiration for token")
+            file_timestamp = path_credentials_source_file.stat().st_mtime
+            tokens = json.loads(path_credentials_source_file.read_text("UTF-8"))
+            token_expire_at = file_timestamp + tokens['expires_in']
+            if token_expire_at < datetime.datetime.now().timestamp():
+                report.notify("existing tokens has expired : removing tokens file")
+                path_credentials_source_file.unlink()
+
         if not path_credentials_source_file.exists():
             report.notify("setup credentials")
             tokens = self._oidc_client.grant_client_credentials_tokens()
             path_credentials_source_file.write_text(json.dumps(tokens), encoding='UTF-8')
             report.notify("done")
-
-        # TODO: handle id_token expiration
 
         return path_credentials_source_file
 
