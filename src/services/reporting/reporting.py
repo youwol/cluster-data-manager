@@ -102,7 +102,7 @@ class Reporting(ReportHandler):
         tasks_str = ">".join(tasks)
         msg_str = f" : {msg}" if msg != "" else ""
         msg = f"{timestamp} {level} ({tasks_str})[{status}]{msg_str}"
-        print(msg)
+        print(msg, flush=True)
         self._path_log_file.open('a').write(f"{msg}\n")
 
     def start_thread(self):
