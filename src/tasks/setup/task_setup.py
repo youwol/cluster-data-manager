@@ -1,11 +1,38 @@
 """Main class for setup task."""
+
 import os
 from pathlib import Path
 from typing import Optional
 
+from services import assets
 from services.archiver import Archiver
+from services.assets import Assets
 from services.google_drive import GoogleDrive
 from services.reporting import Report
+
+
+class KeycloakSetupDetails:
+    """Represent details (path to status file, script) for keycloak setup."""
+
+    def __init__(self, path_keycloak_status_file: Path, path_keycloak_script: Path):
+        self._path_keycloak_status_file = path_keycloak_status_file
+        self._path_keycloak_script = path_keycloak_script
+
+    def path_keycloak_status_file(self) -> Path:
+        """Simple getter.
+
+        Returns:
+            Path: the path of the keycloak status file
+        """
+        return self._path_keycloak_status_file
+
+    def path_keycloak_script(self) -> Path:
+        """Sinple getter.
+
+        Returns:
+            Path: the path of the keycloak script
+        """
+        return self._path_keycloak_script
 
 
 class TaskSetup:
@@ -16,15 +43,18 @@ class TaskSetup:
     Notes:
       Can be call with or without an archive name: in the latter case the last archive will be downloaded.
     """
+
     def __init__(self,
                  report: Report,
                  path_work_dir: Path,
                  google_drive: GoogleDrive,
                  archiver: Archiver,
                  extract_items: [str],
+                 keycloak_setup_details: KeycloakSetupDetails = None,
                  archive_name: Optional[str] = None
                  ):
         self._path_work_dir = path_work_dir
+        self._keycloak_setup_details = keycloak_setup_details
         self._google_drive = google_drive
         self._archiver = archiver
         self._extract_items = extract_items
@@ -32,7 +62,21 @@ class TaskSetup:
         self._report = report.get_sub_report("Setup", default_status_level="NOTIFY", init_status="ComponentInitialized")
 
     def run(self):
-        """Run setup task : download archive & extract item(s)."""
+        """Run setup task.
+
+        Download archive & extract item(s).
+        Create keycloak directory & file status if keycloak_setup_details has been passed.
+        """
+        report = self._report.get_sub_report(task="run",init_status="in function")
+        if self._keycloak_setup_details is not None:
+            report_kc = report.get_sub_report("setup keycloak", init_status="in block")
+            report_kc.debug(f"Set up status file '{self._keycloak_setup_details.path_keycloak_status_file()}'")
+            self._keycloak_setup_details.path_keycloak_status_file().parent.mkdir(exist_ok=True, parents=True)
+            self._keycloak_setup_details.path_keycloak_status_file().write_text("SETUP\n")
+            report_kc.debug(f"Copying kc script to '{self._keycloak_setup_details.path_keycloak_script()}'")
+            assets.copy_file(Assets.KC_EXPORT_SH, self._keycloak_setup_details.path_keycloak_script())
+            report_kc.debug("Done")
+
         if self._archive_name is None:
             self._setup_last_archive()
         else:

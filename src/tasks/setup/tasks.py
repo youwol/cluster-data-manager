@@ -6,7 +6,7 @@ from typing import Any
 
 from configuration import EnvVars, env_utils
 from services import get_archiver_builder, get_google_drive_builder, get_report_builder
-from tasks.setup.task_setup import TaskSetup
+from tasks.setup.task_setup import KeycloakSetupDetails, TaskSetup
 
 
 class Context:
@@ -37,9 +37,19 @@ def get_task_setup_backup() -> TaskSetup:
 
     path_work_dir = env_utils.existing_path(EnvVars.PATH_WORK_DIR)
 
-    context.backup = TaskSetup(report=report_builder(), path_work_dir=path_work_dir,
-                               archiver=archiver_builder(), google_drive=google_drive_builder(),
-                               extract_items=["minio"])
+    keycloak_setup_details = KeycloakSetupDetails(
+        path_keycloak_status_file=env_utils.creating_file(EnvVars.PATH_KEYCLOAK_STATUS_FILE),
+        path_keycloak_script=env_utils.creating_file(EnvVars.PATH_KEYCLOAK_SCRIPT)
+    )
+
+    context.backup = TaskSetup(
+        report=report_builder(),
+        path_work_dir=path_work_dir,
+        keycloak_setup_details=keycloak_setup_details,
+        archiver=archiver_builder(),
+        google_drive=google_drive_builder(),
+        extract_items=["minio"]
+    )
 
     return context.backup
 

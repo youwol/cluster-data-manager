@@ -9,8 +9,10 @@ from typing import Callable, Optional
 from configuration import EnvVars, env_utils
 from services import get_archiver_builder, get_cluster_maintenance_builder, get_cqlsh_commands_builder, \
     get_google_drive_builder, get_mc_commands_builder, get_report_builder
+from services.keycloak_admin import KeycloakAdmin, KeycloakAdminCredentials
 from tasks.backup.task_backup import TaskBackup
 from tasks.backup.task_backup_cassandra import TaskBackupCassandra
+from tasks.backup.task_backup_keycloak import TaskBackupKeycloak
 from tasks.backup.task_backup_s3 import TaskBackupS3
 
 
@@ -18,6 +20,7 @@ class Context:
     """Hold subtasks instances."""
     s3: Optional[TaskBackupS3] = None
     cassandra: Optional[TaskBackupCassandra] = None
+    keycloak: Optional[TaskBackupKeycloak] = None
     task: Optional[TaskBackup] = None
 
 
@@ -74,6 +77,47 @@ def get_task_backup_cassandra_builder() -> Callable[[], TaskBackupCassandra]:
     return builder
 
 
+def get_task_backup_keycloak_builder() -> Callable[[], TaskBackupKeycloak]:
+    """Get a builder for a configured instance of the subtask backup_keycloak
+
+    Returns:
+        Callable[[], TaskBackupKeycloak]: a nullary builder for TaskBackupKeycloak
+    """
+    if context.keycloak is not None:
+        return lambda: context.keycloak
+
+    report_builder = get_report_builder()
+    path_work_dir = env_utils.existing_path(EnvVars.PATH_WORK_DIR)
+    path_keycloak_status_file = env_utils.existing_path(EnvVars.PATH_KEYCLOAK_STATUS_FILE)
+    keycloak_user = env_utils.not_empty_string(EnvVars.KEYCLOAK_USER)
+    keycloak_password = env_utils.not_empty_string(EnvVars.KEYCLOAK_PASSWORD)
+    keycloak_base_url = env_utils.not_empty_string(EnvVars.KEYCLOAK_BASE_URL)
+
+    def keycloak_admin_builder():
+        return KeycloakAdmin(
+            report=report_builder(),
+            credentials=KeycloakAdminCredentials(
+                realm="master",
+                user=keycloak_user,
+                password=keycloak_password
+            ),
+            base_url=keycloak_base_url
+        )
+
+    def builder() -> TaskBackupKeycloak:
+        if context.keycloak is None:
+            context.keycloak = TaskBackupKeycloak(
+                report=report_builder(),
+                path_work_dir=path_work_dir,
+                keycloak_admin=keycloak_admin_builder(),
+                path_keycloak_status_file=path_keycloak_status_file
+            )
+
+        return context.keycloak
+
+    return builder
+
+
 def get_task_backup() -> TaskBackup:
     """Get a configured instance of TaskBackup.
 
@@ -86,6 +130,7 @@ def get_task_backup() -> TaskBackup:
     report_builder = get_report_builder()
     task_backup_s3_builder = get_task_backup_s3_builder()
     task_backup_cassandra_builder = get_task_backup_cassandra_builder()
+    task_backup_keycloak_builder = get_task_backup_keycloak_builder()
     archiver_builder = get_archiver_builder()
     google_drive_builder = get_google_drive_builder()
     cluster_maintenance_builder = get_cluster_maintenance_builder()
@@ -98,6 +143,7 @@ def get_task_backup() -> TaskBackup:
 
     context.task = TaskBackup(task_backup_s3=task_backup_s3_builder(),
                               task_backup_cassandra=task_backup_cassandra_builder(),
+                              task_backup_keycloak=task_backup_keycloak_builder(),
                               google_drive=google_drive_builder(),
                               archive=archiver_builder().new_archive(),
                               google_drive_upload_file_name=google_drive_upload_file_name,
