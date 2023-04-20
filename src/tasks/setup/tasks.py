@@ -71,10 +71,10 @@ def get_task_setup_restore() -> Any:
     google_drive_builder = get_google_drive_builder()
 
     path_work_dir = env_utils.existing_path(EnvVars.PATH_WORK_DIR)
-    archive_name = env_utils.not_empty_string(EnvVars.ARCHIVE_NAME)
+    archive_name = env_utils.not_empty_string(EnvVars.RESTORE_ARCHIVE_NAME)
 
     context.restore = TaskSetup(report=report_builder(), path_work_dir=path_work_dir,
-                                      archiver=archiver_builder(), google_drive=google_drive_builder(),
-                                      extract_items=["minio", "cql"], archive_name=archive_name)
+                                archiver=archiver_builder(), google_drive=google_drive_builder(),
+                                extract_items=["minio", "cql"], archive_name=archive_name)
 
     return context.restore
