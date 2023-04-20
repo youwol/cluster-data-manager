@@ -49,6 +49,8 @@ class TaskBackup:
             }
         )
 
+        self._task_backup_s3.prepare()
+
         with self._cluster_maintenance:
             self._task_backup_cassandra.run()
             self._task_backup_s3.run()

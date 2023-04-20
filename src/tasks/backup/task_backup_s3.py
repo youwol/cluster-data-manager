@@ -17,6 +17,18 @@ class TaskBackupS3(TaskS3):
         self._report = report.get_sub_report("BackupS3", default_status_level="NOTIFY",
                                              init_status="ComponentInitialized")
 
+    def prepare(self):
+        """Prepare S3 backup.
+
+        Run disk usage for cluster buckets to fill cache on instance.
+        """
+        for bucket in self._buckets:
+            bucket_report = self._report.get_sub_report(f"disk_usage_{bucket}", default_status_level="NOTIFY")
+            self._mc_commands.set_reporter(bucket_report)
+            nb_objects, size = self._mc_commands.du_cluster_bucket(bucket)
+            bucket_report.notify(f"nb_objects: {nb_objects}, size: {size}")
+            bucket_report.set_status("Done")
+
     def run(self):
         """Run the task."""
         mc_commands = self._mc_commands

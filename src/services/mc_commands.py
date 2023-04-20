@@ -235,7 +235,7 @@ class McCommands:
 
         report.set_status("exit function")
 
-    def _du_bucket(self, report: Report, bucket: str):
+    def _du_bucket(self, report: Report, bucket: str) -> tuple[str, str]:
 
         bucket_size = 0
         bucket_objects = 0
@@ -249,6 +249,19 @@ class McCommands:
 
         self._run_command(report, "du", "--versions", bucket, on_success=on_success_du)
         return bucket_objects, bucket_size
+
+    def du_cluster_bucket(self, bucket: str) -> tuple[str, str]:
+        """Run disk usage for cluster bucket
+
+        Args:
+            bucket (str): the bucket name
+        Returns:
+            tuple[str, str]: the number of objects and the total size
+        """
+        report = self._report.get_sub_report(f"du_cluster_bucket_{bucket}", init_status="in function")
+        result = self._du_bucket(report, f"{McCommands.ALIAS_CLUSTER}/{bucket}")
+        report.debug("done")
+        return result
 
     def _mc_alias(self, alias: str, instance: S3Instance):
         report = self._report.get_sub_report(f"_mc_alias_{alias}", init_status="in function")
