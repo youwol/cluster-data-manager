@@ -1,4 +1,7 @@
 """Generalised code for tasks."""
+from .cassandra import Cassandra as CommonCassandra
+from .keycloak import Keycloak as CommonKeycloak
+from .s3 import S3 as CommonS3
 from .task import OnPathDirMissing
-from .task_cassandra import TaskCassandra
-from .task_s3 import TaskS3
+
+__all__ = ['CommonCassandra', 'CommonS3', 'CommonKeycloak', 'OnPathDirMissing']

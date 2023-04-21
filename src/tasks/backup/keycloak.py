@@ -1,14 +1,14 @@
 """Main class for subtask backup keycloak"""
 import time
 from pathlib import Path
+from typing import Any
 
 from services.keycloak_admin import KeycloakAdmin
 from services.reporting import Report
-from tasks.common import OnPathDirMissing
-from tasks.common.task_keycloak import TaskKeycloak
+from ..common import CommonKeycloak, OnPathDirMissing
 
 
-class TaskBackupKeycloak(TaskKeycloak):
+class Keycloak(CommonKeycloak):
     """Sub task for keycloak backup."""
 
     def __init__(self, report: Report,
@@ -20,7 +20,7 @@ class TaskBackupKeycloak(TaskKeycloak):
         self._keycloak_admin = keycloak_admin
         self._path_status_file = path_keycloak_status_file
 
-    def run(self):
+    def run(self) -> None:
         """Run the task.
 
         Commands are run from an other script in keycloak container. This method watch a status file updated by this
@@ -50,7 +50,7 @@ class TaskBackupKeycloak(TaskKeycloak):
         """
         return self._task_path_dir_and_archive_item(on_missing=OnPathDirMissing.CREATE)
 
-    def metadata(self):
+    def metadata(self) -> Any:
         """Metadata from keycloak instance.
 
         Returns:

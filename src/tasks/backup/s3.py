@@ -1,23 +1,24 @@
 """Main class of the backup task of S3."""
 from pathlib import Path
+from typing import Any
 
 from services.mc_commands import McCommands
 from services.reporting import Report
-from tasks.common import OnPathDirMissing, TaskS3
+from ..common import CommonS3, OnPathDirMissing
 
 
-class TaskBackupS3(TaskS3):
+class S3(CommonS3):
     """Subtask for backup S3.
 
     Mirror the cluster buckets into the local Minio instance.
     """
 
-    def __init__(self, report: Report, path_work_dir: Path, mc_commands: McCommands, buckets: [str]):
+    def __init__(self, report: Report, path_work_dir: Path, mc_commands: McCommands, buckets: list[str]):
         super().__init__(path_work_dir, mc_commands, buckets)
         self._report = report.get_sub_report("BackupS3", default_status_level="NOTIFY",
                                              init_status="ComponentInitialized")
 
-    def prepare(self):
+    def prepare(self) -> None:
         """Prepare S3 backup.
 
         Run disk usage for cluster buckets to fill cache on instance.
@@ -30,7 +31,7 @@ class TaskBackupS3(TaskS3):
             bucket_report.notify(f"nb_objects: {nb_objects}, size: {size}")
             bucket_report.set_status("Done")
 
-    def run(self):
+    def run(self) -> None:
         """Run the task."""
         mc_commands = self._mc_commands
 
@@ -52,7 +53,7 @@ class TaskBackupS3(TaskS3):
         """
         return self._task_path_dir_and_archive_item(on_missing=OnPathDirMissing.ERROR)
 
-    def metadata(self):
+    def metadata(self) -> Any:
         """Simple getter.
 
         Returns:

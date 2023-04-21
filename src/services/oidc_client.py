@@ -2,15 +2,15 @@
 import json
 import urllib.parse
 import urllib.request
-from typing import Any
+from typing import Any, Optional
 
-from services.reporting import Report
+from .reporting import Report
 
 
 class OidcClientConfig:
     """ Represent the configuration of an OIDC client."""
 
-    def __init__(self, issuer: str, client_id: str, client_secret):
+    def __init__(self, issuer: str, client_id: str, client_secret: Optional[str]):
         self._issuer = issuer
         self._client_id = client_id
         self._client_secret = client_secret
@@ -31,7 +31,7 @@ class OidcClientConfig:
         """
         return self._client_id
 
-    def client_secret(self) -> str:
+    def client_secret(self) -> Optional[str]:
         """Simple getter.
 
         Returns:
@@ -141,10 +141,10 @@ class OidcClient:
         """
         return self._client_id
 
-    def _get_token_endpoint(self):
-        return self._get_oidc_configuration()["token_endpoint"]
+    def _get_token_endpoint(self) -> str:
+        return str(self._get_oidc_configuration()["token_endpoint"])
 
-    def _get_oidc_configuration(self):
+    def _get_oidc_configuration(self) -> Any:
         if self._openid_configuration is None:
             # NB: No cache invalidation since only call once for the lifetime of the application
             req = urllib.request.Request(self._get_oidc_well_known_url())
@@ -153,5 +153,5 @@ class OidcClient:
 
         return self._openid_configuration
 
-    def _get_oidc_well_known_url(self):
+    def _get_oidc_well_known_url(self) -> str:
         return f"{self._issuer_url}/.well-known/openid-configuration"

@@ -7,15 +7,15 @@ Notes:
 """
 from typing import Callable, Optional
 
-from configuration import EnvVars, env_utils
-from services.archiver import Archiver
-from services.cluster_maintenance import ClusterMaintenance, MaintenanceDetails
-from services.cqlsh_commands import CqlInstance, CqlshCommands
-from services.google_drive import GoogleDrive
-from services.kubernetes_api import KubernetesApi, KubernetesConfigMapValueRef, KubernetesIngressRef
-from services.mc_commands import McCommands, MinioClientPaths, MinioLocalInstance, S3Credentials, S3Instance
-from services.oidc_client import OidcClient, OidcClientConfig
-from services.reporting.reporting import Report, Reporting
+from configuration import ConfigEnvVars, env_utils
+from .archiver import Archiver
+from .cluster_maintenance import ClusterMaintenance, MaintenanceDetails
+from .cqlsh_commands import CqlInstance, CqlshCommands
+from .google_drive import GoogleDrive
+from .kubernetes_api import KubernetesApi, KubernetesConfigMapValueRef, KubernetesIngressRef
+from .mc_commands import McCommands, MinioClientPaths, MinioLocalInstance, S3Credentials, S3Instance
+from .oidc_client import OidcClient, OidcClientConfig
+from .reporting.reporting import Report, Reporting
 
 
 # pylint: disable=too-many-instance-attributes
@@ -41,9 +41,10 @@ def get_report_builder() -> Callable[[], Report]:
         Callable[[], Reporting]: a nullary builder for the report service.
     """
     if context.report is not None:
-        return lambda: context.report
+        report = context.report
+        return lambda: report
 
-    path_log_file = env_utils.file(EnvVars.PATH_LOG_FILE)
+    path_log_file = env_utils.file(ConfigEnvVars.PATH_LOG_FILE)
     task_name = env_utils.arg_task_name()
 
     def builder() -> Report:
@@ -62,11 +63,12 @@ def get_cqlsh_commands_builder() -> Callable[[], CqlshCommands]:
     """
 
     if context.cqlsh_commands is not None:
-        return lambda: context.cqlsh_commands
+        cqlsh_commands = context.cqlsh_commands
+        return lambda: cqlsh_commands
 
     report_builder = get_report_builder()
-    cqlsh_command = env_utils.not_empty_string(EnvVars.CQLSH_COMMAND)
-    cql_instance_host = env_utils.maybe_string(EnvVars.CQL_HOST)
+    cqlsh_command = env_utils.not_empty_string(ConfigEnvVars.CQLSH_COMMAND)
+    cql_instance_host = env_utils.maybe_string(ConfigEnvVars.CQL_HOST)
 
     def builder() -> CqlshCommands:
         if context.cqlsh_commands is None:
@@ -87,19 +89,20 @@ def get_mc_commands_builder() -> Callable[[], McCommands]:
     """
 
     if context.mc_commands is not None:
-        return lambda: context.mc_commands
+        mc_commands = context.mc_commands
+        return lambda: mc_commands
 
     report_builder = get_report_builder()
-    path_mc = env_utils.existing_path(EnvVars.PATH_MC)
-    path_mc_config = env_utils.existing_path(EnvVars.PATH_MC_CONFIG)
-    local_access_key = env_utils.not_empty_string(EnvVars.MINIO_LOCAL_ACCESS_KEY)
-    local_secret_key = env_utils.not_empty_string(EnvVars.MINIO_LOCAL_SECRET_KEY)
-    local_port = env_utils.integer(EnvVars.MINIO_LOCAL_PORT, 9000)
-    s3_access_key = env_utils.not_empty_string(EnvVars.S3_ACCESS_KEY)
-    s3_secret_key = env_utils.not_empty_string(EnvVars.S3_SECRET_KEY)
-    s3_host = env_utils.not_empty_string(EnvVars.S3_HOST)
-    s3_port = env_utils.integer(EnvVars.S3_PORT, 9000)
-    s3_tls = env_utils.boolean(EnvVars.S3_TLS, True)
+    path_mc = env_utils.existing_path(ConfigEnvVars.PATH_MC)
+    path_mc_config = env_utils.existing_path(ConfigEnvVars.PATH_MC_CONFIG)
+    local_access_key = env_utils.not_empty_string(ConfigEnvVars.MINIO_LOCAL_ACCESS_KEY)
+    local_secret_key = env_utils.not_empty_string(ConfigEnvVars.MINIO_LOCAL_SECRET_KEY)
+    local_port = env_utils.integer(ConfigEnvVars.MINIO_LOCAL_PORT, 9000)
+    s3_access_key = env_utils.not_empty_string(ConfigEnvVars.S3_ACCESS_KEY)
+    s3_secret_key = env_utils.not_empty_string(ConfigEnvVars.S3_SECRET_KEY)
+    s3_host = env_utils.not_empty_string(ConfigEnvVars.S3_HOST)
+    s3_port = env_utils.integer(ConfigEnvVars.S3_PORT, 9000)
+    s3_tls = env_utils.boolean(ConfigEnvVars.S3_TLS, True)
 
     def builder() -> McCommands:
         if context.mc_commands is None:
@@ -141,12 +144,13 @@ def get_oidc_client_builder() -> Callable[[], OidcClient]:
         Callable[[], OidcClient]: a nullary builder for the Oidc client
     """
     if context.oidc_client is not None:
-        return lambda: context.oidc_client
+        oidc_client = context.oidc_client
+        return lambda: oidc_client
 
     report_builder = get_report_builder()
-    issuer = env_utils.not_empty_string(EnvVars.OIDC_ISSUER)
-    client_id = env_utils.not_empty_string(EnvVars.OIDC_CLIENT_ID)
-    client_secret = env_utils.not_empty_string(EnvVars.OIDC_CLIENT_SECRET)
+    issuer = env_utils.not_empty_string(ConfigEnvVars.OIDC_ISSUER)
+    client_id = env_utils.not_empty_string(ConfigEnvVars.OIDC_CLIENT_ID)
+    client_secret = env_utils.not_empty_string(ConfigEnvVars.OIDC_CLIENT_SECRET)
 
     def builder() -> OidcClient:
         if context.oidc_client is None:
@@ -166,11 +170,12 @@ def get_google_drive_builder() -> Callable[[], GoogleDrive]:
     """
 
     if context.google_drive is not None:
-        return lambda: context.google_drive
+        google_drive = context.google_drive
+        return lambda: google_drive
 
     report_builder = get_report_builder()
     oidc_client_builder = get_oidc_client_builder()
-    drive_id = env_utils.not_empty_string(EnvVars.GOOGLE_DRIVE_ID)
+    drive_id = env_utils.not_empty_string(ConfigEnvVars.GOOGLE_DRIVE_ID)
 
     def builder() -> GoogleDrive:
         if context.google_drive is None:
@@ -191,11 +196,12 @@ def get_archiver_builder() -> Callable[[], Archiver]:
     """
 
     if context.archiver is not None:
-        return lambda: context.archiver
+        archiver = context.archiver
+        return lambda: archiver
 
     report_builder = get_report_builder()
-    path_work_dir = env_utils.existing_path(EnvVars.PATH_WORK_DIR)
-    job_uuid = env_utils.not_empty_string(EnvVars.JOB_UUID)
+    path_work_dir = env_utils.existing_path(ConfigEnvVars.PATH_WORK_DIR)
+    job_uuid = env_utils.not_empty_string(ConfigEnvVars.JOB_UUID)
 
     def builder() -> Archiver:
         if context.archiver is None:
@@ -214,16 +220,17 @@ def get_cluster_maintenance_builder() -> Callable[[], ClusterMaintenance]:
     """
 
     if context.cluster_maintenance is not None:
-        return lambda: context.cluster_maintenance
+        cluster_maintenance = context.cluster_maintenance
+        return lambda: cluster_maintenance
 
     report_builder = get_report_builder()
     k8s_api_builder = get_kubernetes_api_builder()
-    maintenance_namespace = env_utils.not_empty_string(EnvVars.MAINTENANCE_NAMESPACE)
-    maintenance_ingress_name = env_utils.not_empty_string(EnvVars.MAINTENANCE_INGRESS_NAME)
-    maintenance_ingress_class_name = env_utils.not_empty_string(EnvVars.MAINTENANCE_INGRESS_CLASS_NAME)
-    maintenance_config_map_name = env_utils.not_empty_string(EnvVars.MAINTENANCE_CONFIG_MAP_NAME)
-    maintenance_config_map_key = env_utils.not_empty_string(EnvVars.MAINTENANCE_CONFIG_MAP_KEY)
-    maintenance_config_map_value = env_utils.not_empty_string(EnvVars.MAINTENANCE_CONFIG_MAP_VALUE)
+    maintenance_namespace = env_utils.not_empty_string(ConfigEnvVars.MAINTENANCE_NAMESPACE)
+    maintenance_ingress_name = env_utils.not_empty_string(ConfigEnvVars.MAINTENANCE_INGRESS_NAME)
+    maintenance_ingress_class_name = env_utils.not_empty_string(ConfigEnvVars.MAINTENANCE_INGRESS_CLASS_NAME)
+    maintenance_config_map_name = env_utils.not_empty_string(ConfigEnvVars.MAINTENANCE_CONFIG_MAP_NAME)
+    maintenance_config_map_key = env_utils.not_empty_string(ConfigEnvVars.MAINTENANCE_CONFIG_MAP_KEY)
+    maintenance_config_map_value = env_utils.not_empty_string(ConfigEnvVars.MAINTENANCE_CONFIG_MAP_VALUE)
 
     def builder() -> ClusterMaintenance:
         if context.cluster_maintenance is None:
@@ -258,7 +265,8 @@ def get_kubernetes_api_builder() -> Callable[[], KubernetesApi]:
     """
 
     if context.kubernetes_api is not None:
-        return lambda: context.kubernetes_api
+        kubernetes_api = context.kubernetes_api
+        return lambda: kubernetes_api
 
     report_builder = get_report_builder()
 

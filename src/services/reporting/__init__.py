@@ -1,1 +1,1 @@
-from .reporting import Report
+from .reporting import Report as Report

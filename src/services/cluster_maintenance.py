@@ -5,9 +5,10 @@ to a custom maintenance page.
 """
 import time
 from contextlib import AbstractContextManager
+from typing import Any, Optional
 
-from services.kubernetes_api import KubernetesApi, KubernetesConfigMapValueRef, KubernetesIngressRef
-from services.reporting import Report
+from .kubernetes_api import KubernetesApi, KubernetesConfigMapValueRef, KubernetesIngressRef
+from .reporting import Report
 
 
 class MaintenanceDetails:
@@ -41,7 +42,7 @@ class MaintenanceDetails:
         """
         return self._ingress_class_name
 
-    def config_map_value_ref(self):
+    def config_map_value_ref(self) -> KubernetesConfigMapValueRef:
         """Simple getter.
 
         Returns:
@@ -49,7 +50,7 @@ class MaintenanceDetails:
         """
         return self._config_map_value_ref
 
-    def config_map_value(self):
+    def config_map_value(self) -> str:
         """Simple getter.
 
         Returns:
@@ -58,7 +59,7 @@ class MaintenanceDetails:
         return self._config_map_value
 
 
-class ClusterMaintenance(AbstractContextManager):
+class ClusterMaintenance(AbstractContextManager[None]):
     """Context manager for maintenance mode.
 
     When entering the context, the maintenance mode is set up.
@@ -72,10 +73,10 @@ class ClusterMaintenance(AbstractContextManager):
                                              default_status_level="NOTIFY")
         self._k8s_api = k8s_api
         self._details = maintenance_details
-        self._original_config_map_value = None
-        self._original_ingress_class_name = None
+        self._original_config_map_value: Optional[str] = None
+        self._original_ingress_class_name: Optional[str] = None
 
-    def __enter__(self):
+    def __enter__(self) -> None:
         self._report.set_status("MaintenanceModeON")
         self._original_config_map_value = self._k8s_api.get_config_map_value(self._details.config_map_value_ref())
         self._original_ingress_class_name = self._k8s_api.get_ingress_class_name(self._details.ingress_ref())
@@ -83,7 +84,7 @@ class ClusterMaintenance(AbstractContextManager):
         self._k8s_api.set_ingress_class_name(self._details.ingress_ref(), self._details.ingress_class_name())
         time.sleep(5)
 
-    def __exit__(self, *_):
+    def __exit__(self, exec_type: Any, exec_value: Any,  traceback: Any) -> None:
         self._report.set_status("MaintenanceModeOFF")
         self._k8s_api.set_config_map_value(self._details.config_map_value_ref(), self._original_config_map_value)
         self._k8s_api.set_ingress_class_name(self._details.ingress_ref(), self._original_ingress_class_name)

@@ -3,10 +3,11 @@ from pathlib import Path
 
 from services.cqlsh_commands import CqlshCommands
 from services.reporting import Report
-from tasks.common import OnPathDirMissing, TaskCassandra
+from ..common.cassandra import Cassandra as CommonCassandra
+from ..common.task import OnPathDirMissing
 
 
-class TaskRestoreCassandra(TaskCassandra):
+class Cassandra(CommonCassandra):
     """Restoration subtask for cassandra.
 
     Use cqlsh_commands to restore keyspaces from DDL files and tables data from CSV files.
@@ -16,8 +17,8 @@ class TaskRestoreCassandra(TaskCassandra):
             report: Report,
             path_work_dir: Path,
             cqlsh_commands: CqlshCommands,
-            keyspaces: [str],
-            tables: [str],
+            keyspaces: list[str],
+            tables: list[str],
             overwrite: bool
     ):
         super().__init__(path_work_dir, cqlsh_commands, keyspaces, tables)
@@ -25,7 +26,7 @@ class TaskRestoreCassandra(TaskCassandra):
         self._report = report.get_sub_report("RestoreCassandra", default_status_level="NOTIFY",
                                              init_status="ComponentInitialized")
 
-    def run(self):
+    def run(self) -> None:
         """Run the task."""
         self._report.set_status("Running")
 
@@ -51,7 +52,7 @@ class TaskRestoreCassandra(TaskCassandra):
 
         self._report.set_status("Done")
 
-    def task_path_dir_and_archive_item(self):
+    def task_path_dir_and_archive_item(self) -> tuple[Path, str]:
         """Simple getter.
 
         Returns:

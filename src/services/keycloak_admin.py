@@ -2,10 +2,10 @@
 import datetime
 import json
 import urllib.request
-from typing import Any
+from typing import Any, Optional
 
-from services.oidc_client import OidcClient, OidcClientConfig
-from services.reporting import Report
+from .oidc_client import OidcClient, OidcClientConfig
+from .reporting import Report
 
 
 class KeycloakAdminCredentials:
@@ -63,14 +63,14 @@ class TokensManager:
         self._username = username
         self._password = password
         self._oidc_client = oidc_client
-        self._access_token = None
-        self._access_token_expire_at = None
-        self._refresh_token = None
-        self._refresh_token_expire_at = None
+        self._access_token: Optional[str] = None
+        self._access_token_expire_at: Optional[float] = None
+        self._refresh_token: Optional[str] = None
+        self._refresh_token_expire_at: Optional[float] = None
         self._expiration_threshold = expiration_threshold
         self._report = report.get_sub_report(task="TokensManager", init_status="ComponentInitialized")
 
-    def get_access_token(self):
+    def get_access_token(self) -> str:
         """Get an access token.
 
         If access token has expired or is about to (according to expiration_threshold), refresh tokens using the refresh
@@ -79,16 +79,20 @@ class TokensManager:
         """
         report = self._report.get_sub_report(task="get_access_token", init_status="in function")
         now = datetime.datetime.now().timestamp()
-        if self._access_token is None or self._access_token_expire_at is None or self._access_token_expire_at < now:
-            if self._refresh_token is None or self._refresh_token_expire_at < now:
+        if self._access_token is None or self._access_token_expire_at is None \
+                or self._access_token_expire_at < now:
+            if self._refresh_token is None or self._refresh_token_expire_at is None \
+                    or self._refresh_token_expire_at < now:
                 report.notify("refresh_token missing or expired : need new tokens")
                 self._grant_password_tokens()
             else:
                 report.notify("access_token missing or expired : refreshing tokens")
                 self._refresh_tokens()
+        if self._access_token is None:
+            raise RuntimeError("Unable to obtain access token")
         return self._access_token
 
-    def _grant_password_tokens(self):
+    def _grant_password_tokens(self) -> None:
         report = self._report.get_sub_report(task="grant_password_tokens", init_status="in function")
 
         report.debug("calling OidcClient")
@@ -98,17 +102,19 @@ class TokensManager:
         self._store_tokens(tokens)
         report.debug("done")
 
-    def _refresh_tokens(self):
+    def _refresh_tokens(self) -> None:
         report = self._report.get_sub_report(task="refresh_tokens", init_status="in function")
 
         report.debug("calling OidcClient")
+        if self._refresh_token is None:
+            raise RuntimeError("Unable to refresh tokens, no refresh_token")
         tokens = self._oidc_client.refresh_tokens(self._refresh_token)
 
         report.debug("caching tokens")
         self._store_tokens(tokens)
         report.debug("done")
 
-    def _store_tokens(self, tokens: Any):
+    def _store_tokens(self, tokens: Any) -> None:
         self._access_token = tokens["access_token"]
         self._refresh_token = tokens["refresh_token"]
 
@@ -140,7 +146,7 @@ class KeycloakAdmin:
         )
         self._report = sub_report
 
-    def system_info(self):
+    def system_info(self) -> Any:
         """Retrieve keycloak instance system infos."""
         report = self._report.get_sub_report("system_info", init_status="in function")
         endpoint = f"{self._base_url}/admin/serverinfo"

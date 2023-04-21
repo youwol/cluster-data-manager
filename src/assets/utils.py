@@ -1,12 +1,16 @@
 """Assets service functions."""
 import importlib.resources
 import shutil
+from enum import Enum
 from pathlib import Path
 
-from services.assets.enum_assets import Assets
+
+class Assets(Enum):
+    """Enumeration of the available assets."""
+    KC_EXPORT_SH = "kc_export.sh"
 
 
-def copy_file(asset: Assets, destination: Path):
+def copy_to_file(asset: Assets, destination: Path) -> None:
     """Copy asset to destination.
 
     Args:

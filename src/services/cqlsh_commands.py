@@ -2,9 +2,9 @@
 import datetime
 import subprocess
 from pathlib import Path
-from typing import Optional
+from typing import Any, Callable, Optional
 
-from services.reporting import Report
+from .reporting import Report
 
 MSG_INVALID_REQUEST_COL_IDX_TOKEN = 'InvalidRequest: Error from server: code=2200 [Invalid query] message="Unknown ' \
                                     'column name detected in CREATE MATERIALIZED VIEW statement: idx_token"'
@@ -16,7 +16,7 @@ class CqlInstance:
     def __init__(self, host: Optional[str]):
         self._host = host
 
-    def get_host(self) -> str:
+    def get_host(self) -> Optional[str]:
         """Simple getter.
 
         Returns:
@@ -24,7 +24,7 @@ class CqlInstance:
         """
         return self._host
 
-    def as_args_array(self) -> [str]:
+    def as_args_array(self) -> list[str]:
         """Data as an array that can be passed as arguments to a subprocess call.
 
         Returns:
@@ -72,7 +72,7 @@ class CqlshCommands:
         report.set_status(f"Result: {out}")
         return result
 
-    def backup_ddl(self, keyspace: str, path_file: Path):
+    def backup_ddl(self, keyspace: str, path_file: Path) -> None:
         """Dump the Data Description Langage script for a keyspace into a file.
 
         Run statement 'DESCRIBE <keyspace>;' with full consistency and write process stdout into the file.
@@ -94,7 +94,7 @@ class CqlshCommands:
         path_file.write_text("".join(out.splitlines(keepends=True)[1:]))
         report.set_status("Done")
 
-    def restore_ddl(self, keyspace: str, path_file: Path, drop_if_exists=False):
+    def restore_ddl(self, keyspace: str, path_file: Path, drop_if_exists: bool = False) -> None:
         """Execute a Data Description Langage script from a file.
 
         Run statements from a file to restore a keyspace, and check the keyspace restored.
@@ -142,7 +142,7 @@ class CqlshCommands:
             raise RuntimeError(f"Failure {out}")
         report.set_status("Done")
 
-    def backup_table(self, table: str, path_file: Path):
+    def backup_table(self, table: str, path_file: Path) -> None:
         """Dump table data in CSV format into a file.
 
         Run statement 'COPY <table> TO STDOUT;' with full consistency and write process stdout into the file.
@@ -168,7 +168,7 @@ class CqlshCommands:
         count = 0
         last_message_timestamp = datetime.datetime.now().timestamp()
 
-        def on_line(line: str):
+        def on_line(line: str) -> None:
             now = datetime.datetime.now().timestamp()
             nonlocal last_message_timestamp
             nonlocal count
@@ -188,7 +188,7 @@ class CqlshCommands:
         path_file.write_text("".join(out.splitlines(keepends=True)[1:]))
         report.set_status("Done")
 
-    def restore_table(self, table: str, path_file: Path, truncate=False):
+    def restore_table(self, table: str, path_file: Path, truncate: bool = False) -> None:
         """Restore table data from a file in CSV format.
 
         Run statement 'COPY <table> FROM STDIN' with full consistency, sending file content to process stdin.
@@ -201,6 +201,7 @@ class CqlshCommands:
         Args:
             table (str): name of the table.
             path_file (Path): input file.
+            truncate (bool): if provided and True, the table will be truncated before copying data
         """
         report = self._report.get_sub_report(f"restore_table_{table}", init_status="in function")
         report.debug(f"will take data from file {path_file}")
@@ -241,7 +242,7 @@ class CqlshCommands:
         count_str = lines[4].strip()
         return int(count_str)
 
-    def _run_command(self, report: Report, cql: str, stdin: Optional[str] = None):
+    def _run_command(self, report: Report, cql: str, stdin: Optional[str] = None) -> tuple[int, Any, Any]:
         report = report.get_sub_report("__run_command", init_status="in function")
         args = []
         if stdin is None:
@@ -256,11 +257,16 @@ class CqlshCommands:
         report.debug(f"err={result.stderr}")
         return result.returncode, result.stdout, result.stderr
 
-    def _run_command_with_handler(self, report: Report, cql: str, on_line):
+    def _run_command_with_handler(self, report: Report, cql: str, on_line: Callable[[str], None]) -> None:
         report = report.get_sub_report("__run_command_with_handler", init_status="in function")
         report.debug(f"cql={cql}")
         with subprocess.Popen([*self._cqlsh, *self._instance.as_args_array(), "-e", cql],
                               stdout=subprocess.PIPE) as popen:
+            if popen.stdout is None:
+                msg = "no stdout piping when running command"
+                report.fatal(msg)
+                raise RuntimeError(msg)
+
             for line in popen.stdout:
                 on_line(line.decode('utf8'))
 

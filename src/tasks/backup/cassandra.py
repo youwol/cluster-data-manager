@@ -1,12 +1,13 @@
 """Main class for the backup task of cassandra."""
 from pathlib import Path
+from typing import Any
 
 from services.cqlsh_commands import CqlshCommands
 from services.reporting import Report
-from tasks.common import OnPathDirMissing, TaskCassandra
+from ..common import CommonCassandra, OnPathDirMissing
 
 
-class TaskBackupCassandra(TaskCassandra):
+class Cassandra(CommonCassandra):
     """Subtask for backup cassandra.
 
     Dump the keyspaces DDL and the tables data in CSV format.
@@ -15,13 +16,13 @@ class TaskBackupCassandra(TaskCassandra):
     def __init__(self, report: Report,
                  path_work_dir: Path,
                  cqlsh_commands: CqlshCommands,
-                 keyspaces: [str],
-                 tables: [str]):
+                 keyspaces: list[str],
+                 tables: list[str]):
         super().__init__(path_work_dir, cqlsh_commands, keyspaces, tables)
         self._report = report.get_sub_report("BackupCassandra", default_status_level="NOTIFY",
                                              init_status="ComponentInitialized")
 
-    def run(self):
+    def run(self) -> None:
         """Run the task"""
         self._report.set_status("Running")
 
@@ -53,7 +54,7 @@ class TaskBackupCassandra(TaskCassandra):
         """
         return self._task_path_dir_and_archive_item(OnPathDirMissing.CREATE)
 
-    def metadata(self):
+    def metadata(self) -> Any:
         """Simple getter
 
         Returns:

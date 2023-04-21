@@ -8,7 +8,7 @@ class WithStatus:
     def get_status(self) -> str:
         raise NotImplementedError("WithStatus is abstract")
 
-    def get_parents_tasks(self) -> [str]:
+    def get_parents_tasks(self) -> list[str]:
         raise NotImplementedError("WithStatus is abstract")
 
 
@@ -37,7 +37,7 @@ class Report(WithStatus):
             reporting: ReportHandler,
             task: str,
             default_status_level: str = "DEBUG",
-            parents_tasks: [str] = None
+            parents_tasks: Optional[list[str]] = None
     ):
         self._tasks = [*(parents_tasks if parents_tasks is not None else []), task]
         self._reporting = reporting
@@ -59,16 +59,16 @@ class Report(WithStatus):
     def get_parents_tasks(self):
         return self._tasks
 
-    def notify(self, msg: str):
+    def notify(self, msg: str) -> None:
         self._reporting.notify(self, msg)
 
-    def debug(self, msg: str):
+    def debug(self, msg: str) -> None:
         self._reporting.debug(self, msg)
 
-    def warning(self, msg: str):
+    def warning(self, msg: str) -> None:
         self._reporting.warning(self, msg)
 
-    def fatal(self, msg: str):
+    def fatal(self, msg: str) -> None:
         self._reporting.fatal(self, msg)
 
     def get_sub_report(self, task: str, init_status: str = "Starting", default_status_level: str = "DEBUG"):
@@ -80,15 +80,15 @@ class Reporting(ReportHandler):
 
     def __init__(self, path_log_file: Path, initial_task: str):
         self._path_log_file = path_log_file
-        self._current_report = None
         self._root_report = Report(init_status="Starting", reporting=self, task=initial_task,
                                    default_status_level="NOTIFY")
+        self._current_report = self._root_report
         self.set_current_report(self._root_report)
 
-    def set_current_report(self, report: Report):
+    def set_current_report(self, report: WithStatus):
         self._current_report = report
 
-    def get_root_report(self):
+    def get_root_report(self) -> Report:
         return self._root_report
 
     def notify(self, report: WithStatus, msg: str = ""):

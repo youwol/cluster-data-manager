@@ -2,7 +2,7 @@
 from enum import Enum
 
 
-class EnvVars(Enum):
+class EnvironmentVars(Enum):
     """Environment variables names."""
     # Jobs
     JOB_UUID = "JOB_UUID"

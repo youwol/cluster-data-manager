@@ -2,4 +2,6 @@
 
 Only export a getter for an instance of TaskBackup
 """
-from tasks.backup.tasks import get_task_backup
+from .builder import build as build_task_backup
+
+__all__ = ['build_task_backup']

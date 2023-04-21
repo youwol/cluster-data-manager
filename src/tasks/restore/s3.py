@@ -3,21 +3,30 @@ from pathlib import Path
 
 from services.mc_commands import McCommands
 from services.reporting import Report
-from tasks.common import OnPathDirMissing, TaskS3
+from ..common.s3 import S3 as CommonS3
+from ..common.task import OnPathDirMissing
 
 
-class TaskRestoreS3(TaskS3):
+class S3(CommonS3):
     """Restoration subtask for S3.
 
     Will use mc_commands to mirror local bucket to cluster S3 instance.
     """
-    def __init__(self, report: Report, path_work_dir: Path, mc_commands: McCommands, buckets: [str], overwrite: bool):
+
+    def __init__(
+            self,
+            report: Report,
+            path_work_dir: Path,
+            mc_commands: McCommands,
+            buckets: list[str],
+            overwrite: bool
+    ):
         super().__init__(path_work_dir, mc_commands, buckets)
         self._overwrite = overwrite
         self._report = report.get_sub_report("RestoreS3", default_status_level="NOTIFY",
                                              init_status="ComponentInitialized")
 
-    def run(self):
+    def run(self) -> None:
         """Run the task."""
         mc_commands = self._mc_commands
         self._report.debug(f"buckets={self._buckets}")
@@ -31,7 +40,7 @@ class TaskRestoreS3(TaskS3):
         mc_commands.set_reporter(self._report)
         mc_commands.stop_local()
 
-    def task_path_dir_and_archive_item(self):
+    def task_path_dir_and_archive_item(self) -> tuple[Path, str]:
         """Simple getter.
 
         Return:

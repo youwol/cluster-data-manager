@@ -9,8 +9,8 @@ from googleapiclient.http import MediaFileUpload, MediaIoBaseDownload
 from pathlib import Path
 from typing import Any, Optional
 
-from services.oidc_client import OidcClient
-from services.reporting import Report
+from .oidc_client import OidcClient
+from .reporting import Report
 
 PAGESIZE = 50
 
@@ -18,7 +18,7 @@ PAGESIZE = 50
 class NonUniqResult(RuntimeError):
     """Simple RuntimeError for multiple results when at most one is expected."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__("Non uniq result")
 
 
@@ -30,7 +30,7 @@ class FileInformation:
         self._name = name
         self._mime_type = mime_type
 
-    def file_id(self):
+    def file_id(self) -> str:
         """Sinple getter.
 
         Returns:
@@ -38,7 +38,7 @@ class FileInformation:
         """
         return self._file_id
 
-    def name(self):
+    def name(self) -> str:
         """Simple getter.
 
         Returns:
@@ -55,11 +55,11 @@ class GoogleDrive:
         self._report = report.get_sub_report(task="GoogleDrive", init_status="InitializingComponent")
         self._drive_id = drive_id
         self._oidc_client = oidc_client
-        self._service = None
+        self._service: Optional[Any] = None
         self._report.notify(f"Using drive_id {drive_id}")
         self._report.set_status("ComponentInitialized")
 
-    def account(self) -> dict:
+    def account(self) -> Any:
         """Simple getter.
 
         Returns:
@@ -150,7 +150,7 @@ class GoogleDrive:
         except HttpError as error:
             raise RuntimeError(f"listing drive archives failed with HttpError : {error}") from error
 
-    def upload(self, path_local_file: Path, file_name: str, folder_name: str):
+    def upload(self, path_local_file: Path, file_name: str, folder_name: str) -> None:
         """Upload a local file to a drive file into a drive folder.
 
         Args:
@@ -195,7 +195,7 @@ class GoogleDrive:
             report.fatal(f"HTTP error '{error}'")
             raise RuntimeError(f"upload file failed with HttpError: {error}") from error
 
-    def download(self, file_id: str, path_file: Path):
+    def download(self, file_id: str, path_file: Path) -> None:
         """Download a drive file into a local file.
 
         Args:
@@ -205,8 +205,8 @@ class GoogleDrive:
         report = self._report.get_sub_report("download", init_status="in function")
         try:
             # pylint: disable=maybe-no-member
-            request = self._service.files().get_media(fileId=file_id)
-            io_file = io.FileIO(file=path_file, mode="x")
+            request = self._get_service().files().get_media(fileId=file_id)
+            io_file = io.FileIO(file=str(path_file), mode="x")
             downloader = MediaIoBaseDownload(fd=io_file, request=request)
 
             done = False
@@ -262,7 +262,7 @@ class GoogleDrive:
 
         return archive_id
 
-    def _list_files(self, request: str, page_token=None) -> tuple[list[FileInformation], str]:
+    def _list_files(self, request: str, page_token: Optional[str] = None) -> tuple[list[FileInformation], str]:
         # pylint: disable=maybe-no-member
         results = self._get_service().files().list(
             q=request,

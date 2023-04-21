@@ -4,9 +4,9 @@ import json
 import subprocess
 import time
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable, Optional
 
-from services.reporting import Report
+from .reporting import Report
 
 
 class S3Credentials:
@@ -36,7 +36,7 @@ class S3Credentials:
 class S3Instance:
     """Represent a S3 service to connect to."""
 
-    def __init__(self, credentials: S3Credentials, host: str, tls: bool = True, port: int = "9000"):
+    def __init__(self, credentials: S3Credentials, host: str, tls: bool = True, port: int = 9000):
         self._credentials = credentials
         self._host = host
         self._tls = tls
@@ -62,7 +62,7 @@ class S3Instance:
 class MinioLocalInstance(S3Instance):
     """Represent a local S3 service to connect, with host hardcoded to localhost."""
 
-    def __init__(self, access_key, secret_key, port: int):
+    def __init__(self, access_key: str, secret_key: str, port: int):
         super().__init__(credentials=S3Credentials(access_key, secret_key), host="localhost", tls=False, port=port)
 
 
@@ -130,27 +130,27 @@ class McCommands:
 
         result = {}
 
-        def on_success(json_doc):
+        def on_success(json_doc: Any) -> None:
             nonlocal result
             result = json_doc["info"]
 
         self._run_command(report, "admin", "info", McCommands.ALIAS_CLUSTER, on_success=on_success)
         return result
 
-    def _setup_aliases(self):
+    def _setup_aliases(self) -> None:
         self._mc_alias(McCommands.ALIAS_LOCAL, self._local)
         self._mc_alias(McCommands.ALIAS_CLUSTER, self._cluster)
         self._aliases_setup_done = True
 
-    def _need_aliases(self):
+    def _need_aliases(self) -> None:
         if not self._aliases_setup_done:
             self._setup_aliases()
 
-    def set_reporter(self, report: Report):
+    def set_reporter(self, report: Report) -> None:
         """TODO: to be removed"""
         self._report = report.get_sub_report(task="McCommands", init_status=report.get_status())
 
-    def backup_bucket(self, bucket: str):
+    def backup_bucket(self, bucket: str) -> None:
         """Mirror a cluster instance bucket locally.
 
         Args:
@@ -169,7 +169,7 @@ class McCommands:
 
         report.set_status("exit function")
 
-    def restore_bucket(self, bucket: str, remove_existing_bucket=False):
+    def restore_bucket(self, bucket: str, remove_existing_bucket: bool = False) -> None:
         """Mirror a local bucket into the cluster instance.
 
         If remove_existing_bucket is provided and True, the cluster instance bucket will be removed first.
@@ -194,14 +194,14 @@ class McCommands:
 
         report.set_status("exit function")
 
-    def stop_local(self):
+    def stop_local(self) -> None:
         """Stop the local minio instance."""
         self._need_aliases()
         report = self._report.get_sub_report("stop_local", init_status="in function")
         self._run_command(report, "admin", "service", "stop", McCommands.ALIAS_LOCAL)
         report.set_status("exit function")
 
-    def _mirror_buckets(self, report: Report, source: str, target: str):
+    def _mirror_buckets(self, report: Report, source: str, target: str) -> None:
         self._need_aliases()
         report = report.get_sub_report("MirrorBucket", init_status="in function")
 
@@ -211,7 +211,7 @@ class McCommands:
 
         last_message_timestamp = datetime.datetime.now().timestamp()
 
-        def on_success_mirror(json_doc: Any):
+        def on_success_mirror(json_doc: Any) -> None:
             # report.debug(f"json={json}")
             nonlocal last_message_timestamp
             now = datetime.datetime.now().timestamp()
@@ -240,12 +240,12 @@ class McCommands:
 
         report.set_status("exit function")
 
-    def _du_bucket(self, report: Report, bucket: str) -> tuple[str, str]:
+    def _du_bucket(self, report: Report, bucket: str) -> tuple[int, int]:
 
         bucket_size = 0
         bucket_objects = 0
 
-        def on_success_du(json_doc: Any):
+        def on_success_du(json_doc: Any) -> None:
             nonlocal bucket_size
             nonlocal bucket_objects
             report.debug(f"json={json_doc}")
@@ -255,7 +255,7 @@ class McCommands:
         self._run_command(report, "du", "--versions", bucket, on_success=on_success_du)
         return bucket_objects, bucket_size
 
-    def du_cluster_bucket(self, bucket: str) -> tuple[str, str]:
+    def du_cluster_bucket(self, bucket: str) -> tuple[int, int]:
         """Run disk usage for cluster bucket
 
         Args:
@@ -268,7 +268,7 @@ class McCommands:
         report.debug("done")
         return result
 
-    def _mc_alias(self, alias: str, instance: S3Instance):
+    def _mc_alias(self, alias: str, instance: S3Instance) -> None:
         report = self._report.get_sub_report(f"_mc_alias_{alias}", init_status="in function")
         self._run_command(
             report,
@@ -278,22 +278,26 @@ class McCommands:
         )
         report.set_status("exit function")
 
-    def _run_command(self, report: Report, *args, on_success=None):
+    def _run_command(self, report: Report, *args: str, on_success: Optional[Callable[[Any], None]] = None) -> None:
         report = report.get_sub_report("_run_command", init_status="in function")
         report.debug(f"args={args}")
         with subprocess.Popen([self._path_mc, '--json', '--config-dir', self._path_mc_config, *args],
                               stdout=subprocess.PIPE) as popen:
+            if popen.stdout is None:
+                msg = "no stdout piping when running command"
+                report.fatal(msg)
+                raise RuntimeError(msg)
             for line in popen.stdout:
                 # report.debug(f"line={line}")
                 json_doc = json.loads(line)
                 status = json_doc['status']
                 if status == 'error':
-                    report.fatal(f"{line}")
+                    report.fatal(f"{line!r}")
                     raise RuntimeError(f"failure when running mc command : {json_doc['error']}")
                 if status == 'success':
                     if on_success is not None:
                         on_success(json_doc)
                 else:
-                    raise RuntimeError(f"Unknown status in mc output : {line}")
+                    raise RuntimeError(f"Unknown status in mc output : {line!r}")
 
         report.set_status("exit function")

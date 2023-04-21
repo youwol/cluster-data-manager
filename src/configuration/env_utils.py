@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 from pathlib import Path
 from typing import Optional
 
-from configuration.env_vars import EnvVars
+from .env_vars import EnvironmentVars
 
 TRUE_STRINGS = ['true', 'True', 'yes', 'y']
 FALSE_STRINGS = ['false', 'False', 'no', 'n']
@@ -16,46 +16,46 @@ load_dotenv()
 class FileCreationError(RuntimeError):
     """Simple RuntimeError for file creation failure"""
 
-    def __init__(self, msg):
+    def __init__(self, msg: str):
         super().__init__(msg)
 
 
 class EnvVarNotSet(RuntimeError):
     """Simple RuntimeError for environment variable not set."""
 
-    def __init__(self, env_name: EnvVars):
+    def __init__(self, env_name: EnvironmentVars):
         super().__init__(f"Env {env_name.value} not set")
 
 
 class EnvVarEmpty(RuntimeError):
     """Simple RuntimeError for environment variable is an empty string once stripped."""
 
-    def __init__(self, env_name: EnvVars):
+    def __init__(self, env_name: EnvironmentVars):
         super().__init__(f"Env {env_name.value} set but empty once striped")
 
 
 class DirNotEmptyError(RuntimeError):
     """Simple RuntimeError for an expected empty dir containing entries."""
 
-    def __init__(self, env_name: EnvVars, dir_path: Path):
+    def __init__(self, env_name: EnvironmentVars, dir_path: Path):
         super().__init__(f"Directory {dir_path} defined in env {env_name.value} is not empty")
 
 
 class BooleanParsingError(RuntimeError):
     """Simple RuntimeError for an environment variable expected to be a boolean but not parsable"""
 
-    def __init__(self, env_name: EnvVars, value: str):
+    def __init__(self, env_name: EnvironmentVars, value: str):
         super().__init__(f"Env {env_name.value} value '{value}' could not be parse as a boolean")
 
 
 class IntegerParsingError(RuntimeError):
     """Simple RuntimeError for an environment variable expected to be an integer but not parsable"""
 
-    def __init__(self, env_name: EnvVars, value: str):
+    def __init__(self, env_name: EnvironmentVars, value: str):
         super().__init__(f"Env {env_name.value} value '{value}' could not be parse as an integer")
 
 
-def file(env_name: EnvVars) -> Path:
+def file(env_name: EnvironmentVars) -> Path:
     """Get a Path from an environment variable.
 
     Args:
@@ -71,7 +71,7 @@ def file(env_name: EnvVars) -> Path:
     return Path(not_empty_string(env_name))
 
 
-def creating_file(env_name: EnvVars) -> Path:
+def creating_file(env_name: EnvironmentVars) -> Path:
     """Get a Path to a new file from an environment variable.
 
     Args:
@@ -98,7 +98,7 @@ def creating_file(env_name: EnvVars) -> Path:
     return result
 
 
-def existing_path(env_name: EnvVars) -> Path:
+def existing_path(env_name: EnvironmentVars) -> Path:
     """Get a Path to an existing file from an environment variable.
 
     Args:
@@ -120,7 +120,7 @@ def existing_path(env_name: EnvVars) -> Path:
     return result
 
 
-def non_existing_path(env_name: EnvVars) -> Path:
+def non_existing_path(env_name: EnvironmentVars) -> Path:
     """Get a Path to a non-existing file from an environment variable.
 
     Args:
@@ -142,7 +142,7 @@ def non_existing_path(env_name: EnvVars) -> Path:
     return result
 
 
-def empty_dir(env_name: EnvVars) -> Path:
+def empty_dir(env_name: EnvironmentVars) -> Path:
     """Get a Path to an empty dir from an environment variable.
 
     Args:
@@ -162,7 +162,7 @@ def empty_dir(env_name: EnvVars) -> Path:
     return result
 
 
-def not_empty_string(env_name: EnvVars) -> str:
+def not_empty_string(env_name: EnvironmentVars) -> str:
     """Get a non empty string from an environment variable.
 
     Args:
@@ -186,7 +186,7 @@ def not_empty_string(env_name: EnvVars) -> str:
     return result
 
 
-def maybe_string(env_name: EnvVars, default: Optional[str] = None) -> Optional[str]:
+def maybe_string(env_name: EnvironmentVars, default: Optional[str] = None) -> Optional[str]:
     """Get a string from an environment variable or the default if not set.
 
     If not provided default is None.
@@ -207,7 +207,7 @@ def maybe_string(env_name: EnvVars, default: Optional[str] = None) -> Optional[s
     return result
 
 
-def boolean(env_name: EnvVars, default: Optional[bool] = None) -> bool:
+def boolean(env_name: EnvironmentVars, default: Optional[bool] = None) -> bool:
     """Get a boolean from an environment variable.
 
     True is either 'True', 'true', 'yes' or 'y', after stripping.
@@ -244,7 +244,7 @@ def boolean(env_name: EnvVars, default: Optional[bool] = None) -> bool:
     raise BooleanParsingError(env_name, str_value)
 
 
-def integer(env_name: EnvVars, default: Optional[int] = None) -> int:
+def integer(env_name: EnvironmentVars, default: Optional[int] = None) -> int:
     """Get an integer from an environment variable.
 
     Use str(int(<value>)) == v.strip() to check integer parsing.
@@ -276,7 +276,7 @@ def integer(env_name: EnvVars, default: Optional[int] = None) -> int:
     return int(str_value)
 
 
-def strings_list(env_name: EnvVars, sep: str = ":") -> list[str]:
+def strings_list(env_name: EnvironmentVars, sep: str = ":") -> list[str]:
     """
     TODO: write doc
     Args:
@@ -291,7 +291,7 @@ def strings_list(env_name: EnvVars, sep: str = ":") -> list[str]:
     return [item.strip() for item in string_list.split(sep) if item.strip() != ""]
 
 
-def arg_task_name():
+def arg_task_name() -> str:
     """
     TODO: write doc
     Returns:

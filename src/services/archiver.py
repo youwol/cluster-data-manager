@@ -9,7 +9,7 @@ import uuid
 from pathlib import Path
 from typing import Any
 
-from services.reporting import Report
+from .reporting import Report
 
 
 class ArchiveCreator:
@@ -28,7 +28,7 @@ class ArchiveCreator:
             path_work_dir (Path): path of the working directory, where archive will be created.
             job_uuid (str): job UUID, will be used in the archive name.
         """
-        self._items = {}
+        self._items: dict[str, Path] = {}
         self._job_uuid = job_uuid
         self._path_work_dir = path_work_dir
         self._archive_uuid = str(uuid.uuid4())
@@ -36,10 +36,10 @@ class ArchiveCreator:
         self._metadata = {"version": "v1", "job": self._job_uuid, "archive": self._archive_uuid}
         self._report = report.get_sub_report(f"Archive_{self._archive_uuid}", init_status="ComponentInitialized")
 
-    def _get_path_metadata_file(self):
+    def _get_path_metadata_file(self) -> Path:
         return self._path_work_dir / f"{self._job_uuid}_{self._archive_uuid}_{Archiver.METADATA_FILENAME}"
 
-    def _write_metadata(self):
+    def _write_metadata(self) -> None:
         self._report.get_sub_report("_write_metadata", init_status="in function")
         with open(self._get_path_metadata_file(), mode="tw", encoding="UTF-8") as fp_metadata:
             json.dump(self._metadata, fp=fp_metadata)
@@ -63,7 +63,7 @@ class ArchiveCreator:
         report.set_status("exit function")
         return self._path_archive
 
-    def add_dir_item(self, path_dir: Path, archive_item: str):
+    def add_dir_item(self, path_dir: Path, archive_item: str) -> None:
         """Add a directory entry.
 
         Add a new directory to the archive to be created.
@@ -75,7 +75,7 @@ class ArchiveCreator:
         """
         self.add_file_item(path_file=path_dir, archive_item=archive_item)
 
-    def add_file_item(self, path_file: Path, archive_item: str):
+    def add_file_item(self, path_file: Path, archive_item: str) -> None:
         """Add a file entry.
 
         Add a new file to the archive to be created.
@@ -87,7 +87,7 @@ class ArchiveCreator:
         """
         self._add_item(path=path_file, archive_item=archive_item)
 
-    def add_metadata(self, key: str, metadata: Any):
+    def add_metadata(self, key: str, metadata: Any) -> None:
         """Add a metadata entry.
 
         Add new information to the metadata.
@@ -99,7 +99,7 @@ class ArchiveCreator:
         """
         self._metadata[key] = metadata
 
-    def _add_item(self, path: Path, archive_item: str):
+    def _add_item(self, path: Path, archive_item: str) -> None:
         report = self._report.get_sub_report("_add__item", init_status="in function")
         self._items[archive_item] = path
         report.set_status("exit function")
@@ -123,7 +123,7 @@ class ArchiveExtractor:
         self._path_archive = path_archive
         self._path_work_dir = path_work_dir
 
-    def extract_dir_item(self, archive_item: str):
+    def extract_dir_item(self, archive_item: str) -> None:
         """Extract an item
 
         Will extract the item from the archive into the working directory.
@@ -138,7 +138,7 @@ class ArchiveExtractor:
             item_members = [tarinfo for tarinfo in archive.getmembers() if tarinfo.name.startswith(f"{archive_item}/")]
             archive.extractall(path=self._path_work_dir, members=item_members)
 
-    def metadata(self) -> dict:
+    def metadata(self) -> Any:
         """Metadata.
 
         Not Implemented.

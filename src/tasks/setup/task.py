@@ -4,14 +4,13 @@ import os
 from pathlib import Path
 from typing import Optional
 
-from services import assets
+from assets import KnownAssets, copy_asset_to_file
 from services.archiver import Archiver
-from services.assets import Assets
 from services.google_drive import GoogleDrive
 from services.reporting import Report
 
 
-class KeycloakSetupDetails:
+class KeycloakDetails:
     """Represent details (path to status file, script) for keycloak setup."""
 
     def __init__(self, path_keycloak_status_file: Path, path_keycloak_script: Path):
@@ -35,7 +34,7 @@ class KeycloakSetupDetails:
         return self._path_keycloak_script
 
 
-class TaskSetup:
+class Task:
     """Task setup.
 
     Will download an archive and extract the specified item(s).
@@ -49,8 +48,8 @@ class TaskSetup:
                  path_work_dir: Path,
                  google_drive: GoogleDrive,
                  archiver: Archiver,
-                 extract_items: [str],
-                 keycloak_setup_details: KeycloakSetupDetails = None,
+                 extract_items: list[str],
+                 keycloak_setup_details: Optional[KeycloakDetails] = None,
                  archive_name: Optional[str] = None
                  ):
         self._path_work_dir = path_work_dir
@@ -61,7 +60,7 @@ class TaskSetup:
         self._archive_name = archive_name
         self._report = report.get_sub_report("Setup", default_status_level="NOTIFY", init_status="ComponentInitialized")
 
-    def run(self):
+    def run(self) -> None:
         """Run setup task.
 
         Download archive & extract item(s).
@@ -74,7 +73,7 @@ class TaskSetup:
             self._keycloak_setup_details.path_keycloak_status_file().parent.mkdir(exist_ok=True, parents=True)
             self._keycloak_setup_details.path_keycloak_status_file().write_text("SETUP\n")
             report_kc.debug(f"Copying kc script to '{self._keycloak_setup_details.path_keycloak_script()}'")
-            assets.copy_file(Assets.KC_EXPORT_SH, self._keycloak_setup_details.path_keycloak_script())
+            copy_asset_to_file(KnownAssets.KC_EXPORT_SH, self._keycloak_setup_details.path_keycloak_script())
             report_kc.debug("Done")
 
         if self._archive_name is None:
@@ -82,7 +81,7 @@ class TaskSetup:
         else:
             self._setup_explicit_archive(self._archive_name)
 
-    def _setup_last_archive(self):
+    def _setup_last_archive(self) -> None:
         archives = self._google_drive.list_archives()
 
         if len(archives) == 0:
@@ -93,14 +92,14 @@ class TaskSetup:
         self._report.notify(f"using last archive : {last_archive.name()} ({last_archive.file_id()})")
         self.__setup_archive(last_archive.file_id())
 
-    def _setup_explicit_archive(self, archive_name):
+    def _setup_explicit_archive(self, archive_name: str) -> None:
         archive_id = self._google_drive.get_archive_id(archive_name)
         if archive_id is None:
             raise RuntimeError(f"Archive named {archive_name} not found in Google Drive")
         self._report.notify(f"using archive : {archive_name}, ({archive_id}")
         self.__setup_archive(archive_id)
 
-    def __setup_archive(self, archive_id):
+    def __setup_archive(self, archive_id: str) -> None:
         path_archive = self._path_work_dir / "setup_archive.tgz"
         self._google_drive.download(archive_id, path_file=path_archive)
         archive = self._archiver.existing_archive(path_archive=path_archive)

@@ -2,11 +2,12 @@
 
 Manipulate k8s Ingress className and ConfigMap data entry value.
 """
-from kubernetes import client, config
-from kubernetes.client.rest import ApiException
+from kubernetes import client
+from kubernetes.client.exceptions import ApiException
+from kubernetes.config import load_config
 from typing import Optional
 
-from services.reporting import Report
+from .reporting import Report
 
 
 class KubernetesIngressRef:
@@ -74,8 +75,9 @@ class KubernetesConfigMapValueRef:
 
 class KubernetesApi:
     """Class implementing a service for manipulating k8s Ingress className and ConfigMap data entry value."""
+
     def __init__(self, report: Report):
-        config.load_config()
+        load_config()
         self._report = report.get_sub_report("k8s_api", init_status="ComponentInitialized")
 
     def get_ingress_class_name(self, ingress_ref: KubernetesIngressRef) -> Optional[str]:
@@ -101,12 +103,12 @@ class KubernetesApi:
             report.fatal(msg)
             raise RuntimeError(msg) from error
 
-        result = api_response.spec.ingress_class_name
+        result: Optional[str] = api_response.spec.ingress_class_name
         report.debug(f"Result: {result}")
         return result
 
     def set_ingress_class_name(self, ingress_ref: KubernetesIngressRef,
-                               ingress_class_name: Optional[str]):
+                               ingress_class_name: Optional[str]) -> None:
         """Set or remove an Ingress className.
 
         Args:
@@ -133,7 +135,7 @@ class KubernetesApi:
 
         report.debug("Done")
 
-    def get_config_map_value(self, config_map_value_ref: KubernetesConfigMapValueRef) -> str:
+    def get_config_map_value(self, config_map_value_ref: KubernetesConfigMapValueRef) -> Optional[str]:
         """Get the value of a ConfigMap data entry.
 
         Args:
@@ -156,11 +158,11 @@ class KubernetesApi:
             report.fatal(msg)
             raise RuntimeError(msg) from error
 
-        result = api_response.data[config_map_value_ref.key()]
+        result: Optional[str] = api_response.data[config_map_value_ref.key()]
         report.debug(f"Result: {result}")
         return result
 
-    def set_config_map_value(self, config_map_value_ref: KubernetesConfigMapValueRef, value: str):
+    def set_config_map_value(self, config_map_value_ref: KubernetesConfigMapValueRef, value: Optional[str]) -> None:
         """Set the value of a ConfigMap data entry.
 
         Args:
