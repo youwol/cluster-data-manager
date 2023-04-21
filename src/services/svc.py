@@ -46,7 +46,6 @@ def get_report_builder() -> Callable[[], Report]:
     path_log_file = env_utils.file(EnvVars.PATH_LOG_FILE)
     task_name = env_utils.arg_task_name()
 
-
     def builder() -> Report:
         if context.report is None:
             context.report = Reporting(path_log_file=path_log_file, initial_task=task_name).get_root_report()

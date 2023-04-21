@@ -31,8 +31,14 @@ class ReportHandler:
 
 class Report(WithStatus):
 
-    def __init__(self, init_status: str, reporting: ReportHandler, task: str, default_status_level: str
-    = "DEBUG", parents_tasks: [str] = None, ):
+    def __init__(
+            self,
+            init_status: str,
+            reporting: ReportHandler,
+            task: str,
+            default_status_level: str = "DEBUG",
+            parents_tasks: [str] = None
+    ):
         self._tasks = [*(parents_tasks if parents_tasks is not None else []), task]
         self._reporting = reporting
         self._status = ""

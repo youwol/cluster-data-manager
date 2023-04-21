@@ -67,7 +67,7 @@ class TaskSetup:
         Download archive & extract item(s).
         Create keycloak directory & file status if keycloak_setup_details has been passed.
         """
-        report = self._report.get_sub_report(task="run",init_status="in function")
+        report = self._report.get_sub_report(task="run", init_status="in function")
         if self._keycloak_setup_details is not None:
             report_kc = report.get_sub_report("setup keycloak", init_status="in block")
             report_kc.debug(f"Set up status file '{self._keycloak_setup_details.path_keycloak_status_file()}'")
