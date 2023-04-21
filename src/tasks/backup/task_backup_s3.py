@@ -22,6 +22,7 @@ class TaskBackupS3(TaskS3):
 
         Run disk usage for cluster buckets to fill cache on instance.
         """
+        self._report.debug(f"disk usage cluster buckets: {self._buckets}")
         for bucket in self._buckets:
             bucket_report = self._report.get_sub_report(f"disk_usage_{bucket}", default_status_level="NOTIFY")
             self._mc_commands.set_reporter(bucket_report)
@@ -32,8 +33,8 @@ class TaskBackupS3(TaskS3):
     def run(self):
         """Run the task."""
         mc_commands = self._mc_commands
-        self._report.debug(f"buckets={self._buckets}")
 
+        self._report.debug(f"mirroring buckets: {self._buckets}")
         for bucket in self._buckets:
             bucket_report = self._report.get_sub_report(f"backup_minio_{bucket}", default_status_level="NOTIFY")
             mc_commands.set_reporter(bucket_report)

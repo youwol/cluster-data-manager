@@ -23,7 +23,7 @@ class TaskBackupKeycloak(TaskKeycloak):
     def run(self):
         """Run the task.
 
-        Commands are run from another script in keycloak container. This method watch a status file updated by this
+        Commands are run from an other script in keycloak container. This method watch a status file updated by this
         script and wait for the status of the script to be "DONE".
         """
         report = self._report.get_sub_report(task="run", init_status="in function")

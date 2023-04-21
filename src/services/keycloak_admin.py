@@ -46,6 +46,10 @@ class TokensManager:
 
     Take an OidcClient and username/password.
     Will refresh tokens on expiration, or request new tokens if refresh token itself has expired.
+
+    Notes:
+        Actually the expiration_threshold attribute (defaulting to 5 secondes) is used to force refreshing tokens
+        about to expire, so that asking for a token return a token usable during that time.
     """
 
     def __init__(
@@ -69,15 +73,14 @@ class TokensManager:
     def get_access_token(self):
         """Get an access token.
 
-        If access token has expired, refresh tokens using the refresh token.
-        If refresh_token itself has expired, request new tokens using grant password.
+        If access token has expired or is about to (according to expiration_threshold), refresh tokens using the refresh
+        token. If refresh_token itself has expired or is about to (again, according to expiration threshold), request
+        new tokens using grant password.
         """
         report = self._report.get_sub_report(task="get_access_token", init_status="in function")
-        if self._access_token is None \
-                or self._access_token_expire_at is None \
-                or self._access_token_expire_at < datetime.datetime.now().timestamp():
-            if self._refresh_token is None or \
-                    self._refresh_token_expire_at < datetime.datetime.now().timestamp():
+        now = datetime.datetime.now().timestamp()
+        if self._access_token is None or self._access_token_expire_at is None or self._access_token_expire_at < now:
+            if self._refresh_token is None or self._refresh_token_expire_at < now:
                 report.notify("refresh_token missing or expired : need new tokens")
                 self._grant_password_tokens()
             else:
@@ -97,6 +100,7 @@ class TokensManager:
 
     def _refresh_tokens(self):
         report = self._report.get_sub_report(task="refresh_tokens", init_status="in function")
+
         report.debug("calling OidcClient")
         tokens = self._oidc_client.refresh_tokens(self._refresh_token)
 
@@ -105,11 +109,12 @@ class TokensManager:
         report.debug("done")
 
     def _store_tokens(self, tokens: Any):
-        threshold = self._expiration_threshold
         self._access_token = tokens["access_token"]
-        self._access_token_expire_at = datetime.datetime.now().timestamp() + tokens["expires_in"] - threshold
         self._refresh_token = tokens["refresh_token"]
-        self._refresh_token_expire_at = datetime.datetime.now().timestamp() + tokens["refresh_expires_in"] - threshold
+
+        expire_from = datetime.datetime.now().timestamp() - self._expiration_threshold
+        self._access_token_expire_at = expire_from + tokens["expires_in"]
+        self._refresh_token_expire_at = expire_from + tokens["refresh_expires_in"]
 
 
 class KeycloakAdmin:
@@ -139,9 +144,9 @@ class KeycloakAdmin:
         """Retrieve keycloak instance system infos."""
         report = self._report.get_sub_report("system_info", init_status="in function")
         endpoint = f"{self._base_url}/admin/serverinfo"
-        header = {"Authorization": f"Bearer {self._tokens_manager.get_access_token()}"}
+        auth_header = {"Authorization": f"Bearer {self._tokens_manager.get_access_token()}"}
         report.debug(f"Calling endpoint {endpoint}")
-        req = urllib.request.Request(url=endpoint, headers=header)
+        req = urllib.request.Request(url=endpoint, headers=auth_header)
         with urllib.request.urlopen(req) as resp:
             report.debug("decoding response")
             result = json.loads(resp.read().decode())
