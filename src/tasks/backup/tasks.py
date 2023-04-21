@@ -89,7 +89,7 @@ def get_task_backup_keycloak_builder() -> Callable[[], TaskBackupKeycloak]:
     report_builder = get_report_builder()
     path_work_dir = env_utils.existing_path(EnvVars.PATH_WORK_DIR)
     path_keycloak_status_file = env_utils.existing_path(EnvVars.PATH_KEYCLOAK_STATUS_FILE)
-    keycloak_user = env_utils.not_empty_string(EnvVars.KEYCLOAK_USER)
+    keycloak_username = env_utils.not_empty_string(EnvVars.KEYCLOAK_USERNAME)
     keycloak_password = env_utils.not_empty_string(EnvVars.KEYCLOAK_PASSWORD)
     keycloak_base_url = env_utils.not_empty_string(EnvVars.KEYCLOAK_BASE_URL)
 
@@ -98,7 +98,7 @@ def get_task_backup_keycloak_builder() -> Callable[[], TaskBackupKeycloak]:
             report=report_builder(),
             credentials=KeycloakAdminCredentials(
                 realm="master",
-                user=keycloak_user,
+                username=keycloak_username,
                 password=keycloak_password
             ),
             base_url=keycloak_base_url

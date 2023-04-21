@@ -11,9 +11,9 @@ from services.reporting import Report
 class KeycloakAdminCredentials:
     """Represent the credentials (realm, user and password) for keycloak client"""
 
-    def __init__(self, realm: str, user: str, password: str):
+    def __init__(self, realm: str, username: str, password: str):
         self._realm = realm
-        self._user = user
+        self._username = username
         self._password = password
 
     def realm(self) -> str:
@@ -24,13 +24,13 @@ class KeycloakAdminCredentials:
         """
         return self._realm
 
-    def user(self) -> str:
+    def username(self) -> str:
         """Simple getter
 
         Returns:
-            str: the user
+            str: the username
         """
-        return self._user
+        return self._username
 
     def password(self) -> str:
         """Simple getter
@@ -48,8 +48,15 @@ class TokensManager:
     Will refresh tokens on expiration, or request new tokens if refresh token itself has expired.
     """
 
-    def __init__(self, report: Report, user: str, password: str, oidc_client: OidcClient, expiration_threshold: int = 5):
-        self._user = user
+    def __init__(
+            self,
+            report: Report,
+            username: str,
+            password: str,
+            oidc_client: OidcClient,
+            expiration_threshold: int = 5
+    ):
+        self._username = username
         self._password = password
         self._oidc_client = oidc_client
         self._access_token = None
@@ -80,9 +87,9 @@ class TokensManager:
 
     def _grant_password_tokens(self):
         report = self._report.get_sub_report(task="grant_password_tokens", init_status="in function")
+
         report.debug("calling OidcClient")
-        tokens = self._oidc_client.grant_password_tokens(self._user,
-                                                         self._password)
+        tokens = self._oidc_client.grant_password_tokens(self._username, self._password)
 
         report.debug("caching tokens")
         self._store_tokens(tokens)
@@ -115,7 +122,7 @@ class KeycloakAdmin:
         self._base_url = base_url
         self._tokens_manager = TokensManager(
             report=sub_report,
-            user=credentials.user(),
+            username=credentials.username(),
             password=credentials.password(),
             oidc_client=OidcClient(
                 report=sub_report,
