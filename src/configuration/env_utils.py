@@ -288,7 +288,7 @@ def strings_list(env_name: EnvVars, sep: str = ":") -> list[str]:
     """
     string_list = not_empty_string(env_name)
 
-    return string_list.split(sep)
+    return [item.strip() for item in string_list.split(sep) if item.strip() != ""]
 
 
 def arg_task_name():
