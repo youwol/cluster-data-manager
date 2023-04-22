@@ -269,10 +269,16 @@ def get_kubernetes_api_builder() -> Callable[[], KubernetesApi]:
         return lambda: kubernetes_api
 
     report_builder = get_report_builder()
+    kube_config = env_utils.maybe_string(ConfigEnvVars.MAINTENANCE_KUBE_CONFIG)
+    kube_config_context = env_utils.maybe_string(ConfigEnvVars.MAINTENANCE_KUBE_CONFIG_CONTEXT)
 
     def builder() -> KubernetesApi:
         if context.kubernetes_api is None:
-            context.kubernetes_api = KubernetesApi(report=report_builder())
+            context.kubernetes_api = KubernetesApi(
+                report=report_builder(),
+                kube_config=kube_config,
+                kube_config_context=kube_config_context
+            )
 
         return context.kubernetes_api
 

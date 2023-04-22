@@ -4,7 +4,7 @@ Manipulate k8s Ingress className and ConfigMap data entry value.
 """
 from kubernetes import client
 from kubernetes.client.exceptions import ApiException
-from kubernetes.config import load_config
+from kubernetes.config import load_incluster_config, load_kube_config
 from typing import Optional
 
 from .reporting import Report
@@ -76,9 +76,22 @@ class KubernetesConfigMapValueRef:
 class KubernetesApi:
     """Class implementing a service for manipulating k8s Ingress className and ConfigMap data entry value."""
 
-    def __init__(self, report: Report):
-        load_config()
-        self._report = report.get_sub_report("k8s_api", init_status="ComponentInitialized")
+    def __init__(self, report: Report, kube_config: Optional[str], kube_config_context: Optional[str]):
+        self._report = report.get_sub_report("kubernetes_api", init_status="InitializingComponent")
+        if kube_config is None:
+            if kube_config_context is not None:
+                self._report.warning("ignoring kubernetes config context because"
+                                     " no kubernetes config file is configured")
+            self._report.notify("using Pod service account")
+            load_incluster_config()
+        else:
+            if kube_config_context is None:
+                ctx_msg = "without specific context"
+            else:
+                ctx_msg = f"with context '{kube_config_context}'"
+            self._report.notify(f"using kubernetes config file '{kube_config}' {ctx_msg}")
+            load_kube_config(config_file=kube_config, context=kube_config_context, persist_config=False)
+        self._report.notify("Done")
 
     def get_ingress_class_name(self, ingress_ref: KubernetesIngressRef) -> Optional[str]:
         """Get an Ingress className, if such attribute is defined.
