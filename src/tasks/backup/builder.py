@@ -143,7 +143,7 @@ def build() -> Task:
     google_drive_builder = get_service_google_drive_builder()
     cluster_maintenance_builder = get_service_cluster_maintenance_builder()
 
-    path_log_file = env_utils.existing_path(ConfigEnvVars.PATH_WORK_DIR)
+    path_log_file = env_utils.existing_path(ConfigEnvVars.PATH_LOG_FILE)
     job_uuid = env_utils.not_empty_string(ConfigEnvVars.JOB_UUID)
     type_backup = env_utils.not_empty_string(ConfigEnvVars.TYPE_BACKUP)
     google_drive_upload_file_name = f"{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}_{job_uuid}.tgz"
