@@ -13,11 +13,14 @@ class Cassandra(CommonCassandra):
     Dump the keyspaces DDL and the tables data in CSV format.
     """
 
-    def __init__(self, report: Report,
-                 path_work_dir: Path,
-                 cqlsh_commands: CqlshCommands,
-                 keyspaces: list[str],
-                 tables: list[str]):
+    def __init__(
+        self,
+        report: Report,
+        path_work_dir: Path,
+        cqlsh_commands: CqlshCommands,
+        keyspaces: list[str],
+        tables: list[str],
+    ):
         """Simple Constructor.
 
         Will call CommonCassandra __init__ with path_work_dir, cqlsh_commands, keyspaces and tables.
@@ -30,8 +33,11 @@ class Cassandra(CommonCassandra):
             tables (list[str]): the list of tables
         """
         super().__init__(path_work_dir, cqlsh_commands, keyspaces, tables)
-        self._report = report.get_sub_report("BackupCassandra", default_status_level="NOTIFY",
-                                             init_status="ComponentInitialized")
+        self._report = report.get_sub_report(
+            "BackupCassandra",
+            default_status_level="NOTIFY",
+            init_status="ComponentInitialized",
+        )
 
     def run(self) -> None:
         """Run the task."""
@@ -39,19 +45,25 @@ class Cassandra(CommonCassandra):
 
         self._report.debug(f"keyspaces={self._keyspaces}")
         for keyspace in self._keyspaces:
-            keyspace_report = self._report.get_sub_report(f"backup_ddl_{keyspace}", default_status_level="NOTIFY")
+            keyspace_report = self._report.get_sub_report(
+                f"backup_ddl_{keyspace}", default_status_level="NOTIFY"
+            )
             self._cqlsh_commands.backup_ddl(
                 keyspace,
-                self._path_cql_ddl_dir(on_missing=OnPathDirMissing.CREATE) / f"{keyspace}.cql"
+                self._path_cql_ddl_dir(on_missing=OnPathDirMissing.CREATE)
+                / f"{keyspace}.cql",
             )
             keyspace_report.set_status("Done")
 
         self._report.debug(f"tables={self._tables}")
         for table in self._tables:
-            table_report = self._report.get_sub_report(f"backup_table_{table}", default_status_level="NOTIFY")
+            table_report = self._report.get_sub_report(
+                f"backup_table_{table}", default_status_level="NOTIFY"
+            )
             self._cqlsh_commands.backup_table(
                 table,
-                self._path_cql_data_dir(on_missing=OnPathDirMissing.CREATE) / f"{table}.csv"
+                self._path_cql_data_dir(on_missing=OnPathDirMissing.CREATE)
+                / f"{table}.csv",
             )
             table_report.set_status("Done")
 
@@ -73,5 +85,5 @@ class Cassandra(CommonCassandra):
         """
         return {
             "host": self._cqlsh_commands.show_host(),
-            "versions": self._cqlsh_commands.show_version()
+            "versions": self._cqlsh_commands.show_version(),
         }

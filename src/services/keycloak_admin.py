@@ -60,12 +60,12 @@ class TokensManager:
     """
 
     def __init__(
-            self,
-            report: Report,
-            username: str,
-            password: str,
-            oidc_client: OidcClient,
-            expiration_threshold: int = 5
+        self,
+        report: Report,
+        username: str,
+        password: str,
+        oidc_client: OidcClient,
+        expiration_threshold: int = 5,
     ):
         """Simple constructor.
 
@@ -84,7 +84,9 @@ class TokensManager:
         self._refresh_token: Optional[str] = None
         self._refresh_token_expire_at: Optional[float] = None
         self._expiration_threshold = expiration_threshold
-        self._report = report.get_sub_report(task="TokensManager", init_status="ComponentInitialized")
+        self._report = report.get_sub_report(
+            task="TokensManager", init_status="ComponentInitialized"
+        )
 
     def get_access_token(self) -> str:
         """Get an access token.
@@ -93,12 +95,20 @@ class TokensManager:
         token. If refresh_token itself has expired or is about to (again, according to expiration threshold), request
         new tokens using grant password.
         """
-        report = self._report.get_sub_report(task="get_access_token", init_status="in function")
+        report = self._report.get_sub_report(
+            task="get_access_token", init_status="in function"
+        )
         now = datetime.datetime.now().timestamp()
-        if self._access_token is None or self._access_token_expire_at is None \
-                or self._access_token_expire_at < now:
-            if self._refresh_token is None or self._refresh_token_expire_at is None \
-                    or self._refresh_token_expire_at < now:
+        if (
+            self._access_token is None
+            or self._access_token_expire_at is None
+            or self._access_token_expire_at < now
+        ):
+            if (
+                self._refresh_token is None
+                or self._refresh_token_expire_at is None
+                or self._refresh_token_expire_at < now
+            ):
                 report.notify("refresh_token missing or expired : need new tokens")
                 self._grant_password_tokens()
             else:
@@ -109,7 +119,9 @@ class TokensManager:
         return self._access_token
 
     def _grant_password_tokens(self) -> None:
-        report = self._report.get_sub_report(task="grant_password_tokens", init_status="in function")
+        report = self._report.get_sub_report(
+            task="grant_password_tokens", init_status="in function"
+        )
 
         report.debug("calling OidcClient")
         tokens = self._oidc_client.grant_password_tokens(self._username, self._password)
@@ -119,7 +131,9 @@ class TokensManager:
         report.debug("done")
 
     def _refresh_tokens(self) -> None:
-        report = self._report.get_sub_report(task="refresh_tokens", init_status="in function")
+        report = self._report.get_sub_report(
+            task="refresh_tokens", init_status="in function"
+        )
 
         report.debug("calling OidcClient")
         if self._refresh_token is None:
@@ -142,7 +156,9 @@ class TokensManager:
 class KeycloakAdmin:
     """Client for keycloak administration."""
 
-    def __init__(self, report: Report, credentials: KeycloakAdminCredentials, base_url: str):
+    def __init__(
+        self, report: Report, credentials: KeycloakAdminCredentials, base_url: str
+    ):
         """Simple constructor.
 
         Args:
@@ -150,7 +166,9 @@ class KeycloakAdmin:
             credentials (KeycloakAdminCredentials): the credentials for Keycloak administration
             base_url (str): the base url for Keycloak administration
         """
-        sub_report = report.get_sub_report(task="KeycloakAdmin", init_status="ComponentInitialized")
+        sub_report = report.get_sub_report(
+            task="KeycloakAdmin", init_status="ComponentInitialized"
+        )
         self._base_url = base_url
         self._tokens_manager = TokensManager(
             report=sub_report,
@@ -161,9 +179,9 @@ class KeycloakAdmin:
                 oidc_client_config=OidcClientConfig(
                     client_id="admin-cli",
                     client_secret=None,
-                    issuer=f"{base_url}/realms/{credentials.realm()}"
-                )
-            )
+                    issuer=f"{base_url}/realms/{credentials.realm()}",
+                ),
+            ),
         )
         self._report = sub_report
 
@@ -171,7 +189,9 @@ class KeycloakAdmin:
         """Retrieve keycloak instance system infos."""
         report = self._report.get_sub_report("system_info", init_status="in function")
         endpoint = f"{self._base_url}/admin/serverinfo"
-        auth_header = {"Authorization": f"Bearer {self._tokens_manager.get_access_token()}"}
+        auth_header = {
+            "Authorization": f"Bearer {self._tokens_manager.get_access_token()}"
+        }
         report.debug(f"Calling endpoint {endpoint}")
         req = urllib.request.Request(url=endpoint, headers=auth_header)
         with urllib.request.urlopen(req) as resp:

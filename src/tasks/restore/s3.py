@@ -14,12 +14,12 @@ class S3(CommonS3):
     """
 
     def __init__(
-            self,
-            report: Report,
-            path_work_dir: Path,
-            mc_commands: McCommands,
-            buckets: list[str],
-            overwrite: bool
+        self,
+        report: Report,
+        path_work_dir: Path,
+        mc_commands: McCommands,
+        buckets: list[str],
+        overwrite: bool,
     ):
         """Simple constructor.
 
@@ -34,8 +34,11 @@ class S3(CommonS3):
         """
         super().__init__(path_work_dir, mc_commands, buckets)
         self._overwrite = overwrite
-        self._report = report.get_sub_report("RestoreS3", default_status_level="NOTIFY",
-                                             init_status="ComponentInitialized")
+        self._report = report.get_sub_report(
+            "RestoreS3",
+            default_status_level="NOTIFY",
+            init_status="ComponentInitialized",
+        )
 
     def run(self) -> None:
         """Run the task."""
@@ -43,7 +46,9 @@ class S3(CommonS3):
         self._report.debug(f"buckets={self._buckets}")
 
         for bucket in self._buckets:
-            bucket_report = self._report.get_sub_report(f"restore_minio_{bucket}", default_status_level="NOTIFY")
+            bucket_report = self._report.get_sub_report(
+                f"restore_minio_{bucket}", default_status_level="NOTIFY"
+            )
             mc_commands.set_reporter(bucket_report)
             mc_commands.restore_bucket(bucket, self._overwrite)
             bucket_report.set_status("Done")

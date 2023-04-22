@@ -15,7 +15,13 @@ class Cassandra(Task):
     RELATIVE_PATH_SCHEMA = "cql/schema"
     RELATIVE_PATH_DATA = "cql/data"
 
-    def __init__(self, path_work_dir: Path, cqlsh_commands: CqlshCommands, keyspaces: list[str], tables: list[str]):
+    def __init__(
+        self,
+        path_work_dir: Path,
+        cqlsh_commands: CqlshCommands,
+        keyspaces: list[str],
+        tables: list[str],
+    ):
         """Simple constructor.
 
         Will call Task __init__ with path_work_dir.
@@ -31,12 +37,20 @@ class Cassandra(Task):
         self._keyspaces = keyspaces
         self._tables = tables
 
-    def _task_path_dir_and_archive_item(self, on_missing: OnPathDirMissing) -> tuple[Path, str]:
-        return self._path_dir_maybe_exists(Cassandra.RELATIVE_PATH,
-                                           on_missing=on_missing), Cassandra.RELATIVE_PATH
+    def _task_path_dir_and_archive_item(
+        self, on_missing: OnPathDirMissing
+    ) -> tuple[Path, str]:
+        return (
+            self._path_dir_maybe_exists(Cassandra.RELATIVE_PATH, on_missing=on_missing),
+            Cassandra.RELATIVE_PATH,
+        )
 
     def _path_cql_ddl_dir(self, on_missing: OnPathDirMissing) -> Path:
-        return self._path_dir_maybe_exists(Cassandra.RELATIVE_PATH_SCHEMA, on_missing=on_missing)
+        return self._path_dir_maybe_exists(
+            Cassandra.RELATIVE_PATH_SCHEMA, on_missing=on_missing
+        )
 
     def _path_cql_data_dir(self, on_missing: OnPathDirMissing) -> Path:
-        return self._path_dir_maybe_exists(Cassandra.RELATIVE_PATH_DATA, on_missing=on_missing)
+        return self._path_dir_maybe_exists(
+            Cassandra.RELATIVE_PATH_DATA, on_missing=on_missing
+        )

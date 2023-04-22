@@ -14,13 +14,13 @@ class Cassandra(CommonCassandra):
     """
 
     def __init__(
-            self,
-            report: Report,
-            path_work_dir: Path,
-            cqlsh_commands: CqlshCommands,
-            keyspaces: list[str],
-            tables: list[str],
-            overwrite: bool
+        self,
+        report: Report,
+        path_work_dir: Path,
+        cqlsh_commands: CqlshCommands,
+        keyspaces: list[str],
+        tables: list[str],
+        overwrite: bool,
     ):
         """Simple Constructor.
 
@@ -36,8 +36,11 @@ class Cassandra(CommonCassandra):
         """
         super().__init__(path_work_dir, cqlsh_commands, keyspaces, tables)
         self._overwrite = overwrite
-        self._report = report.get_sub_report("RestoreCassandra", default_status_level="NOTIFY",
-                                             init_status="ComponentInitialized")
+        self._report = report.get_sub_report(
+            "RestoreCassandra",
+            default_status_level="NOTIFY",
+            init_status="ComponentInitialized",
+        )
 
     def run(self) -> None:
         """Run the task."""
@@ -45,21 +48,27 @@ class Cassandra(CommonCassandra):
 
         self._report.debug(f"keyspaces={self._keyspaces}")
         for keyspace in self._keyspaces:
-            keyspace_report = self._report.get_sub_report(f"restore_ddl_{keyspace}", default_status_level="NOTIFY")
+            keyspace_report = self._report.get_sub_report(
+                f"restore_ddl_{keyspace}", default_status_level="NOTIFY"
+            )
             self._cqlsh_commands.restore_ddl(
                 keyspace,
-                self._path_cql_ddl_dir(on_missing=OnPathDirMissing.ERROR) / f"{keyspace}.cql",
-                self._overwrite
+                self._path_cql_ddl_dir(on_missing=OnPathDirMissing.ERROR)
+                / f"{keyspace}.cql",
+                self._overwrite,
             )
             keyspace_report.set_status("Done")
 
         self._report.debug(f"tables={self._tables}")
         for table in self._tables:
-            table_report = self._report.get_sub_report(f"restore_table_{table}", default_status_level="NOTIFY")
+            table_report = self._report.get_sub_report(
+                f"restore_table_{table}", default_status_level="NOTIFY"
+            )
             self._cqlsh_commands.restore_table(
                 table,
-                self._path_cql_data_dir(on_missing=OnPathDirMissing.ERROR) / f"{table}.csv",
-                self._overwrite
+                self._path_cql_data_dir(on_missing=OnPathDirMissing.ERROR)
+                / f"{table}.csv",
+                self._overwrite,
             )
             table_report.set_status("Done")
 

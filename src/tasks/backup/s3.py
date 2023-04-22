@@ -13,7 +13,13 @@ class S3(CommonS3):
     Mirror the cluster buckets into the local Minio instance.
     """
 
-    def __init__(self, report: Report, path_work_dir: Path, mc_commands: McCommands, buckets: list[str]):
+    def __init__(
+        self,
+        report: Report,
+        path_work_dir: Path,
+        mc_commands: McCommands,
+        buckets: list[str],
+    ):
         """Simple constructor.
 
         Will call CommanS3 __init__ with path_work_dir, mc_commands, buckets.
@@ -25,8 +31,11 @@ class S3(CommonS3):
             buckets (list[str]): the list of buckets
         """
         super().__init__(path_work_dir, mc_commands, buckets)
-        self._report = report.get_sub_report("BackupS3", default_status_level="NOTIFY",
-                                             init_status="ComponentInitialized")
+        self._report = report.get_sub_report(
+            "BackupS3",
+            default_status_level="NOTIFY",
+            init_status="ComponentInitialized",
+        )
 
     def prepare(self) -> None:
         """Prepare S3 backup.
@@ -35,7 +44,9 @@ class S3(CommonS3):
         """
         self._report.debug(f"disk usage cluster buckets: {self._buckets}")
         for bucket in self._buckets:
-            bucket_report = self._report.get_sub_report(f"disk_usage_{bucket}", default_status_level="NOTIFY")
+            bucket_report = self._report.get_sub_report(
+                f"disk_usage_{bucket}", default_status_level="NOTIFY"
+            )
             self._mc_commands.set_reporter(bucket_report)
             nb_objects, size = self._mc_commands.du_cluster_bucket(bucket)
             bucket_report.notify(f"nb_objects: {nb_objects}, size: {size}")
@@ -47,7 +58,9 @@ class S3(CommonS3):
 
         self._report.debug(f"mirroring buckets: {self._buckets}")
         for bucket in self._buckets:
-            bucket_report = self._report.get_sub_report(f"backup_minio_{bucket}", default_status_level="NOTIFY")
+            bucket_report = self._report.get_sub_report(
+                f"backup_minio_{bucket}", default_status_level="NOTIFY"
+            )
             mc_commands.set_reporter(bucket_report)
             mc_commands.backup_bucket(bucket)
             bucket_report.set_status("Done")

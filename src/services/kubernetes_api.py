@@ -100,7 +100,12 @@ class KubernetesConfigMapValueRef:
 class KubernetesApi:
     """Class implementing a service for manipulating k8s Ingress className and ConfigMap data entry value."""
 
-    def __init__(self, report: Report, kube_config: Optional[str], kube_config_context: Optional[str]):
+    def __init__(
+        self,
+        report: Report,
+        kube_config: Optional[str],
+        kube_config_context: Optional[str],
+    ):
         """Construct and confugre kubernetes API.
 
         If kube_config is not provided, will default to in cluster configuration (a service account token mounted by
@@ -113,11 +118,15 @@ class KubernetesApi:
             kube_config (Optional[str]): path to the kube_config file
             kube_config_context (Optional[str]): name of a context defined in the kube_config file
         """
-        self._report = report.get_sub_report("kubernetes_api", init_status="InitializingComponent")
+        self._report = report.get_sub_report(
+            "kubernetes_api", init_status="InitializingComponent"
+        )
         if kube_config is None:
             if kube_config_context is not None:
-                self._report.warning("ignoring kubernetes config context because"
-                                     " no kubernetes config file is configured")
+                self._report.warning(
+                    "ignoring kubernetes config context because"
+                    " no kubernetes config file is configured"
+                )
             self._report.notify("using Pod service account")
             load_incluster_config()
         else:
@@ -125,11 +134,19 @@ class KubernetesApi:
                 ctx_msg = "without specific context"
             else:
                 ctx_msg = f"with context '{kube_config_context}'"
-            self._report.notify(f"using kubernetes config file '{kube_config}' {ctx_msg}")
-            load_kube_config(config_file=kube_config, context=kube_config_context, persist_config=False)
+            self._report.notify(
+                f"using kubernetes config file '{kube_config}' {ctx_msg}"
+            )
+            load_kube_config(
+                config_file=kube_config,
+                context=kube_config_context,
+                persist_config=False,
+            )
         self._report.notify("Done")
 
-    def get_ingress_class_name(self, ingress_ref: KubernetesIngressRef) -> Optional[str]:
+    def get_ingress_class_name(
+        self, ingress_ref: KubernetesIngressRef
+    ) -> Optional[str]:
         """Get an Ingress className, if such attribute is defined.
 
         Args:
@@ -138,8 +155,9 @@ class KubernetesApi:
         Returns:
             Optional[str]: the Ingress className, or None if no such attribute exists.
         """
-        report = self._report.get_sub_report(f"get_ingress_class_name[{ingress_ref}]",
-                                             init_status="in function")
+        report = self._report.get_sub_report(
+            f"get_ingress_class_name[{ingress_ref}]", init_status="in function"
+        )
         api_networking = client.NetworkingV1Api()
 
         try:
@@ -156,8 +174,9 @@ class KubernetesApi:
         report.debug(f"Result: {result}")
         return result
 
-    def set_ingress_class_name(self, ingress_ref: KubernetesIngressRef,
-                               ingress_class_name: Optional[str]) -> None:
+    def set_ingress_class_name(
+        self, ingress_ref: KubernetesIngressRef, ingress_class_name: Optional[str]
+    ) -> None:
         """Set or remove an Ingress className.
 
         Args:
@@ -167,7 +186,8 @@ class KubernetesApi:
         """
         report = self._report.get_sub_report(
             f"set_ingress_class_name[{ingress_ref}]({ingress_class_name})",
-            init_status="in function")
+            init_status="in function",
+        )
         report.debug(f"value={ingress_class_name}")
         api_networking = client.NetworkingV1Api()
 
@@ -175,7 +195,7 @@ class KubernetesApi:
             _ = api_networking.patch_namespaced_ingress(
                 namespace=ingress_ref.namespace(),
                 name=ingress_ref.name(),
-                body={"spec": {"ingressClassName": ingress_class_name}}
+                body={"spec": {"ingressClassName": ingress_class_name}},
             )
         except ApiException as error:
             msg = f"Exception when calling NetworkingV1Api->patch_namespaced_ingress: {error}"
@@ -184,7 +204,9 @@ class KubernetesApi:
 
         report.debug("Done")
 
-    def get_config_map_value(self, config_map_value_ref: KubernetesConfigMapValueRef) -> Optional[str]:
+    def get_config_map_value(
+        self, config_map_value_ref: KubernetesConfigMapValueRef
+    ) -> Optional[str]:
         """Get the value of a ConfigMap data entry.
 
         Args:
@@ -193,14 +215,15 @@ class KubernetesApi:
         Returns:
             str: the value.
         """
-        report = self._report.get_sub_report(f"set_config_map_value[{config_map_value_ref}]",
-                                             init_status="in function")
+        report = self._report.get_sub_report(
+            f"set_config_map_value[{config_map_value_ref}]", init_status="in function"
+        )
         api_core = client.CoreV1Api()
 
         try:
             api_response = api_core.read_namespaced_config_map(
                 namespace=config_map_value_ref.namespace(),
-                name=config_map_value_ref.name()
+                name=config_map_value_ref.name(),
             )
         except ApiException as error:
             msg = f"Exception when calling CoreV1Api->patch_namespaced_config_map: {error}"
@@ -211,15 +234,18 @@ class KubernetesApi:
         report.debug(f"Result: {result}")
         return result
 
-    def set_config_map_value(self, config_map_value_ref: KubernetesConfigMapValueRef, value: Optional[str]) -> None:
+    def set_config_map_value(
+        self, config_map_value_ref: KubernetesConfigMapValueRef, value: Optional[str]
+    ) -> None:
         """Set the value of a ConfigMap data entry.
 
         Args:
             config_map_value_ref (KubernetesConfigMapValueRef): the ConfigMap data entry reference.
             value (str): the value.
         """
-        report = self._report.get_sub_report(f"set_config_map_value[{config_map_value_ref}]",
-                                             init_status="in function")
+        report = self._report.get_sub_report(
+            f"set_config_map_value[{config_map_value_ref}]", init_status="in function"
+        )
         report.debug(f"value={value}")
         api_core = client.CoreV1Api()
 
@@ -227,7 +253,7 @@ class KubernetesApi:
             _ = api_core.patch_namespaced_config_map(
                 namespace=config_map_value_ref.namespace(),
                 name=config_map_value_ref.name(),
-                body={"data": {config_map_value_ref.key(): value}}
+                body={"data": {config_map_value_ref.key(): value}},
             )
         except ApiException as error:
             msg = f"Exception when calling CoreV1Api->patch_namespaced_config_map: {error}"

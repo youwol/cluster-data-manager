@@ -4,7 +4,6 @@ from typing import List, Optional
 
 
 class WithStatus:
-
     def get_status(self) -> str:
         raise NotImplementedError("WithStatus is abstract")
 
@@ -30,14 +29,13 @@ class ReportHandler:
 
 
 class Report(WithStatus):
-
     def __init__(
-            self,
-            init_status: str,
-            reporting: ReportHandler,
-            task: str,
-            default_status_level: str = "DEBUG",
-            parents_tasks: Optional[list[str]] = None
+        self,
+        init_status: str,
+        reporting: ReportHandler,
+        task: str,
+        default_status_level: str = "DEBUG",
+        parents_tasks: Optional[list[str]] = None,
     ):
         self._tasks = [*(parents_tasks if parents_tasks is not None else []), task]
         self._reporting = reporting
@@ -71,17 +69,30 @@ class Report(WithStatus):
     def fatal(self, msg: str) -> None:
         self._reporting.fatal(self, msg)
 
-    def get_sub_report(self, task: str, init_status: str = "Starting", default_status_level: str = "DEBUG"):
-        return Report(init_status=init_status, reporting=self._reporting, task=task,
-                      parents_tasks=self._tasks, default_status_level=default_status_level)
+    def get_sub_report(
+        self,
+        task: str,
+        init_status: str = "Starting",
+        default_status_level: str = "DEBUG",
+    ):
+        return Report(
+            init_status=init_status,
+            reporting=self._reporting,
+            task=task,
+            parents_tasks=self._tasks,
+            default_status_level=default_status_level,
+        )
 
 
 class Reporting(ReportHandler):
-
     def __init__(self, path_log_file: Path, initial_task: str):
         self._path_log_file = path_log_file
-        self._root_report = Report(init_status="Starting", reporting=self, task=initial_task,
-                                   default_status_level="NOTIFY")
+        self._root_report = Report(
+            init_status="Starting",
+            reporting=self,
+            task=initial_task,
+            default_status_level="NOTIFY",
+        )
         self._current_report = self._root_report
         self.set_current_report(self._root_report)
 
@@ -92,16 +103,36 @@ class Reporting(ReportHandler):
         return self._root_report
 
     def notify(self, report: WithStatus, msg: str = ""):
-        self._write_log(level=" NOTIFY", tasks=report.get_parents_tasks(), status=report.get_status(), msg=msg)
+        self._write_log(
+            level=" NOTIFY",
+            tasks=report.get_parents_tasks(),
+            status=report.get_status(),
+            msg=msg,
+        )
 
     def debug(self, report: WithStatus, msg: str = ""):
-        self._write_log(level="  DEBUG", tasks=report.get_parents_tasks(), status=report.get_status(), msg=msg)
+        self._write_log(
+            level="  DEBUG",
+            tasks=report.get_parents_tasks(),
+            status=report.get_status(),
+            msg=msg,
+        )
 
     def warning(self, report: WithStatus, msg: str = ""):
-        self._write_log(level="WARNING", tasks=report.get_parents_tasks(), status=report.get_status(), msg=msg)
+        self._write_log(
+            level="WARNING",
+            tasks=report.get_parents_tasks(),
+            status=report.get_status(),
+            msg=msg,
+        )
 
     def fatal(self, report: WithStatus, msg: str = ""):
-        self._write_log(level="  FATAL", tasks=report.get_parents_tasks(), status=report.get_status(), msg=msg)
+        self._write_log(
+            level="  FATAL",
+            tasks=report.get_parents_tasks(),
+            status=report.get_status(),
+            msg=msg,
+        )
 
     def _write_log(self, level: str, tasks: List[str], status: str, msg: str):
         timestamp = datetime.datetime.now()
@@ -109,7 +140,7 @@ class Reporting(ReportHandler):
         msg_str = f" : {msg}" if msg != "" else ""
         msg = f"{timestamp} {level} ({tasks_str})[{status}]{msg_str}"
         print(msg, flush=True)
-        self._path_log_file.open('a').write(f"{msg}\n")
+        self._path_log_file.open("a").write(f"{msg}\n")
 
     def start_thread(self):
         pass

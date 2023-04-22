@@ -9,9 +9,7 @@ class Task:
     Will call the subtasks.
     """
 
-    def __init__(self,
-                 task_restore_cassandra: Cassandra,
-                 task_restore_s3: S3):
+    def __init__(self, task_restore_cassandra: Cassandra, task_restore_s3: S3):
         """Simple constructor.
 
         Args:

@@ -7,7 +7,11 @@ import time
 from contextlib import AbstractContextManager
 from typing import Any, Optional
 
-from .kubernetes_api import KubernetesApi, KubernetesConfigMapValueRef, KubernetesIngressRef
+from .kubernetes_api import (
+    KubernetesApi,
+    KubernetesConfigMapValueRef,
+    KubernetesIngressRef,
+)
 from .reporting import Report
 
 
@@ -15,11 +19,11 @@ class MaintenanceDetails:
     """Represent the k8s objects references and maintenance values."""
 
     def __init__(
-            self,
-            ingress_ref: KubernetesIngressRef,
-            ingress_class_name: str,
-            config_map_value_ref: KubernetesConfigMapValueRef,
-            config_map_value: str
+        self,
+        ingress_ref: KubernetesIngressRef,
+        ingress_class_name: str,
+        config_map_value_ref: KubernetesConfigMapValueRef,
+        config_map_value: str,
     ):
         """Simple constructor.
 
@@ -77,7 +81,12 @@ class ClusterMaintenance(AbstractContextManager[None]):
          Using a context manager ensure that the maintenance mode is tear down in almost all situations.
     """
 
-    def __init__(self, report: Report, k8s_api: KubernetesApi, maintenance_details: MaintenanceDetails):
+    def __init__(
+        self,
+        report: Report,
+        k8s_api: KubernetesApi,
+        maintenance_details: MaintenanceDetails,
+    ):
         """Simple constructor.
 
         Args:
@@ -85,8 +94,11 @@ class ClusterMaintenance(AbstractContextManager[None]):
             k8s_api (KubernetesApi): the kubernetes API service
             maintenance_details (MaintenanceDetails): the maintenance details
         """
-        self._report = report.get_sub_report("ClusterMaintenance", init_status="ComponentInitialized",
-                                             default_status_level="NOTIFY")
+        self._report = report.get_sub_report(
+            "ClusterMaintenance",
+            init_status="ComponentInitialized",
+            default_status_level="NOTIFY",
+        )
         self._k8s_api = k8s_api
         self._details = maintenance_details
         self._original_config_map_value: Optional[str] = None
@@ -101,17 +113,29 @@ class ClusterMaintenance(AbstractContextManager[None]):
             Context maintenance yield nothing.
         """
         self._report.set_status("MaintenanceModeON")
-        self._original_config_map_value = self._k8s_api.get_config_map_value(self._details.config_map_value_ref())
-        self._original_ingress_class_name = self._k8s_api.get_ingress_class_name(self._details.ingress_ref())
-        self._k8s_api.set_config_map_value(self._details.config_map_value_ref(), self._details.config_map_value())
-        self._k8s_api.set_ingress_class_name(self._details.ingress_ref(), self._details.ingress_class_name())
+        self._original_config_map_value = self._k8s_api.get_config_map_value(
+            self._details.config_map_value_ref()
+        )
+        self._original_ingress_class_name = self._k8s_api.get_ingress_class_name(
+            self._details.ingress_ref()
+        )
+        self._k8s_api.set_config_map_value(
+            self._details.config_map_value_ref(), self._details.config_map_value()
+        )
+        self._k8s_api.set_ingress_class_name(
+            self._details.ingress_ref(), self._details.ingress_class_name()
+        )
         time.sleep(5)
 
-    def __exit__(self, exec_type: Any, exec_value: Any,  traceback: Any) -> None:
+    def __exit__(self, exec_type: Any, exec_value: Any, traceback: Any) -> None:
         """Exit maintenance context.
 
         Will restore the kubernetes objects as before entering maintenance mode.
         """
         self._report.set_status("MaintenanceModeOFF")
-        self._k8s_api.set_config_map_value(self._details.config_map_value_ref(), self._original_config_map_value)
-        self._k8s_api.set_ingress_class_name(self._details.ingress_ref(), self._original_ingress_class_name)
+        self._k8s_api.set_config_map_value(
+            self._details.config_map_value_ref(), self._original_config_map_value
+        )
+        self._k8s_api.set_ingress_class_name(
+            self._details.ingress_ref(), self._original_ingress_class_name
+        )

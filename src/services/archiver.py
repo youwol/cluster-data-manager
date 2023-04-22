@@ -32,16 +32,29 @@ class ArchiveCreator:
         self._job_uuid = job_uuid
         self._path_work_dir = path_work_dir
         self._archive_uuid = str(uuid.uuid4())
-        self._path_archive = path_work_dir / f"{self._job_uuid}_{self._archive_uuid}.tgz"
-        self._metadata = {"version": "v1", "job": self._job_uuid, "archive": self._archive_uuid}
-        self._report = report.get_sub_report(f"Archive_{self._archive_uuid}", init_status="ComponentInitialized")
+        self._path_archive = (
+            path_work_dir / f"{self._job_uuid}_{self._archive_uuid}.tgz"
+        )
+        self._metadata = {
+            "version": "v1",
+            "job": self._job_uuid,
+            "archive": self._archive_uuid,
+        }
+        self._report = report.get_sub_report(
+            f"Archive_{self._archive_uuid}", init_status="ComponentInitialized"
+        )
 
     def _get_path_metadata_file(self) -> Path:
-        return self._path_work_dir / f"{self._job_uuid}_{self._archive_uuid}_{Archiver.METADATA_FILENAME}"
+        return (
+            self._path_work_dir
+            / f"{self._job_uuid}_{self._archive_uuid}_{Archiver.METADATA_FILENAME}"
+        )
 
     def _write_metadata(self) -> None:
         self._report.get_sub_report("_write_metadata", init_status="in function")
-        with open(self._get_path_metadata_file(), mode="tw", encoding="UTF-8") as fp_metadata:
+        with open(
+            self._get_path_metadata_file(), mode="tw", encoding="UTF-8"
+        ) as fp_metadata:
             json.dump(self._metadata, fp=fp_metadata)
 
     def finalize(self) -> Path:
@@ -55,11 +68,13 @@ class ArchiveCreator:
         report = self._report.get_sub_report("finalize", init_status="in function")
         self._write_metadata()
         with tarfile.open(name=self._path_archive, mode="w:gz") as archive:
-            for (archive_item, path) in self._items.items():
+            for archive_item, path in self._items.items():
                 report.notify(f"Adding item {path} as {archive_item}")
                 archive.add(path, arcname=archive_item)
             report.notify("Adding metadata informations")
-            archive.add(self._get_path_metadata_file(), arcname=Archiver.METADATA_FILENAME)
+            archive.add(
+                self._get_path_metadata_file(), arcname=Archiver.METADATA_FILENAME
+            )
         report.set_status("exit function")
         return self._path_archive
 
@@ -131,10 +146,16 @@ class ArchiveExtractor:
         Args:
             archive_item (str): name of the item.
         """
-        report = self._report.get_sub_report("extract_dir_item", init_status="in function")
+        report = self._report.get_sub_report(
+            "extract_dir_item", init_status="in function"
+        )
         report.debug(f"extraction {archive_item} in {self._path_work_dir}")
         with tarfile.open(name=self._path_archive, mode="r:gz") as archive:
-            item_members = [tarinfo for tarinfo in archive.getmembers() if tarinfo.name.startswith(f"{archive_item}/")]
+            item_members = [
+                tarinfo
+                for tarinfo in archive.getmembers()
+                if tarinfo.name.startswith(f"{archive_item}/")
+            ]
             archive.extractall(path=self._path_work_dir, members=item_members)
 
     def metadata(self) -> Any:
@@ -161,7 +182,9 @@ class Archiver:
             path_work_dir (Path): the working directory path
             job_uuid (str): the Kubernetes Job uuid
         """
-        self._report = report.get_sub_report("Archiver", init_status="InitializingComponent")
+        self._report = report.get_sub_report(
+            "Archiver", init_status="InitializingComponent"
+        )
         self._path_work_dir = path_work_dir
         self._job_uuid = job_uuid
         report.set_status("ComponentInitialized")
@@ -172,7 +195,11 @@ class Archiver:
         Returns:
             ArchiveCreator: An instance of ArchiveCreator, ready to be used.
         """
-        return ArchiveCreator(report=self._report, path_work_dir=self._path_work_dir, job_uuid=self._job_uuid)
+        return ArchiveCreator(
+            report=self._report,
+            path_work_dir=self._path_work_dir,
+            job_uuid=self._job_uuid,
+        )
 
     def existing_archive(self, path_archive: Path) -> ArchiveExtractor:
         """Get an instance on ArchiveExtractor.
@@ -184,4 +211,8 @@ class Archiver:
             ArchiveExtractor: an instance of ArchiveExtractor, ready to be used.
 
         """
-        return ArchiveExtractor(report=self._report, path_archive=path_archive, path_work_dir=self._path_work_dir)
+        return ArchiveExtractor(
+            report=self._report,
+            path_archive=path_archive,
+            path_work_dir=self._path_work_dir,
+        )

@@ -5,7 +5,11 @@ Use get_<task>() to obtain a configured instance of TaskSetup for a given task.
 from typing import Any, Optional
 
 from configuration import ConfigEnvVars, env_utils
-from services import get_service_archiver_builder, get_service_google_drive_builder, get_service_report_builder
+from services import (
+    get_service_archiver_builder,
+    get_service_google_drive_builder,
+    get_service_report_builder,
+)
 from .task import KeycloakDetails, Task
 
 
@@ -39,8 +43,12 @@ def backup() -> Task:
     path_work_dir = env_utils.existing_path(ConfigEnvVars.PATH_WORK_DIR)
 
     keycloak_setup_details = KeycloakDetails(
-        path_keycloak_status_file=env_utils.creating_file(ConfigEnvVars.PATH_KEYCLOAK_STATUS_FILE),
-        path_keycloak_script=env_utils.creating_file(ConfigEnvVars.PATH_KEYCLOAK_SCRIPT)
+        path_keycloak_status_file=env_utils.creating_file(
+            ConfigEnvVars.PATH_KEYCLOAK_STATUS_FILE
+        ),
+        path_keycloak_script=env_utils.creating_file(
+            ConfigEnvVars.PATH_KEYCLOAK_SCRIPT
+        ),
     )
 
     context.backup = Task(
@@ -49,7 +57,7 @@ def backup() -> Task:
         keycloak_setup_details=keycloak_setup_details,
         archiver=archiver_builder(),
         google_drive=google_drive_builder(),
-        extract_items=["minio"]
+        extract_items=["minio"],
     )
 
     return context.backup
@@ -81,7 +89,7 @@ def restore() -> Any:
         archiver=archiver_builder(),
         google_drive=google_drive_builder(),
         extract_items=["minio", "cql"],
-        archive_name=archive_name
+        archive_name=archive_name,
     )
 
     return context.restore

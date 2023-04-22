@@ -13,7 +13,9 @@ class S3(Task):
 
     RELATIVE_PATH = "minio"
 
-    def __init__(self, path_work_dir: Path, mc_commands: McCommands, buckets: list[str]):
+    def __init__(
+        self, path_work_dir: Path, mc_commands: McCommands, buckets: list[str]
+    ):
         """Simple constructor.
 
         Will call Task __init__ with path_work_dir.
@@ -27,5 +29,10 @@ class S3(Task):
         self._mc_commands = mc_commands
         self._buckets = buckets
 
-    def _task_path_dir_and_archive_item(self, on_missing: OnPathDirMissing) -> tuple[Path, str]:
-        return self._path_dir_maybe_exists(S3.RELATIVE_PATH, on_missing=on_missing), S3.RELATIVE_PATH
+    def _task_path_dir_and_archive_item(
+        self, on_missing: OnPathDirMissing
+    ) -> tuple[Path, str]:
+        return (
+            self._path_dir_maybe_exists(S3.RELATIVE_PATH, on_missing=on_missing),
+            S3.RELATIVE_PATH,
+        )

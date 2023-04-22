@@ -7,9 +7,14 @@ import datetime
 from typing import Callable, Optional
 
 from configuration import ConfigEnvVars, env_utils
-from services import get_service_archiver_builder, get_service_cluster_maintenance_builder, \
-    get_service_cqlsh_commands_builder, get_service_google_drive_builder, get_service_mc_commands_builder, \
-    get_service_report_builder
+from services import (
+    get_service_archiver_builder,
+    get_service_cluster_maintenance_builder,
+    get_service_cqlsh_commands_builder,
+    get_service_google_drive_builder,
+    get_service_mc_commands_builder,
+    get_service_report_builder,
+)
 from services.keycloak_admin import KeycloakAdmin, KeycloakAdminCredentials
 from .cassandra import Cassandra
 from .keycloak import Keycloak
@@ -45,13 +50,12 @@ def get_s3_builder() -> Callable[[], S3]:
     buckets = env_utils.strings_list(ConfigEnvVars.S3_BUCKETS)
 
     def builder() -> S3:
-
         if context.s3 is None:
             context.s3 = S3(
                 report=report_builder(),
                 path_work_dir=path_work_dir,
                 mc_commands=mc_commands_builder(),
-                buckets=buckets
+                buckets=buckets,
             )
         return context.s3
 
@@ -76,9 +80,13 @@ def get_cassandra_builder() -> Callable[[], Cassandra]:
 
     def builder() -> Cassandra:
         if context.cassandra is None:
-            context.cassandra = Cassandra(report=report_builder(), path_work_dir=path_work_dir,
-                                          cqlsh_commands=cqlsh_commands_builder(), tables=tables,
-                                          keyspaces=keyspaces)
+            context.cassandra = Cassandra(
+                report=report_builder(),
+                path_work_dir=path_work_dir,
+                cqlsh_commands=cqlsh_commands_builder(),
+                tables=tables,
+                keyspaces=keyspaces,
+            )
 
         return context.cassandra
 
@@ -97,7 +105,9 @@ def get_keycloak_builder() -> Callable[[], Keycloak]:
 
     report_builder = get_service_report_builder()
     path_work_dir = env_utils.existing_path(ConfigEnvVars.PATH_WORK_DIR)
-    path_keycloak_status_file = env_utils.existing_path(ConfigEnvVars.PATH_KEYCLOAK_STATUS_FILE)
+    path_keycloak_status_file = env_utils.existing_path(
+        ConfigEnvVars.PATH_KEYCLOAK_STATUS_FILE
+    )
     keycloak_username = env_utils.not_empty_string(ConfigEnvVars.KEYCLOAK_USERNAME)
     keycloak_password = env_utils.not_empty_string(ConfigEnvVars.KEYCLOAK_PASSWORD)
     keycloak_base_url = env_utils.not_empty_string(ConfigEnvVars.KEYCLOAK_BASE_URL)
@@ -106,11 +116,9 @@ def get_keycloak_builder() -> Callable[[], Keycloak]:
         return KeycloakAdmin(
             report=report_builder(),
             credentials=KeycloakAdminCredentials(
-                realm="master",
-                username=keycloak_username,
-                password=keycloak_password
+                realm="master", username=keycloak_username, password=keycloak_password
             ),
-            base_url=keycloak_base_url
+            base_url=keycloak_base_url,
         )
 
     def builder() -> Keycloak:
@@ -119,7 +127,7 @@ def get_keycloak_builder() -> Callable[[], Keycloak]:
                 report=report_builder(),
                 path_work_dir=path_work_dir,
                 keycloak_admin=keycloak_admin_builder(),
-                path_keycloak_status_file=path_keycloak_status_file
+                path_keycloak_status_file=path_keycloak_status_file,
             )
 
         return context.keycloak
@@ -147,7 +155,9 @@ def build() -> Task:
     path_log_file = env_utils.existing_path(ConfigEnvVars.PATH_LOG_FILE)
     job_uuid = env_utils.not_empty_string(ConfigEnvVars.JOB_UUID)
     type_backup = env_utils.not_empty_string(ConfigEnvVars.TYPE_BACKUP)
-    google_drive_upload_file_name = f"{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}_{job_uuid}.tgz"
+    google_drive_upload_file_name = (
+        f"{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}_{job_uuid}.tgz"
+    )
     google_drive_upload_folder = type_backup
 
     context.task = Task(
@@ -159,7 +169,7 @@ def build() -> Task:
         google_drive_upload_file_name=google_drive_upload_file_name,
         google_drive_upload_folder=google_drive_upload_folder,
         cluster_maintenance=cluster_maintenance_builder(),
-        path_log_file=path_log_file
+        path_log_file=path_log_file,
     )
 
     return context.task

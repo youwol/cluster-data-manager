@@ -6,7 +6,11 @@ Use get_restore_task() to obtain a configured instance for TaskRestore.
 from typing import Callable, Optional
 
 from configuration import ConfigEnvVars, env_utils
-from services import get_service_cqlsh_commands_builder, get_service_mc_commands_builder, get_service_report_builder
+from services import (
+    get_service_cqlsh_commands_builder,
+    get_service_mc_commands_builder,
+    get_service_report_builder,
+)
 from .cassandra import Cassandra
 from .s3 import S3
 from .task import Task
@@ -42,8 +46,13 @@ def get_s3_builder() -> Callable[[], S3]:
 
     def builder() -> S3:
         if context.s3 is None:
-            context.s3 = S3(report=report_builder(), path_work_dir=path_work_dir,
-                            mc_commands=mc_commands_builder(), buckets=s3_buckets, overwrite=overwrite)
+            context.s3 = S3(
+                report=report_builder(),
+                path_work_dir=path_work_dir,
+                mc_commands=mc_commands_builder(),
+                buckets=s3_buckets,
+                overwrite=overwrite,
+            )
 
         return context.s3
 
@@ -70,9 +79,14 @@ def get_cassandra_builder() -> Callable[[], Cassandra]:
 
     def builder() -> Cassandra:
         if context.cassandra is None:
-            context.cassandra = Cassandra(report=report_builder(), path_work_dir=path_work_dir,
-                                          cqlsh_commands=cqlsh_commands_builder(), keyspaces=keyspaces,
-                                          tables=tables, overwrite=overwrite)
+            context.cassandra = Cassandra(
+                report=report_builder(),
+                path_work_dir=path_work_dir,
+                cqlsh_commands=cqlsh_commands_builder(),
+                keyspaces=keyspaces,
+                tables=tables,
+                overwrite=overwrite,
+            )
 
         return context.cassandra
 
@@ -91,7 +105,9 @@ def build() -> Task:
     task_restore_cassandre_builder = get_cassandra_builder()
     task_restore_s3_builder = get_s3_builder()
 
-    context.task = Task(task_restore_s3=task_restore_s3_builder(),
-                        task_restore_cassandra=task_restore_cassandre_builder())
+    context.task = Task(
+        task_restore_s3=task_restore_s3_builder(),
+        task_restore_cassandra=task_restore_cassandre_builder(),
+    )
 
     return context.task

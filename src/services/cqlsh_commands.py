@@ -6,8 +6,10 @@ from typing import Any, Callable, Optional
 
 from .reporting import Report
 
-MSG_INVALID_REQUEST_COL_IDX_TOKEN = 'InvalidRequest: Error from server: code=2200 [Invalid query] message="Unknown ' \
-                                    'column name detected in CREATE MATERIALIZED VIEW statement: idx_token"'
+MSG_INVALID_REQUEST_COL_IDX_TOKEN = (
+    'InvalidRequest: Error from server: code=2200 [Invalid query] message="Unknown '
+    'column name detected in CREATE MATERIALIZED VIEW statement: idx_token"'
+)
 
 
 class CqlInstance:
@@ -49,7 +51,9 @@ class CqlshCommands:
             cqlsh (str): the command line for calling cqlsh
             cql_instance (CqlInstance): the cql instance to connect to
         """
-        self._report = report.get_sub_report("CqlshCommands", init_status="InitializingComponent")
+        self._report = report.get_sub_report(
+            "CqlshCommands", init_status="InitializingComponent"
+        )
         self._cqlsh = cqlsh.split(" ")
         self._instance = cql_instance
         self._report.debug(f"using instance {cql_instance.get_host()}")
@@ -97,16 +101,22 @@ class CqlshCommands:
             keyspace (str): name of the keyspace.
             path_file (Path): output file.
         """
-        report = self._report.get_sub_report(f"backup_ddl_{keyspace}", init_status="in function")
+        report = self._report.get_sub_report(
+            f"backup_ddl_{keyspace}", init_status="in function"
+        )
         report.debug(f"will store ddl in {path_file}")
-        code, out, err = self._run_command(report, f"CONSISTENCY ALL; DESCRIBE {keyspace};")
+        code, out, err = self._run_command(
+            report, f"CONSISTENCY ALL; DESCRIBE {keyspace};"
+        )
         if code != 0:
             raise RuntimeError(f"Failure: {err}")
 
         path_file.write_text("".join(out.splitlines(keepends=True)[1:]))
         report.set_status("Done")
 
-    def restore_ddl(self, keyspace: str, path_file: Path, drop_if_exists: bool = False) -> None:
+    def restore_ddl(
+        self, keyspace: str, path_file: Path, drop_if_exists: bool = False
+    ) -> None:
         """Execute a Data Description Langage script from a file.
 
         Run statements from a file to restore a keyspace, and check the keyspace restored.
@@ -124,18 +134,31 @@ class CqlshCommands:
             path_file (Path): input file
             drop_if_exists (bool): if provided and True, drop keyspace before executing DDL script.
         """
-        report = self._report.get_sub_report(f"restore_ddl_{keyspace}", init_status="in function")
+        report = self._report.get_sub_report(
+            f"restore_ddl_{keyspace}", init_status="in function"
+        )
         report.debug(f"will take ddl from file {path_file}")
 
-        cql_preamble = f"CONSISTENCY ALL;DROP KEYSPACE IF EXISTS {keyspace};" if drop_if_exists else "CONSISTENCY ALL;"
+        cql_preamble = (
+            f"CONSISTENCY ALL;DROP KEYSPACE IF EXISTS {keyspace};"
+            if drop_if_exists
+            else "CONSISTENCY ALL;"
+        )
 
-        code, out, err = self._run_command(report, f"{cql_preamble}\n{path_file.read_text('utf8')}")
+        code, out, err = self._run_command(
+            report, f"{cql_preamble}\n{path_file.read_text('utf8')}"
+        )
         if code == 0:
             report.debug("ok")
         elif code == 2:
             err_lines = err.splitlines()
-            if all(message.find(MSG_INVALID_REQUEST_COL_IDX_TOKEN) > 0 for message in err_lines):
-                report.warning(f"Ignoring {len(err_lines)} failure(s) '{MSG_INVALID_REQUEST_COL_IDX_TOKEN}'")
+            if all(
+                message.find(MSG_INVALID_REQUEST_COL_IDX_TOKEN) > 0
+                for message in err_lines
+            ):
+                report.warning(
+                    f"Ignoring {len(err_lines)} failure(s) '{MSG_INVALID_REQUEST_COL_IDX_TOKEN}'"
+                )
             else:
                 report.fatal(f"ERROR : {err}")
                 raise RuntimeError(f"Failure: {err}")
@@ -144,12 +167,19 @@ class CqlshCommands:
 
         # Check created keyspace against DDL in file
         report.debug(f"checking keyspace {keyspace}")
-        code, out, err = self._run_command(report, f"CONSISTENCY ALL; DESCRIBE {keyspace};")
+        code, out, err = self._run_command(
+            report, f"CONSISTENCY ALL; DESCRIBE {keyspace};"
+        )
         if code == 0:
-            diff = [line for line in "".join(out.splitlines(keepends=True)[1:]).split("\n\n") if
-                    line not in path_file.read_text('utf8').split("\n\n")]
+            diff = [
+                line
+                for line in "".join(out.splitlines(keepends=True)[1:]).split("\n\n")
+                if line not in path_file.read_text("utf8").split("\n\n")
+            ]
             if len(diff) > 0:
-                raise RuntimeError(f"keyspace {keyspace} not correctly restored, diff are {diff}")
+                raise RuntimeError(
+                    f"keyspace {keyspace} not correctly restored, diff are {diff}"
+                )
         else:
             raise RuntimeError(f"Failure {out}")
         report.set_status("Done")
@@ -169,7 +199,9 @@ class CqlshCommands:
             table (str): name of the table.
             path_file (Path): output file.
         """
-        report = self._report.get_sub_report(f"backup_table_{table}", init_status="in function")
+        report = self._report.get_sub_report(
+            f"backup_table_{table}", init_status="in function"
+        )
         report.debug(f"will store table data in {path_file}")
 
         # Expected nb of line in output
@@ -191,7 +223,9 @@ class CqlshCommands:
                 last_message_timestamp = now
                 report.debug(f"Copied {count} / {total} lines ")
 
-        self._run_command_with_handler(report, f"CONSISTENCY ALL; COPY {table} TO STDOUT;", on_line=on_line)
+        self._run_command_with_handler(
+            report, f"CONSISTENCY ALL; COPY {table} TO STDOUT;", on_line=on_line
+        )
 
         # Check nb of lines, minus the first line (output of 'CONSISTENCY ALL;'.
         if (count - 1) != total:
@@ -200,7 +234,9 @@ class CqlshCommands:
         path_file.write_text("".join(out.splitlines(keepends=True)[1:]))
         report.set_status("Done")
 
-    def restore_table(self, table: str, path_file: Path, truncate: bool = False) -> None:
+    def restore_table(
+        self, table: str, path_file: Path, truncate: bool = False
+    ) -> None:
         """Restore table data from a file in CSV format.
 
         Run statement 'COPY <table> FROM STDIN' with full consistency, sending file content to process stdin.
@@ -215,10 +251,14 @@ class CqlshCommands:
             path_file (Path): input file.
             truncate (bool): if provided and True, the table will be truncated before copying data
         """
-        report = self._report.get_sub_report(f"restore_table_{table}", init_status="in function")
+        report = self._report.get_sub_report(
+            f"restore_table_{table}", init_status="in function"
+        )
         report.debug(f"will take data from file {path_file}")
 
-        cql_preamble = f"CONSISTENCY ALL; TRUNCATE {table};" if truncate else "CONSISTENCY ALL;"
+        cql_preamble = (
+            f"CONSISTENCY ALL; TRUNCATE {table};" if truncate else "CONSISTENCY ALL;"
+        )
 
         cql = f"{cql_preamble} COPY {table} FROM STDIN;"
 
@@ -245,7 +285,9 @@ class CqlshCommands:
         """
         report = report.get_sub_report("_count_table", init_status="in function")
         report.debug(f"table={table}")
-        code, out, err = self._run_command(report, f"CONSISTENCY ALL;SELECT count(*) FROM {table};")
+        code, out, err = self._run_command(
+            report, f"CONSISTENCY ALL;SELECT count(*) FROM {table};"
+        )
         if code != 0:
             raise RuntimeError(f"Failure: {err}")
 
@@ -254,7 +296,9 @@ class CqlshCommands:
         count_str = lines[4].strip()
         return int(count_str)
 
-    def _run_command(self, report: Report, cql: str, stdin: Optional[str] = None) -> tuple[int, Any, Any]:
+    def _run_command(
+        self, report: Report, cql: str, stdin: Optional[str] = None
+    ) -> tuple[int, Any, Any]:
         report = report.get_sub_report("__run_command", init_status="in function")
         args = []
         if stdin is None:
@@ -262,24 +306,35 @@ class CqlshCommands:
         else:
             args = ["-e", cql]
         report.debug(f"cql='{cql}', args='{args}', stdin='{stdin}'")
-        result = subprocess.run([*self._cqlsh, *self._instance.as_args_array(), *args], input=stdin,
-                                capture_output=True, text=True, check=False)
+        result = subprocess.run(
+            [*self._cqlsh, *self._instance.as_args_array(), *args],
+            input=stdin,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
         report.debug(f"return_code={result.returncode}")
         report.debug(f"out={result.stdout}")
         report.debug(f"err={result.stderr}")
         return result.returncode, result.stdout, result.stderr
 
-    def _run_command_with_handler(self, report: Report, cql: str, on_line: Callable[[str], None]) -> None:
-        report = report.get_sub_report("__run_command_with_handler", init_status="in function")
+    def _run_command_with_handler(
+        self, report: Report, cql: str, on_line: Callable[[str], None]
+    ) -> None:
+        report = report.get_sub_report(
+            "__run_command_with_handler", init_status="in function"
+        )
         report.debug(f"cql={cql}")
-        with subprocess.Popen([*self._cqlsh, *self._instance.as_args_array(), "-e", cql],
-                              stdout=subprocess.PIPE) as popen:
+        with subprocess.Popen(
+            [*self._cqlsh, *self._instance.as_args_array(), "-e", cql],
+            stdout=subprocess.PIPE,
+        ) as popen:
             if popen.stdout is None:
                 msg = "no stdout piping when running command"
                 report.fatal(msg)
                 raise RuntimeError(msg)
 
             for line in popen.stdout:
-                on_line(line.decode('utf8'))
+                on_line(line.decode("utf8"))
 
         report.set_status("exit function")

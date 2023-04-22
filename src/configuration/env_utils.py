@@ -8,8 +8,8 @@ from dotenv import load_dotenv
 
 from .env_vars import EnvironmentVars
 
-TRUE_STRINGS = ['true', 'True', 'yes', 'y']
-FALSE_STRINGS = ['false', 'False', 'no', 'n']
+TRUE_STRINGS = ["true", "True", "yes", "y"]
+FALSE_STRINGS = ["false", "False", "no", "n"]
 
 load_dotenv()
 
@@ -60,7 +60,9 @@ class DirNotEmptyError(RuntimeError):
             env_name (EnvironmentVars): the environment variable.
             dir_path (Path): the path of the (not empty) directory.
         """
-        super().__init__(f"Directory {dir_path} defined in env {env_name.value} is not empty")
+        super().__init__(
+            f"Directory {dir_path} defined in env {env_name.value} is not empty"
+        )
 
 
 class BooleanParsingError(RuntimeError):
@@ -73,7 +75,9 @@ class BooleanParsingError(RuntimeError):
             env_name (EnvironmentVars): the environment variable.
             value (str): the (unparseable) value.
         """
-        super().__init__(f"Env {env_name.value} value '{value}' could not be parse as a boolean")
+        super().__init__(
+            f"Env {env_name.value} value '{value}' could not be parse as a boolean"
+        )
 
 
 class IntegerParsingError(RuntimeError):
@@ -86,7 +90,9 @@ class IntegerParsingError(RuntimeError):
             env_name (EnvironmentVars): the environment variable.
             value (str): the (unparseable) value.
         """
-        super().__init__(f"Env {env_name.value} value '{value}' could not be parse as an integer")
+        super().__init__(
+            f"Env {env_name.value} value '{value}' could not be parse as an integer"
+        )
 
 
 def file(env_name: EnvironmentVars) -> Path:
@@ -125,9 +131,13 @@ def creating_file(env_name: EnvironmentVars) -> Path:
         result.parent.mkdir(parents=True, exist_ok=True)
         result.touch(exist_ok=False)
     except FileExistsError as error:
-        raise FileCreationError(f"Path '{result}' defined in {env_name.value} already exists") from error
+        raise FileCreationError(
+            f"Path '{result}' defined in {env_name.value} already exists"
+        ) from error
     except OSError as error:
-        raise FileCreationError(f"Failed to touch path '{result}' defined in {env_name.value}") from error
+        raise FileCreationError(
+            f"Failed to touch path '{result}' defined in {env_name.value}"
+        ) from error
 
     return result
 
@@ -149,7 +159,9 @@ def existing_path(env_name: EnvironmentVars) -> Path:
     result = Path(not_empty_string(env_name))
 
     if not result.exists():
-        raise FileNotFoundError(f"Path '{result}' defined in env {env_name.value} does not exist")
+        raise FileNotFoundError(
+            f"Path '{result}' defined in env {env_name.value} does not exist"
+        )
 
     return result
 
@@ -188,7 +200,9 @@ def empty_dir(env_name: EnvironmentVars) -> Path:
     result = existing_path(env_name)
 
     if not result.is_dir():
-        raise NotADirectoryError(f"Path '{result}' defined in env {env_name.value} is not a dir")
+        raise NotADirectoryError(
+            f"Path '{result}' defined in env {env_name.value} is not a dir"
+        )
 
     if os.listdir(result):
         raise DirNotEmptyError(env_name, result)
@@ -220,7 +234,9 @@ def not_empty_string(env_name: EnvironmentVars) -> str:
     return result
 
 
-def maybe_string(env_name: EnvironmentVars, default: Optional[str] = None) -> Optional[str]:
+def maybe_string(
+    env_name: EnvironmentVars, default: Optional[str] = None
+) -> Optional[str]:
     """Get a string from an environment variable or the default if not set.
 
     If not provided default is None.

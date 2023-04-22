@@ -12,8 +12,18 @@ from .archiver import Archiver
 from .cluster_maintenance import ClusterMaintenance, MaintenanceDetails
 from .cqlsh_commands import CqlInstance, CqlshCommands
 from .google_drive import GoogleDrive
-from .kubernetes_api import KubernetesApi, KubernetesConfigMapValueRef, KubernetesIngressRef
-from .mc_commands import McCommands, MinioClientPaths, MinioLocalInstance, S3Credentials, S3Instance
+from .kubernetes_api import (
+    KubernetesApi,
+    KubernetesConfigMapValueRef,
+    KubernetesIngressRef,
+)
+from .mc_commands import (
+    McCommands,
+    MinioClientPaths,
+    MinioLocalInstance,
+    S3Credentials,
+    S3Instance,
+)
 from .oidc_client import OidcClient, OidcClientConfig
 from .reporting.reporting import Report, Reporting
 
@@ -50,7 +60,9 @@ def get_report_builder() -> Callable[[], Report]:
 
     def builder() -> Report:
         if context.report is None:
-            context.report = Reporting(path_log_file=path_log_file, initial_task=task_name).get_root_report()
+            context.report = Reporting(
+                path_log_file=path_log_file, initial_task=task_name
+            ).get_root_report()
         return context.report
 
     return builder
@@ -73,9 +85,9 @@ def get_cqlsh_commands_builder() -> Callable[[], CqlshCommands]:
     def builder() -> CqlshCommands:
         if context.cqlsh_commands is None:
             cql_instance = CqlInstance(host=cql_instance_host)
-            context.cqlsh_commands = CqlshCommands(report=report_builder(),
-                                                   cql_instance=cql_instance,
-                                                   cqlsh=cqlsh_command)
+            context.cqlsh_commands = CqlshCommands(
+                report=report_builder(), cql_instance=cql_instance, cqlsh=cqlsh_command
+            )
         return context.cqlsh_commands
 
     return builder
@@ -121,15 +133,14 @@ def get_mc_commands_builder() -> Callable[[], McCommands]:
                 tls=s3_tls,
             )
 
-            mc_paths = MinioClientPaths(
-                path_bin=path_mc,
-                path_config=path_mc_config
-            )
+            mc_paths = MinioClientPaths(path_bin=path_mc, path_config=path_mc_config)
 
-            context.mc_commands = McCommands(report=report_builder(),
-                                             mc_paths=mc_paths,
-                                             minio_instance=local,
-                                             s3_instance=cluster)
+            context.mc_commands = McCommands(
+                report=report_builder(),
+                mc_paths=mc_paths,
+                minio_instance=local,
+                s3_instance=cluster,
+            )
 
         return context.mc_commands
 
@@ -153,9 +164,12 @@ def get_oidc_client_builder() -> Callable[[], OidcClient]:
 
     def builder() -> OidcClient:
         if context.oidc_client is None:
-            oidc_client_config = OidcClientConfig(issuer=issuer, client_id=client_id, client_secret=client_secret)
-            context.oidc_client = OidcClient(report=report_builder(),
-                                             oidc_client_config=oidc_client_config)
+            oidc_client_config = OidcClientConfig(
+                issuer=issuer, client_id=client_id, client_secret=client_secret
+            )
+            context.oidc_client = OidcClient(
+                report=report_builder(), oidc_client_config=oidc_client_config
+            )
         return context.oidc_client
 
     return builder
@@ -177,9 +191,11 @@ def get_google_drive_builder() -> Callable[[], GoogleDrive]:
 
     def builder() -> GoogleDrive:
         if context.google_drive is None:
-            context.google_drive = GoogleDrive(report=report_builder(),
-                                               drive_id=drive_id,
-                                               oidc_client=oidc_client_builder())
+            context.google_drive = GoogleDrive(
+                report=report_builder(),
+                drive_id=drive_id,
+                oidc_client=oidc_client_builder(),
+            )
 
         return context.google_drive
 
@@ -202,7 +218,9 @@ def get_archiver_builder() -> Callable[[], Archiver]:
 
     def builder() -> Archiver:
         if context.archiver is None:
-            context.archiver = Archiver(report=report_builder(), path_work_dir=path_work_dir, job_uuid=job_uuid)
+            context.archiver = Archiver(
+                report=report_builder(), path_work_dir=path_work_dir, job_uuid=job_uuid
+            )
 
         return context.archiver
 
@@ -221,31 +239,49 @@ def get_cluster_maintenance_builder() -> Callable[[], ClusterMaintenance]:
 
     report_builder = get_report_builder()
     k8s_api_builder = get_kubernetes_api_builder()
-    maintenance_namespace = env_utils.not_empty_string(ConfigEnvVars.MAINTENANCE_NAMESPACE)
-    maintenance_ingress_name = env_utils.not_empty_string(ConfigEnvVars.MAINTENANCE_INGRESS_NAME)
-    maintenance_ingress_class_name = env_utils.not_empty_string(ConfigEnvVars.MAINTENANCE_INGRESS_CLASS_NAME)
-    maintenance_config_map_name = env_utils.not_empty_string(ConfigEnvVars.MAINTENANCE_CONFIG_MAP_NAME)
-    maintenance_config_map_key = env_utils.not_empty_string(ConfigEnvVars.MAINTENANCE_CONFIG_MAP_KEY)
-    maintenance_config_map_value = env_utils.not_empty_string(ConfigEnvVars.MAINTENANCE_CONFIG_MAP_VALUE)
+    maintenance_namespace = env_utils.not_empty_string(
+        ConfigEnvVars.MAINTENANCE_NAMESPACE
+    )
+    maintenance_ingress_name = env_utils.not_empty_string(
+        ConfigEnvVars.MAINTENANCE_INGRESS_NAME
+    )
+    maintenance_ingress_class_name = env_utils.not_empty_string(
+        ConfigEnvVars.MAINTENANCE_INGRESS_CLASS_NAME
+    )
+    maintenance_config_map_name = env_utils.not_empty_string(
+        ConfigEnvVars.MAINTENANCE_CONFIG_MAP_NAME
+    )
+    maintenance_config_map_key = env_utils.not_empty_string(
+        ConfigEnvVars.MAINTENANCE_CONFIG_MAP_KEY
+    )
+    maintenance_config_map_value = env_utils.not_empty_string(
+        ConfigEnvVars.MAINTENANCE_CONFIG_MAP_VALUE
+    )
 
     def builder() -> ClusterMaintenance:
         if context.cluster_maintenance is None:
             context.cluster_maintenance = ClusterMaintenance(
                 report=report_builder(),
                 k8s_api=k8s_api_builder(),
-                maintenance_details=(MaintenanceDetails(
-                    ingress_ref=(KubernetesIngressRef(
-                        namespace=maintenance_namespace,
-                        name=maintenance_ingress_name
-                    )),
-                    ingress_class_name=maintenance_ingress_class_name,
-                    config_map_value_ref=(KubernetesConfigMapValueRef(
-                        namespace=maintenance_namespace,
-                        name=maintenance_config_map_name,
-                        key=maintenance_config_map_key
-                    )),
-                    config_map_value=maintenance_config_map_value
-                ))
+                maintenance_details=(
+                    MaintenanceDetails(
+                        ingress_ref=(
+                            KubernetesIngressRef(
+                                namespace=maintenance_namespace,
+                                name=maintenance_ingress_name,
+                            )
+                        ),
+                        ingress_class_name=maintenance_ingress_class_name,
+                        config_map_value_ref=(
+                            KubernetesConfigMapValueRef(
+                                namespace=maintenance_namespace,
+                                name=maintenance_config_map_name,
+                                key=maintenance_config_map_key,
+                            )
+                        ),
+                        config_map_value=maintenance_config_map_value,
+                    )
+                ),
             )
 
         return context.cluster_maintenance
@@ -265,14 +301,16 @@ def get_kubernetes_api_builder() -> Callable[[], KubernetesApi]:
 
     report_builder = get_report_builder()
     kube_config = env_utils.maybe_string(ConfigEnvVars.MAINTENANCE_KUBE_CONFIG)
-    kube_config_context = env_utils.maybe_string(ConfigEnvVars.MAINTENANCE_KUBE_CONFIG_CONTEXT)
+    kube_config_context = env_utils.maybe_string(
+        ConfigEnvVars.MAINTENANCE_KUBE_CONFIG_CONTEXT
+    )
 
     def builder() -> KubernetesApi:
         if context.kubernetes_api is None:
             context.kubernetes_api = KubernetesApi(
                 report=report_builder(),
                 kube_config=kube_config,
-                kube_config_context=kube_config_context
+                kube_config_context=kube_config_context,
             )
 
         return context.kubernetes_api

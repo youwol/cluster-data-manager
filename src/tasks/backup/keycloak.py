@@ -11,10 +11,13 @@ from ..common import CommonKeycloak, OnPathDirMissing
 class Keycloak(CommonKeycloak):
     """Sub task for keycloak backup."""
 
-    def __init__(self, report: Report,
-                 keycloak_admin: KeycloakAdmin,
-                 path_work_dir: Path,
-                 path_keycloak_status_file: Path):
+    def __init__(
+        self,
+        report: Report,
+        keycloak_admin: KeycloakAdmin,
+        path_work_dir: Path,
+        path_keycloak_status_file: Path,
+    ):
         """Simple constructor.
 
         Will call CommonKeycloak __init__ with path_work_dir
@@ -66,6 +69,4 @@ class Keycloak(CommonKeycloak):
         Returns:
             Any: result of /admin/serverinfo
         """
-        return {
-            "server_info": self._keycloak_admin.system_info()
-        }
+        return {"server_info": self._keycloak_admin.system_info()}

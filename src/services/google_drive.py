@@ -71,7 +71,9 @@ class GoogleDrive:
             drive_id (str):  the google drive Id
             oidc_client (OidcClient): the oidc client for identity pool authentication
         """
-        self._report = report.get_sub_report(task="GoogleDrive", init_status="InitializingComponent")
+        self._report = report.get_sub_report(
+            task="GoogleDrive", init_status="InitializingComponent"
+        )
         self._drive_id = drive_id
         self._oidc_client = oidc_client
         self._service: Optional[Any] = None
@@ -107,7 +109,7 @@ class GoogleDrive:
             report.notify("found existing file : checking expiration for token")
             file_timestamp = path_credentials_source_file.stat().st_mtime
             tokens = json.loads(path_credentials_source_file.read_text("UTF-8"))
-            token_expire_at = file_timestamp + tokens['expires_in']
+            token_expire_at = file_timestamp + tokens["expires_in"]
             if token_expire_at < datetime.datetime.now().timestamp():
                 report.notify("existing tokens has expired : removing tokens file")
                 path_credentials_source_file.unlink()
@@ -115,7 +117,9 @@ class GoogleDrive:
         if not path_credentials_source_file.exists():
             report.notify("setup credentials")
             tokens = self._oidc_client.grant_client_credentials_tokens()
-            path_credentials_source_file.write_text(json.dumps(tokens), encoding='UTF-8')
+            path_credentials_source_file.write_text(
+                json.dumps(tokens), encoding="UTF-8"
+            )
             report.notify("done")
 
         return path_credentials_source_file
@@ -137,15 +141,15 @@ class GoogleDrive:
                         "file": self._get_path_oidc_tokens(),
                         "format": {
                             "type": "json",
-                            "subject_token_field_name": "id_token"
-                        }
-                    }
+                            "subject_token_field_name": "id_token",
+                        },
+                    },
                 }
             )
             report.notify("GoogleCloud credentials defined")
 
             report.debug("building service drive")
-            self._service = build('drive', 'v3', credentials=creds)
+            self._service = build("drive", "v3", credentials=creds)
             report.set_status("Done")
         return self._service
 
@@ -159,15 +163,21 @@ class GoogleDrive:
             [dict]: list of files information
         """
         try:
-            files, page_token = self._list_files(request="mimeType='application/x-tar'", page_token=None)
+            files, page_token = self._list_files(
+                request="mimeType='application/x-tar'", page_token=None
+            )
             result = [*files]
             while page_token is not None:
-                files, page_token = self._list_files(request="mimeType='application/x-tar'", page_token=page_token)
+                files, page_token = self._list_files(
+                    request="mimeType='application/x-tar'", page_token=page_token
+                )
                 result = [*result, *files]
             return result
 
         except HttpError as error:
-            raise RuntimeError(f"listing drive archives failed with HttpError : {error}") from error
+            raise RuntimeError(
+                f"listing drive archives failed with HttpError : {error}"
+            ) from error
 
     def upload(self, path_local_file: Path, file_name: str, folder_name: str) -> None:
         """Upload a local file to a drive file into a drive folder.
@@ -195,8 +205,16 @@ class GoogleDrive:
             media = MediaFileUpload(path_local_file, resumable=True)
             report.set_status("Uploading")
             # pylint: disable=maybe-no-member
-            request = self._get_service().files().create(media_body=media, supportsAllDrives=True, fields="id",
-                                                         body={'name': file_name, 'parents': [folder_id]})
+            request = (
+                self._get_service()
+                .files()
+                .create(
+                    media_body=media,
+                    supportsAllDrives=True,
+                    fields="id",
+                    body={"name": file_name, "parents": [folder_id]},
+                )
+            )
 
             response = None
             while response is None:
@@ -204,7 +222,7 @@ class GoogleDrive:
                 if status:
                     report.notify(f"Uploaded {int(status.progress() * 100):d}%.")
 
-            result = response.get('id')
+            result = response.get("id")
             report.set_status("Uploaded", level="NOTIFY")
             report.debug(f"file_id={result}")
             report.set_status("exit function")
@@ -236,7 +254,9 @@ class GoogleDrive:
 
         except HttpError as error:
             report.fatal(f"HTTP error '{error}'")
-            raise RuntimeError(f"listing files failed with HttpError : {error}") from error
+            raise RuntimeError(
+                f"listing files failed with HttpError : {error}"
+            ) from error
 
     def _get_folder_id(self, folder_name: str) -> Optional[str]:
         try:
@@ -244,7 +264,9 @@ class GoogleDrive:
                 f"mimeType='application/vnd.google-apps.folder' and name='{folder_name}'"
             )
         except HttpError as error:
-            raise RuntimeError(f"listing files failed with HttpError : {error}") from error
+            raise RuntimeError(
+                f"listing files failed with HttpError : {error}"
+            ) from error
         except NonUniqResult as error:
             raise RuntimeError(f"More than one folder named '{folder_name}'") from error
 
@@ -256,7 +278,9 @@ class GoogleDrive:
                 f"mimeType!='application/vnd.google-apps.folder' and name='{file_name}'and '{folder_id}' in parents"
             )
         except HttpError as error:
-            raise RuntimeError(f"listing files failed with HttpError : {error}") from error
+            raise RuntimeError(
+                f"listing files failed with HttpError : {error}"
+            ) from error
         except NonUniqResult as error:
             raise RuntimeError(f"More than one file named '{file_name}'") from error
         return file_id
@@ -273,28 +297,44 @@ class GoogleDrive:
             Optional[str]: the file ID, or None if not found.
         """
         try:
-            archive_id = self._get_file_id(f"mimeType='application/x-tar' and name='{archive_name}'")
+            archive_id = self._get_file_id(
+                f"mimeType='application/x-tar' and name='{archive_name}'"
+            )
         except HttpError as error:
-            raise RuntimeError(f"listing files failed with HttpError : {error}") from error
+            raise RuntimeError(
+                f"listing files failed with HttpError : {error}"
+            ) from error
         except NonUniqResult as error:
-            raise RuntimeError(f"More than one archive named '{archive_name}'") from error
+            raise RuntimeError(
+                f"More than one archive named '{archive_name}'"
+            ) from error
 
         return archive_id
 
-    def _list_files(self, request: str, page_token: Optional[str] = None) -> tuple[list[FileInformation], str]:
+    def _list_files(
+        self, request: str, page_token: Optional[str] = None
+    ) -> tuple[list[FileInformation], str]:
         # pylint: disable=maybe-no-member
-        results = self._get_service().files().list(
-            q=request,
-            corpora="drive",
-            driveId=self._drive_id,
-            supportsAllDrives=True,
-            includeItemsFromAllDrives=True,
-            pageSize=PAGESIZE,
-            pageToken=page_token,
-            fields="nextPageToken, files(id, name, mimeType)"
-        ).execute()
-        files_informations = [FileInformation(f['id'], f['name'], f['mimeType']) for f in (results.get('files', []))]
-        return files_informations, results.get('nextPageToken', None)
+        results = (
+            self._get_service()
+            .files()
+            .list(
+                q=request,
+                corpora="drive",
+                driveId=self._drive_id,
+                supportsAllDrives=True,
+                includeItemsFromAllDrives=True,
+                pageSize=PAGESIZE,
+                pageToken=page_token,
+                fields="nextPageToken, files(id, name, mimeType)",
+            )
+            .execute()
+        )
+        files_informations = [
+            FileInformation(f["id"], f["name"], f["mimeType"])
+            for f in (results.get("files", []))
+        ]
+        return files_informations, results.get("nextPageToken", None)
 
     def _get_file_id(self, request: str) -> Optional[str]:
         files, next_page_token = self._list_files(request=request)
