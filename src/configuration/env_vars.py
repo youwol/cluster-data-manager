@@ -1,4 +1,5 @@
 """Enumeration of the environments variables names."""
+# standard library
 from enum import Enum
 
 

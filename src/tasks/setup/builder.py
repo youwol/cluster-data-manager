@@ -2,14 +2,20 @@
 
 Use get_<task>() to obtain a configured instance of TaskSetup for a given task.
 """
+# typing
 from typing import Any, Optional
 
+# data-manager configuration
 from configuration import ConfigEnvVars, env_utils
+
+# data-manager services
 from services import (
     get_service_archiver_builder,
     get_service_google_drive_builder,
     get_service_report_builder,
 )
+
+# relative
 from .task import KeycloakDetails, Task
 
 

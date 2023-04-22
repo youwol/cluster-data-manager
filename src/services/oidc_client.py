@@ -1,9 +1,13 @@
 """Main class and ancillary classes to request OIDC tokens."""
+# standard library
 import json
 import urllib.parse
 import urllib.request
+
+# typing
 from typing import Any, Optional
 
+# relative
 from .reporting import Report
 
 

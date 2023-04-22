@@ -1,11 +1,16 @@
 """Main class and ancillary classes for service mc_commands."""
+# standard library
 import datetime
 import json
 import subprocess
 import time
+
 from pathlib import Path
+
+# typing
 from typing import Any, Callable, Optional
 
+# relative
 from .reporting import Report
 
 

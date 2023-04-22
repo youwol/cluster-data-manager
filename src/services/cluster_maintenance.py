@@ -3,10 +3,15 @@
 Cluster maintenance service handle the set up and tear down of an Ingress redirecting cluster traffic for backends
 to a custom maintenance page.
 """
+# standard library
 import time
+
 from contextlib import AbstractContextManager
+
+# typing
 from typing import Any, Optional
 
+# relative
 from .kubernetes_api import (
     KubernetesApi,
     KubernetesConfigMapValueRef,

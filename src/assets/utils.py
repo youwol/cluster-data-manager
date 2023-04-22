@@ -1,6 +1,8 @@
 """Assets service functions."""
+# standard library
 import importlib.resources
 import shutil
+
 from enum import Enum
 from pathlib import Path
 

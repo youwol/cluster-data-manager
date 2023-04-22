@@ -5,9 +5,13 @@ Use get_<service>_builder() to obtain a nullary builder for a service.
 Notes:
     It is possible to overload the definition of any service by using the context object before calling builders.
 """
+# typing
 from typing import Callable, Optional
 
+# data-manager configuration
 from configuration import ConfigEnvVars, env_utils
+
+# relative
 from .archiver import Archiver
 from .cluster_maintenance import ClusterMaintenance, MaintenanceDetails
 from .cqlsh_commands import CqlInstance, CqlshCommands

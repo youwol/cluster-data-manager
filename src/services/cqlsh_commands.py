@@ -1,9 +1,14 @@
 """Main class and ancillary classes for cqlsh_commands service."""
+# standard library
 import datetime
 import subprocess
+
 from pathlib import Path
+
+# typing
 from typing import Any, Callable, Optional
 
+# relative
 from .reporting import Report
 
 MSG_INVALID_REQUEST_COL_IDX_TOKEN = (

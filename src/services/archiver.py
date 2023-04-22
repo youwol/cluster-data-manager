@@ -3,12 +3,17 @@
 The Archiver service should be used to obtain instance of ArchiveCreator (represent and manage a new archive) or
 ArchiveExtractor (represent and manage an existing archive).
 """
+# standard library
 import json
 import tarfile
 import uuid
+
 from pathlib import Path
+
+# typing
 from typing import Any
 
+# relative
 from .reporting import Report
 
 

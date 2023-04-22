@@ -1,11 +1,17 @@
 """Utilitary fonctions for environement variables."""
-from pathlib import Path
-from typing import Optional
-
+# standard library
 import os
 import sys
+
+from pathlib import Path
+
+# typing
+from typing import Optional
+
+# third parties
 from dotenv import load_dotenv
 
+# relative
 from .env_vars import EnvironmentVars
 
 TRUE_STRINGS = ["true", "True", "yes", "y"]

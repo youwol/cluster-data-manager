@@ -1,9 +1,13 @@
 """Main class and ancillary classes for keyclak client."""
+# standard library
 import datetime
 import json
 import urllib.request
+
+# typing
 from typing import Any, Optional
 
+# relative
 from .oidc_client import OidcClient, OidcClientConfig
 from .reporting import Report
 

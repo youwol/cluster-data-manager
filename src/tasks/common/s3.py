@@ -1,7 +1,11 @@
 """Parent class for S3 tasks."""
+# standard library
 from pathlib import Path
 
+# data-manager services
 from services.mc_commands import McCommands
+
+# relative
 from .task import OnPathDirMissing, Task
 
 

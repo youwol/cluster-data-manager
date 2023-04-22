@@ -1,8 +1,12 @@
 """Main class for restoration subtask of S3."""
+# standard library
 from pathlib import Path
 
+# data-manager services
 from services.mc_commands import McCommands
 from services.reporting import Report
+
+# relative
 from ..common.s3 import S3 as CommonS3
 from ..common.task import OnPathDirMissing
 

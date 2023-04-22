@@ -1,9 +1,15 @@
 """Main class of the backup task of S3."""
+# standard library
 from pathlib import Path
+
+# typing
 from typing import Any
 
+# data-manager services
 from services.mc_commands import McCommands
 from services.reporting import Report
+
+# relative
 from ..common import CommonS3, OnPathDirMissing
 
 

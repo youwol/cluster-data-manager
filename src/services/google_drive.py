@@ -1,16 +1,21 @@
 """Main class and ancillary classes for service google_drive."""
+# standard library
 import datetime
 import io
 import json
 
 from pathlib import Path
+
+# typing
 from typing import Any, Optional
 
+# third parties
 from google.auth.identity_pool import Credentials
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from googleapiclient.http import MediaFileUpload, MediaIoBaseDownload
 
+# relative
 from .oidc_client import OidcClient
 from .reporting import Report
 
