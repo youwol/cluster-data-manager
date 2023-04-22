@@ -11,6 +11,7 @@ from .task import KeycloakDetails, Task
 
 class Context:
     """Hold tasks instances."""
+
     backup: Optional[Task] = None
     restore: Optional[Task] = None
 
@@ -60,6 +61,7 @@ def restore() -> Any:
     Configured with:
       * archive name from environment.
       * extract everythinng.
+
     Returns:
         TaskSetup: a instance of TaskSetup configured for setup_restore
     """

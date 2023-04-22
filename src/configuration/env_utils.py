@@ -1,9 +1,10 @@
 """Utilitary fonctions for environement variables."""
+from pathlib import Path
+from typing import Optional
+
 import os
 import sys
 from dotenv import load_dotenv
-from pathlib import Path
-from typing import Optional
 
 from .env_vars import EnvironmentVars
 
@@ -14,9 +15,14 @@ load_dotenv()
 
 
 class FileCreationError(RuntimeError):
-    """Simple RuntimeError for file creation failure"""
+    """Simple RuntimeError for file creation failure."""
 
     def __init__(self, msg: str):
+        """Simply Call super.
+
+        Args:
+            msg (str): message passed to parent class.
+        """
         super().__init__(msg)
 
 
@@ -24,13 +30,23 @@ class EnvVarNotSet(RuntimeError):
     """Simple RuntimeError for environment variable not set."""
 
     def __init__(self, env_name: EnvironmentVars):
+        """Call super with a formatted message.
+
+        Args:
+            env_name (EnvironmentVars): the environment variable not set.
+        """
         super().__init__(f"Env {env_name.value} not set")
 
 
 class EnvVarEmpty(RuntimeError):
-    """Simple RuntimeError for environment variable is an empty string once stripped."""
+    """Simple RuntimeError for empty (once stripped) environment variable."""
 
     def __init__(self, env_name: EnvironmentVars):
+        """Call super with a formatted message.
+
+        Args:
+            env_name (EnvironmentVars): the empty environment variable.
+        """
         super().__init__(f"Env {env_name.value} set but empty once striped")
 
 
@@ -38,20 +54,38 @@ class DirNotEmptyError(RuntimeError):
     """Simple RuntimeError for an expected empty dir containing entries."""
 
     def __init__(self, env_name: EnvironmentVars, dir_path: Path):
+        """Call super with a formatted message.
+
+        Args:
+            env_name (EnvironmentVars): the environment variable.
+            dir_path (Path): the path of the (not empty) directory.
+        """
         super().__init__(f"Directory {dir_path} defined in env {env_name.value} is not empty")
 
 
 class BooleanParsingError(RuntimeError):
-    """Simple RuntimeError for an environment variable expected to be a boolean but not parsable"""
+    """Simple RuntimeError for an environment variable expected to be a boolean but not parsable."""
 
     def __init__(self, env_name: EnvironmentVars, value: str):
+        """Call super with a formatted message.
+
+        Args:
+            env_name (EnvironmentVars): the environment variable.
+            value (str): the (unparseable) value.
+        """
         super().__init__(f"Env {env_name.value} value '{value}' could not be parse as a boolean")
 
 
 class IntegerParsingError(RuntimeError):
-    """Simple RuntimeError for an environment variable expected to be an integer but not parsable"""
+    """Simple RuntimeError for an environment variable expected to be an integer but not parsable."""
 
     def __init__(self, env_name: EnvironmentVars, value: str):
+        """Call super with a formatted message.
+
+        Args:
+            env_name (EnvironmentVars): the environment variable.
+            value (str): the (unparseable) value.
+        """
         super().__init__(f"Env {env_name.value} value '{value}' could not be parse as an integer")
 
 
@@ -85,10 +119,10 @@ def creating_file(env_name: EnvironmentVars) -> Path:
        EnvVarEmpty: if the environment variable is an empty string once stripped.
        FileCreationError: if the file already exists or cannot be created.
     """
-
     result = Path(not_empty_string(env_name))
 
     try:
+        result.parent.mkdir(parents=True, exist_ok=True)
         result.touch(exist_ok=False)
     except FileExistsError as error:
         raise FileCreationError(f"Path '{result}' defined in {env_name.value} already exists") from error
@@ -149,7 +183,7 @@ def empty_dir(env_name: EnvironmentVars) -> Path:
         env_name (EnvVars): environment variable name.
 
     Returns:
-
+        Path: the directory path.
     """
     result = existing_path(env_name)
 
@@ -227,7 +261,6 @@ def boolean(env_name: EnvironmentVars, default: Optional[bool] = None) -> bool:
         EnvVarNotSet: if the environment variable is not set and default is not provided or is None.
         BooleanParsingError: if the value is not parsable as a boolean.
     """
-
     str_value = os.getenv(env_name.value)
 
     if str_value is None:
@@ -277,14 +310,18 @@ def integer(env_name: EnvironmentVars, default: Optional[int] = None) -> int:
 
 
 def strings_list(env_name: EnvironmentVars, sep: str = ":") -> list[str]:
-    """
-    TODO: write doc
+    """Split env_name in a list of str.
+
+    Notes:
+        The environment variable must be set. To pass an empty list, just set it to the separator alone :
+        ENV=":"
+
     Args:
-        env_name ():
-        sep ():
+        env_name (EnvironmentVars): environment variable name
+        sep (str): the separator (':' by default)
 
     Returns:
-
+        list[str]: a list of string, possibly empty
     """
     string_list = not_empty_string(env_name)
 
@@ -292,10 +329,12 @@ def strings_list(env_name: EnvironmentVars, sep: str = ":") -> list[str]:
 
 
 def arg_task_name() -> str:
-    """
-    TODO: write doc
-    Returns:
+    """Get the task name from command line.
 
+    The task name is expected as the sole argument on command line.
+
+    Returns:
+        str: the task name
     """
     if len(sys.argv) != 2:
         raise RuntimeError(f"{sys.argv[0]} expect exactly one argument")

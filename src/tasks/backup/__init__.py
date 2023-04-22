@@ -1,4 +1,4 @@
-""" Module for the Backup task & subtasks.
+"""Module for the Backup task & subtasks.
 
 Only export a getter for an instance of TaskBackup
 """

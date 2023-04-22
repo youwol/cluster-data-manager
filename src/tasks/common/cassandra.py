@@ -10,11 +10,22 @@ class Cassandra(Task):
 
     Define relative paths for the tasks.
     """
+
     RELATIVE_PATH = "cql"
     RELATIVE_PATH_SCHEMA = "cql/schema"
     RELATIVE_PATH_DATA = "cql/data"
 
     def __init__(self, path_work_dir: Path, cqlsh_commands: CqlshCommands, keyspaces: list[str], tables: list[str]):
+        """Simple constructor.
+
+        Will call Task __init__ with path_work_dir.
+
+        Args:
+            path_work_dir (Path): the working directory path
+            cqlsh_commands (CqlshCommands): the cqlsh_commands service
+            keyspaces (list[str]): the list of keyspaces
+            tables (list[str]): the list of tables
+        """
         super().__init__(path_work_dir)
         self._cqlsh_commands = cqlsh_commands
         self._keyspaces = keyspaces

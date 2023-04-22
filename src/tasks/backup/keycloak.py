@@ -1,4 +1,4 @@
-"""Main class for subtask backup keycloak"""
+"""Main class for subtask backup keycloak."""
 import time
 from pathlib import Path
 from typing import Any
@@ -15,6 +15,16 @@ class Keycloak(CommonKeycloak):
                  keycloak_admin: KeycloakAdmin,
                  path_work_dir: Path,
                  path_keycloak_status_file: Path):
+        """Simple constructor.
+
+        Will call CommonKeycloak __init__ with path_work_dir
+
+        Args:
+            report (Report): the report
+            keycloak_admin (KeycloakAdmin): the keycloak admin service
+            path_work_dir (Path): the working directory path
+            path_keycloak_status_file (Path): the path to the keycloak status file
+        """
         super().__init__(path_work_dir)
         self._report = report
         self._keycloak_admin = keycloak_admin

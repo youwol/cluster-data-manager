@@ -5,6 +5,7 @@ from pathlib import Path
 
 class OnPathDirMissing(Enum):
     """Enum for the behavior of Task#_path_dir_maybe_exists()."""
+
     CREATE = "create"
     ERROR = "error"
 
@@ -16,6 +17,11 @@ class Task:
     """
 
     def __init__(self, path_work_dir: Path):
+        """Simple constructor.
+
+        Args:
+            path_work_dir (Path): the working directory path
+        """
         self._path_work_dir = path_work_dir
 
     def _path_dir_maybe_exists(self, relative_path: str, on_missing: OnPathDirMissing) -> Path:

@@ -1,4 +1,4 @@
-"""Parent class for keycloak tasks"""
+"""Parent class for keycloak tasks."""
 from pathlib import Path
 
 from .task import OnPathDirMissing, Task
@@ -9,6 +9,7 @@ class Keycloak(Task):
 
     Define relative path for tasks.
     """
+
     RELATIVE_PATH = "kc"
 
     def _task_path_dir_and_archive_item(self, on_missing: OnPathDirMissing) -> tuple[Path, str]:

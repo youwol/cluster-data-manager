@@ -12,8 +12,8 @@ from .reporting import Report
 
 
 class MaintenanceDetails:
-    """ Represent the k8s object references (Ingress className & ConfigMap data entry)
-    necessary to handle maintenance mode."""
+    """Represent the k8s objects references and maintenance values."""
+
     def __init__(
             self,
             ingress_ref: KubernetesIngressRef,
@@ -21,6 +21,14 @@ class MaintenanceDetails:
             config_map_value_ref: KubernetesConfigMapValueRef,
             config_map_value: str
     ):
+        """Simple constructor.
+
+        Args:
+            ingress_ref (KubernetesIngressRef): the reference of the Ingress
+            ingress_class_name (str): the className of the Ingress for maintenance
+            config_map_value_ref (KubernetesConfigMapValueRef): the reference of the ConfigMap data entry
+            config_map_value: the value of the ConfigMap data entry for maintenance
+        """
         self._ingress_ref = ingress_ref
         self._ingress_class_name = ingress_class_name
         self._config_map_value_ref = config_map_value_ref
@@ -68,7 +76,15 @@ class ClusterMaintenance(AbstractContextManager[None]):
     Note:
          Using a context manager ensure that the maintenance mode is tear down in almost all situations.
     """
+
     def __init__(self, report: Report, k8s_api: KubernetesApi, maintenance_details: MaintenanceDetails):
+        """Simple constructor.
+
+        Args:
+            report (Report): the report
+            k8s_api (KubernetesApi): the kubernetes API service
+            maintenance_details (MaintenanceDetails): the maintenance details
+        """
         self._report = report.get_sub_report("ClusterMaintenance", init_status="ComponentInitialized",
                                              default_status_level="NOTIFY")
         self._k8s_api = k8s_api
@@ -77,6 +93,13 @@ class ClusterMaintenance(AbstractContextManager[None]):
         self._original_ingress_class_name: Optional[str] = None
 
     def __enter__(self) -> None:
+        """Enter maintenance context.
+
+        Will set the kubernetes objects for maintenance mode.
+
+        Notes:
+            Context maintenance yield nothing.
+        """
         self._report.set_status("MaintenanceModeON")
         self._original_config_map_value = self._k8s_api.get_config_map_value(self._details.config_map_value_ref())
         self._original_ingress_class_name = self._k8s_api.get_ingress_class_name(self._details.ingress_ref())
@@ -85,6 +108,10 @@ class ClusterMaintenance(AbstractContextManager[None]):
         time.sleep(5)
 
     def __exit__(self, exec_type: Any, exec_value: Any,  traceback: Any) -> None:
+        """Exit maintenance context.
+
+        Will restore the kubernetes objects as before entering maintenance mode.
+        """
         self._report.set_status("MaintenanceModeOFF")
         self._k8s_api.set_config_map_value(self._details.config_map_value_ref(), self._original_config_map_value)
         self._k8s_api.set_ingress_class_name(self._details.ingress_ref(), self._original_ingress_class_name)

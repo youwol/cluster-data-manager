@@ -26,6 +26,19 @@ class Task:
                  cluster_maintenance: ClusterMaintenance,
                  path_log_file: Path
                  ):
+        """Simple constructor.
+
+        Args:
+            task_backup_s3 (S3): the backup S3 task
+            task_backup_cassandra (Cassandra): the backup cassandra task
+            task_backup_keycloak (Keycloak): the backup keycloak task
+            archive (ArchiveCreator): the archive creator
+            google_drive (GoogleDrive): the google drive service
+            google_drive_upload_file_name (str): the name of the google drive upload
+            google_drive_upload_folder (str): the folder name for the google drive upload
+            cluster_maintenance (ClusterMaintenance): the cluster maintenance service
+            path_log_file (Path): the path to the log file
+        """
         self._task_backup_s3 = task_backup_s3
         self._task_backup_cassandra = task_backup_cassandra
         self._task_backup_keycloak = task_backup_keycloak

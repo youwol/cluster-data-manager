@@ -13,6 +13,12 @@ class S3Credentials:
     """Represent credentials for S3."""
 
     def __init__(self, access_key: str, secret_key: str):
+        """Simple constructor.
+
+        Args:
+            access_key (str): the S3 credential access_key
+            secret_key (str): the S3 credential secret_key
+        """
         self._access_key = access_key
         self._secret_key = secret_key
 
@@ -37,6 +43,14 @@ class S3Instance:
     """Represent a S3 service to connect to."""
 
     def __init__(self, credentials: S3Credentials, host: str, tls: bool = True, port: int = 9000):
+        """Simple constructor.
+
+        Args:
+            credentials (S3Credentials): the credentials
+            host (str): the host part of the instance url
+            tls (bool): if True, the scheme part of the instance url is https
+            port (int): the port part of the instance url
+        """
         self._credentials = credentials
         self._host = host
         self._tls = tls
@@ -63,6 +77,16 @@ class MinioLocalInstance(S3Instance):
     """Represent a local S3 service to connect, with host hardcoded to localhost."""
 
     def __init__(self, access_key: str, secret_key: str, port: int):
+        """Simple constructor.
+
+        Will call S3Instance __init__ with an S3Credentials (from access_key and secret_key), host set to
+        'localhost', tls set to False and port
+
+        Args:
+            access_key (str): the local credential access_key
+            secret_key (str): the local credential secret_key
+            port (int): the local minio instance port
+        """
         super().__init__(credentials=S3Credentials(access_key, secret_key), host="localhost", tls=False, port=port)
 
 
@@ -70,6 +94,12 @@ class MinioClientPaths:
     """Represent the paths for a Minio client (mc) binary."""
 
     def __init__(self, path_bin: Path, path_config: Path):
+        """Simple constructor.
+
+        Args:
+            path_bin (Path): the path to mc binary
+            path_config (Path): the path to mc config directory
+        """
         self._path_bin = path_bin
         self._path_config = path_config
 
@@ -97,8 +127,21 @@ class McCommands:
 
     ALIAS_CLUSTER = "cluster"
 
-    def __init__(self, report: Report, mc_paths: MinioClientPaths, minio_instance: MinioLocalInstance,
-                 s3_instance: S3Instance):
+    def __init__(
+            self,
+            report: Report,
+            mc_paths: MinioClientPaths,
+            minio_instance: MinioLocalInstance,
+            s3_instance: S3Instance
+    ):
+        """Simple constructor.
+
+        Args:
+            report (Report): the report
+            mc_paths (MinioClientPaths): the path to mc binary and the path to mc config directory
+            minio_instance: the local minio instance
+            s3_instance: the cluster S3 instance
+        """
         self._report = report.get_sub_report(task="McCommands", init_status="InitializingComponent")
         self._path_mc = mc_paths.path_bin()
         self._report.debug(f"using binary {self._path_mc}")
@@ -147,7 +190,7 @@ class McCommands:
             self._setup_aliases()
 
     def set_reporter(self, report: Report) -> None:
-        """TODO: to be removed"""
+        """TODO: to be removed."""
         self._report = report.get_sub_report(task="McCommands", init_status=report.get_status())
 
     def backup_bucket(self, bucket: str) -> None:
@@ -256,7 +299,7 @@ class McCommands:
         return bucket_objects, bucket_size
 
     def du_cluster_bucket(self, bucket: str) -> tuple[int, int]:
-        """Run disk usage for cluster bucket
+        """Run disk usage for cluster bucket.
 
         Args:
             bucket (str): the bucket name

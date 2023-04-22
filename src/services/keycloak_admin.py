@@ -1,4 +1,4 @@
-"""Main class and ancillary classes for keyclak client"""
+"""Main class and ancillary classes for keyclak client."""
 import datetime
 import json
 import urllib.request
@@ -9,15 +9,22 @@ from .reporting import Report
 
 
 class KeycloakAdminCredentials:
-    """Represent the credentials (realm, user and password) for keycloak client"""
+    """Represent the credentials (realm, user and password) for keycloak client."""
 
     def __init__(self, realm: str, username: str, password: str):
+        """Simple constructor.
+
+        Args:
+            realm (str): the account realm name
+            username (str): the account username
+            password (): the account password
+        """
         self._realm = realm
         self._username = username
         self._password = password
 
     def realm(self) -> str:
-        """Simple getter
+        """Simple getter.
 
         Returns:
             str: the realm
@@ -25,7 +32,7 @@ class KeycloakAdminCredentials:
         return self._realm
 
     def username(self) -> str:
-        """Simple getter
+        """Simple getter.
 
         Returns:
             str: the username
@@ -33,7 +40,7 @@ class KeycloakAdminCredentials:
         return self._username
 
     def password(self) -> str:
-        """Simple getter
+        """Simple getter.
 
         Returns:
             str: the password
@@ -60,6 +67,15 @@ class TokensManager:
             oidc_client: OidcClient,
             expiration_threshold: int = 5
     ):
+        """Simple constructor.
+
+        Args:
+            report (Report): the report
+            username (str): the account username for grant_password flow
+            password (str): the account password for gront_password flow
+            oidc_client (OidcClient): the openid connect client
+            expiration_threshold (int): the expiration threshold (default to 5 seconds)
+        """
         self._username = username
         self._password = password
         self._oidc_client = oidc_client
@@ -124,11 +140,16 @@ class TokensManager:
 
 
 class KeycloakAdmin:
-    """Client for keycloak administration"""
+    """Client for keycloak administration."""
 
-    def __init__(self, report: Report,
-                 credentials: KeycloakAdminCredentials,
-                 base_url: str = "http://localhost:8080/auth"):
+    def __init__(self, report: Report, credentials: KeycloakAdminCredentials, base_url: str):
+        """Simple constructor.
+
+        Args:
+            report (Report): the report
+            credentials (KeycloakAdminCredentials): the credentials for Keycloak administration
+            base_url (str): the base url for Keycloak administration
+        """
         sub_report = report.get_sub_report(task="KeycloakAdmin", init_status="ComponentInitialized")
         self._base_url = base_url
         self._tokens_manager = TokensManager(

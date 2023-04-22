@@ -21,6 +21,7 @@ from .reporting.reporting import Report, Reporting
 # pylint: disable=too-many-instance-attributes
 class Context:
     """Hold services instances."""
+
     cqlsh_commands: Optional[CqlshCommands] = None
     mc_commands: Optional[McCommands] = None
     report: Optional[Report] = None
@@ -61,7 +62,6 @@ def get_cqlsh_commands_builder() -> Callable[[], CqlshCommands]:
     Returns:
         Callable[[], CqlshCommands]: a nullary builder for the cqlsh_commands service.
     """
-
     if context.cqlsh_commands is not None:
         cqlsh_commands = context.cqlsh_commands
         return lambda: cqlsh_commands
@@ -87,7 +87,6 @@ def get_mc_commands_builder() -> Callable[[], McCommands]:
     Returns:
         Callable[[], McCommands]: a nullary builder for the mc_commands service.
     """
-
     if context.mc_commands is not None:
         mc_commands = context.mc_commands
         return lambda: mc_commands
@@ -168,7 +167,6 @@ def get_google_drive_builder() -> Callable[[], GoogleDrive]:
     Returns:
         Callable[[], GoogleDrive]: a nullary builder for the google_drive service.
     """
-
     if context.google_drive is not None:
         google_drive = context.google_drive
         return lambda: google_drive
@@ -194,7 +192,6 @@ def get_archiver_builder() -> Callable[[], Archiver]:
     Return:
         Callable[[], Archiver]: a nullary builder for the archiver service.
     """
-
     if context.archiver is not None:
         archiver = context.archiver
         return lambda: archiver
@@ -218,7 +215,6 @@ def get_cluster_maintenance_builder() -> Callable[[], ClusterMaintenance]:
     Returns:
         Callable[[], ClusterMaintenance]: a nullary builder for the cluster_maintenance service.
     """
-
     if context.cluster_maintenance is not None:
         cluster_maintenance = context.cluster_maintenance
         return lambda: cluster_maintenance
@@ -263,7 +259,6 @@ def get_kubernetes_api_builder() -> Callable[[], KubernetesApi]:
     Returns:
         Callable[[], KubernetesApi]: a nullary builder for the kubernetes_api service.
     """
-
     if context.kubernetes_api is not None:
         kubernetes_api = context.kubernetes_api
         return lambda: kubernetes_api

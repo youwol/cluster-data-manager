@@ -14,6 +14,7 @@ from .task import Task
 
 class Context:
     """Hold subtasks instances."""
+
     s3: Optional[S3] = None
     cassandra: Optional[Cassandra] = None
     task: Optional[Task] = None
@@ -50,7 +51,7 @@ def get_s3_builder() -> Callable[[], S3]:
 
 
 def get_cassandra_builder() -> Callable[[], Cassandra]:
-    """ Get a builder for a configured instance of TaskRestoreCassandra.
+    """Get a builder for a configured instance of TaskRestoreCassandra.
 
     Returns:
         Callable[[], TaskRestoreCassandra]: a nullary builder for a configured instance of TaskRestoreCassandra

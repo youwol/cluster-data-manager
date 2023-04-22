@@ -7,6 +7,7 @@ from pathlib import Path
 
 class Assets(Enum):
     """Enumeration of the available assets."""
+
     KC_EXPORT_SH = "kc_export.sh"
 
 

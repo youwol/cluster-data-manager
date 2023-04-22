@@ -2,12 +2,14 @@
 import datetime
 import io
 import json
+
+from pathlib import Path
+from typing import Any, Optional
+
 from google.auth.identity_pool import Credentials
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from googleapiclient.http import MediaFileUpload, MediaIoBaseDownload
-from pathlib import Path
-from typing import Any, Optional
 
 from .oidc_client import OidcClient
 from .reporting import Report
@@ -19,6 +21,10 @@ class NonUniqResult(RuntimeError):
     """Simple RuntimeError for multiple results when at most one is expected."""
 
     def __init__(self) -> None:
+        """Simple constructor.
+
+        Call RuntimeError __init__ with 'Non uniq result'
+        """
         super().__init__("Non uniq result")
 
 
@@ -26,6 +32,13 @@ class FileInformation:
     """Represent Google Drive file informations (id, name and mimeType)."""
 
     def __init__(self, file_id: str, name: str, mime_type: str):
+        """Simple constructor.
+
+        Args:
+            file_id (str): the file id
+            name (str): the file name
+            mime_type (str): the mime type
+        """
         self._file_id = file_id
         self._name = name
         self._mime_type = mime_type
@@ -51,7 +64,13 @@ class GoogleDrive:
     """Service google_drive."""
 
     def __init__(self, report: Report, drive_id: str, oidc_client: OidcClient):
+        """Simple constructor.
 
+        Args:
+            report (Report): the report
+            drive_id (str):  the google drive Id
+            oidc_client (OidcClient): the oidc client for identity pool authentication
+        """
         self._report = report.get_sub_report(task="GoogleDrive", init_status="InitializingComponent")
         self._drive_id = drive_id
         self._oidc_client = oidc_client

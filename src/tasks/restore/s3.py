@@ -21,6 +21,17 @@ class S3(CommonS3):
             buckets: list[str],
             overwrite: bool
     ):
+        """Simple constructor.
+
+        Will call CommanS3 __init__ with path_work_dir, mc_commands, buckets.
+
+        Args:
+            report (Report): the report
+            path_work_dir (Path): the working directory path
+            mc_commands (McCommands): the mc_commands service
+            buckets (list[str]): the list of buckets
+            overwrite (bool): overwrite behavior when restoring buckets
+        """
         super().__init__(path_work_dir, mc_commands, buckets)
         self._overwrite = overwrite
         self._report = report.get_sub_report("RestoreS3", default_status_level="NOTIFY",

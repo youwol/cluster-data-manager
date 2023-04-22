@@ -19,6 +19,7 @@ from .task import Task
 
 class Context:
     """Hold subtasks instances."""
+
     s3: Optional[S3] = None
     cassandra: Optional[Cassandra] = None
     keycloak: Optional[Keycloak] = None
@@ -85,7 +86,7 @@ def get_cassandra_builder() -> Callable[[], Cassandra]:
 
 
 def get_keycloak_builder() -> Callable[[], Keycloak]:
-    """Get a builder for a configured instance of the subtask backup_keycloak
+    """Get a builder for a configured instance of the subtask backup_keycloak.
 
     Returns:
         Callable[[], TaskBackupKeycloak]: a nullary builder for TaskBackupKeycloak

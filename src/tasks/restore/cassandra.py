@@ -12,6 +12,7 @@ class Cassandra(CommonCassandra):
 
     Use cqlsh_commands to restore keyspaces from DDL files and tables data from CSV files.
     """
+
     def __init__(
             self,
             report: Report,
@@ -21,6 +22,18 @@ class Cassandra(CommonCassandra):
             tables: list[str],
             overwrite: bool
     ):
+        """Simple Constructor.
+
+        Will call CommonCassandra __init__ with path_work_dir, cqlsh_commands, keyspaces and tables.
+
+        Args:
+            report (Report): the report
+            path_work_dir (Path): the working directory path
+            cqlsh_commands (CqlshCommands): the cqlsh_commands service
+            keyspaces (list[str]): the list of keyspaces
+            tables (list[str]): the list of tables
+            overwrite (bool): overwrite behavior when restoring keyspaces and tables
+        """
         super().__init__(path_work_dir, cqlsh_commands, keyspaces, tables)
         self._overwrite = overwrite
         self._report = report.get_sub_report("RestoreCassandra", default_status_level="NOTIFY",

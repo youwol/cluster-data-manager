@@ -8,9 +8,20 @@ from .reporting import Report
 
 
 class OidcClientConfig:
-    """ Represent the configuration of an OIDC client."""
+    """Represent the configuration of an OIDC client."""
 
     def __init__(self, issuer: str, client_id: str, client_secret: Optional[str]):
+        """Simple constructor.
+
+        Notes:
+            if no client_secret is provided, configure a public client
+            If client_secret is provided, configure a confidential client
+
+        Args:
+            issuer (str): the base url for the issuer
+            client_id (str): the client_id for a public or confidential client
+            client_secret (Optional[str]): if provided, the client_secret for a confidential client
+        """
         self._issuer = issuer
         self._client_id = client_id
         self._client_secret = client_secret
@@ -44,6 +55,12 @@ class OidcClient:
     """Oidc client."""
 
     def __init__(self, report: Report, oidc_client_config: OidcClientConfig):
+        """Simple constructor.
+
+        Args:
+            report (Report): the report
+            oidc_client_config (OidcClientConfig): the client configuration
+        """
         self._issuer_url = oidc_client_config.issuer()
         self._client_id = oidc_client_config.client_id()
         self._client_secret = oidc_client_config.client_secret()
@@ -99,7 +116,7 @@ class OidcClient:
             return result
 
     def refresh_tokens(self, refresh_token: str) -> Any:
-        """Refreshs tokens
+        """Refresh tokens.
 
         Args:
             refresh_token (str): the refresh token (must not have been expired)

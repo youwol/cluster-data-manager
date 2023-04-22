@@ -14,6 +14,12 @@ class KeycloakDetails:
     """Represent details (path to status file, script) for keycloak setup."""
 
     def __init__(self, path_keycloak_status_file: Path, path_keycloak_script: Path):
+        """Simple constructor.
+
+        Args:
+            path_keycloak_status_file (str): the path to the keycloak status file in keycloak container directory
+            path_keycloak_script (str): the path to keycloak script to execute in keycloak container
+        """
         self._path_keycloak_status_file = path_keycloak_status_file
         self._path_keycloak_script = path_keycloak_script
 
@@ -52,6 +58,17 @@ class Task:
                  keycloak_setup_details: Optional[KeycloakDetails] = None,
                  archive_name: Optional[str] = None
                  ):
+        """Simple constructor.
+
+        Args:
+            report (Report): the report
+            path_work_dir (Path): the working directory path
+            google_drive (GoogleDrive): the google_drive service
+            archiver (Archiver): the archiver service
+            extract_items (list[str]): the list of items to extract from the archive
+            keycloak_setup_details (Optional[KeycloakDetails]): if provided, setup keycloak container directory
+            archive_name (Optional[str]): if provided, use this google drive archive instead of the latest
+        """
         self._path_work_dir = path_work_dir
         self._keycloak_setup_details = keycloak_setup_details
         self._google_drive = google_drive

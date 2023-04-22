@@ -14,6 +14,16 @@ class S3(CommonS3):
     """
 
     def __init__(self, report: Report, path_work_dir: Path, mc_commands: McCommands, buckets: list[str]):
+        """Simple constructor.
+
+        Will call CommanS3 __init__ with path_work_dir, mc_commands, buckets.
+
+        Args:
+            report (Report): the report
+            path_work_dir (Path): the working directory path
+            mc_commands (McCommands): the mc_commands service
+            buckets (list[str]): the list of buckets
+        """
         super().__init__(path_work_dir, mc_commands, buckets)
         self._report = report.get_sub_report("BackupS3", default_status_level="NOTIFY",
                                              init_status="ComponentInitialized")

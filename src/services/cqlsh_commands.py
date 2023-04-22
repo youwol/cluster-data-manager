@@ -14,6 +14,11 @@ class CqlInstance:
     """Represent the Cassandre host to connect to."""
 
     def __init__(self, host: Optional[str]):
+        """Simple constructor.
+
+        Args:
+            host (Optional[str]): the host
+        """
         self._host = host
 
     def get_host(self) -> Optional[str]:
@@ -28,15 +33,22 @@ class CqlInstance:
         """Data as an array that can be passed as arguments to a subprocess call.
 
         Returns:
-            [str]: the data split in an array.
+            [str]: the data split in an array
         """
         return [self._host] if self._host is not None else []
 
 
 class CqlshCommands:
-    """ Execute CQL statements, using cqlsh."""
+    """Execute CQL statements, using cqlsh."""
 
     def __init__(self, report: Report, cqlsh: str, cql_instance: CqlInstance):
+        """Simple constructor.
+
+        Args:
+            report (services.reporting.reporting.Report): the report
+            cqlsh (str): the command line for calling cqlsh
+            cql_instance (CqlInstance): the cql instance to connect to
+        """
         self._report = report.get_sub_report("CqlshCommands", init_status="InitializingComponent")
         self._cqlsh = cqlsh.split(" ")
         self._instance = cql_instance

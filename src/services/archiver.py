@@ -124,13 +124,12 @@ class ArchiveExtractor:
         self._path_work_dir = path_work_dir
 
     def extract_dir_item(self, archive_item: str) -> None:
-        """Extract an item
+        """Extract an item.
 
         Will extract the item from the archive into the working directory.
 
         Args:
             archive_item (str): name of the item.
-
         """
         report = self._report.get_sub_report("extract_dir_item", init_status="in function")
         report.debug(f"extraction {archive_item} in {self._path_work_dir}")
@@ -151,9 +150,17 @@ class ArchiveExtractor:
 
 class Archiver:
     """Class to instantiate ArchiveCreator or ArchiveExtractor."""
+
     METADATA_FILENAME = "metadata.txt"
 
     def __init__(self, report: Report, path_work_dir: Path, job_uuid: str):
+        """Simple constructor.
+
+        Args:
+            report (Report): the report
+            path_work_dir (Path): the working directory path
+            job_uuid (str): the Kubernetes Job uuid
+        """
         self._report = report.get_sub_report("Archiver", init_status="InitializingComponent")
         self._path_work_dir = path_work_dir
         self._job_uuid = job_uuid

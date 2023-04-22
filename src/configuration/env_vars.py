@@ -4,6 +4,7 @@ from enum import Enum
 
 class EnvironmentVars(Enum):
     """Environment variables names."""
+
     # Jobs
     JOB_UUID = "JOB_UUID"
     TYPE_BACKUP = "TYPE_BACKUP"

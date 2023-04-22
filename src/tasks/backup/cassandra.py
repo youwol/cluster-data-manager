@@ -18,12 +18,23 @@ class Cassandra(CommonCassandra):
                  cqlsh_commands: CqlshCommands,
                  keyspaces: list[str],
                  tables: list[str]):
+        """Simple Constructor.
+
+        Will call CommonCassandra __init__ with path_work_dir, cqlsh_commands, keyspaces and tables.
+
+        Args:
+            report (Report): the report
+            path_work_dir (Path): the working directory path
+            cqlsh_commands (CqlshCommands): the cqlsh_commands service
+            keyspaces (list[str]): the list of keyspaces
+            tables (list[str]): the list of tables
+        """
         super().__init__(path_work_dir, cqlsh_commands, keyspaces, tables)
         self._report = report.get_sub_report("BackupCassandra", default_status_level="NOTIFY",
                                              init_status="ComponentInitialized")
 
     def run(self) -> None:
-        """Run the task"""
+        """Run the task."""
         self._report.set_status("Running")
 
         self._report.debug(f"keyspaces={self._keyspaces}")
@@ -47,7 +58,7 @@ class Cassandra(CommonCassandra):
         self._report.set_status("Done")
 
     def task_path_dir_and_archive_item(self) -> tuple[Path, str]:
-        """Simple getter
+        """Simple getter.
 
         Returns:
             tuple[Path, str]: the relative dir for cassandra and 'cql'
@@ -55,7 +66,7 @@ class Cassandra(CommonCassandra):
         return self._task_path_dir_and_archive_item(OnPathDirMissing.CREATE)
 
     def metadata(self) -> Any:
-        """Simple getter
+        """Simple getter.
 
         Returns:
             dict: metadata form cqlsh_commands
