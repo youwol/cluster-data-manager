@@ -122,7 +122,11 @@ class KubernetesApi:
             report.fatal(msg)
             raise RuntimeError(msg) from error
 
-        result: Optional[str] = api_response.spec.ingress_class_name
+        spec_ingress = api_response.spec
+        if spec_ingress is None:
+            raise RuntimeError(f"Ingress '{ingress_ref}' has no spec")
+
+        result = spec_ingress.ingress_class_name
         report.debug(f"Result: {result}")
         return result
 
@@ -182,7 +186,16 @@ class KubernetesApi:
             report.fatal(msg)
             raise RuntimeError(msg) from error
 
-        result: Optional[str] = api_response.data[config_map_value_ref.key]
+        config_map_data = api_response.data
+        if config_map_data is None:
+            raise RuntimeError(f"ConfigMap '{config_map_value_ref}' has no data")
+
+        if config_map_value_ref.key not in config_map_data:
+            raise RuntimeError(
+                f"ConfigMap data entry '{config_map_value_ref}' does not exist"
+            )
+
+        result = config_map_data[config_map_value_ref.key]
         report.debug(f"Result: {result}")
         return result
 
