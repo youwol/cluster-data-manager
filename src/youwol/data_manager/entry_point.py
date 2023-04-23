@@ -2,11 +2,11 @@
 
 It has a main function, and expect exactly one command line argument : the name of the task to run.
 """
-# data-manager configuration
-from configuration import env_utils
+# application configuration
+from youwol.data_manager.configuration import env_utils
 
-# data-manager tasks
-from tasks import (
+# application tasks
+from youwol.data_manager.tasks import (
     build_task_backup,
     build_task_restore,
     build_task_setup_backup,

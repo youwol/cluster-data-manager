@@ -9,11 +9,11 @@ import datetime
 # typing
 from typing import Callable, Optional
 
-# data-manager configuration
-from configuration import ConfigEnvVars, env_utils
+# application configuration
+from youwol.data_manager.configuration import ConfigEnvVars, env_utils
 
-# data-manager services
-from services import (
+# application services
+from youwol.data_manager.services import (
     get_service_archiver_builder,
     get_service_cluster_maintenance_builder,
     get_service_cqlsh_commands_builder,
@@ -21,7 +21,10 @@ from services import (
     get_service_mc_commands_builder,
     get_service_report_builder,
 )
-from services.keycloak_admin import KeycloakAdmin, KeycloakAdminCredentials
+from youwol.data_manager.services.keycloak_admin import (
+    KeycloakAdmin,
+    KeycloakAdminCredentials,
+)
 
 # relative
 from .cassandra import Cassandra

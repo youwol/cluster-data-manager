@@ -3,3 +3,6 @@
 /.env*
 /.env
 __pycache__
+
+/build
+/src/cluster_data_manager.egg-info

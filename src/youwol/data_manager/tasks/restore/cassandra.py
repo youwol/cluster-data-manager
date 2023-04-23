@@ -2,9 +2,9 @@
 # standard library
 from pathlib import Path
 
-# data-manager services
-from services.cqlsh_commands import CqlshCommands
-from services.reporting import Report
+# application services
+from youwol.data_manager.services.cqlsh_commands import CqlshCommands
+from youwol.data_manager.services.reporting import Report
 
 # relative
 from ..common.cassandra import Cassandra as CommonCassandra

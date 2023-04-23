@@ -6,11 +6,11 @@ Use get_restore_task() to obtain a configured instance for TaskRestore.
 # typing
 from typing import Callable, Optional
 
-# data-manager configuration
-from configuration import ConfigEnvVars, env_utils
+# application configuration
+from youwol.data_manager.configuration import ConfigEnvVars, env_utils
 
-# data-manager services
-from services import (
+# application services
+from youwol.data_manager.services import (
     get_service_cqlsh_commands_builder,
     get_service_mc_commands_builder,
     get_service_report_builder,

@@ -5,9 +5,9 @@ from pathlib import Path
 # typing
 from typing import Any
 
-# data-manager services
-from services.cqlsh_commands import CqlshCommands
-from services.reporting import Report
+# application services
+from youwol.data_manager.services.cqlsh_commands import CqlshCommands
+from youwol.data_manager.services.reporting import Report
 
 # relative
 from ..common import CommonCassandra, OnPathDirMissing

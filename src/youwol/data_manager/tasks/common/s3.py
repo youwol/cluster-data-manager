@@ -2,8 +2,8 @@
 # standard library
 from pathlib import Path
 
-# data-manager services
-from services.mc_commands import McCommands
+# application services
+from youwol.data_manager.services.mc_commands import McCommands
 
 # relative
 from .task import OnPathDirMissing, Task

@@ -2,8 +2,8 @@
 # standard library
 from pathlib import Path
 
-# data-manager services
-from services.cqlsh_commands import CqlshCommands
+# application services
+from youwol.data_manager.services.cqlsh_commands import CqlshCommands
 
 # relative
 from .task import OnPathDirMissing, Task

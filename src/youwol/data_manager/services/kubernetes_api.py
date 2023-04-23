@@ -8,7 +8,7 @@ from dataclasses import dataclass
 # typing
 from typing import Optional
 
-# third parties
+# Kubernetes
 from kubernetes import client, config
 from kubernetes.client.exceptions import ApiException
 

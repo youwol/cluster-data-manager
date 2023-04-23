@@ -7,9 +7,9 @@ from pathlib import Path
 # typing
 from typing import Any
 
-# data-manager services
-from services.keycloak_admin import KeycloakAdmin
-from services.reporting import Report
+# application services
+from youwol.data_manager.services.keycloak_admin import KeycloakAdmin
+from youwol.data_manager.services.reporting import Report
 
 # relative
 from ..common import CommonKeycloak, OnPathDirMissing

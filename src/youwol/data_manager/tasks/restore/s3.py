@@ -2,9 +2,9 @@
 # standard library
 from pathlib import Path
 
-# data-manager services
-from services.mc_commands import McCommands
-from services.reporting import Report
+# application services
+from youwol.data_manager.services.mc_commands import McCommands
+from youwol.data_manager.services.reporting import Report
 
 # relative
 from ..common.s3 import S3 as CommonS3

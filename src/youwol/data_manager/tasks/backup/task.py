@@ -2,10 +2,10 @@
 # standard library
 from pathlib import Path
 
-# data-manager services
-from services.archiver import ArchiveCreator
-from services.cluster_maintenance import ClusterMaintenance
-from services.google_drive import GoogleDrive
+# application services
+from youwol.data_manager.services.archiver import ArchiveCreator
+from youwol.data_manager.services.cluster_maintenance import ClusterMaintenance
+from youwol.data_manager.services.google_drive import GoogleDrive
 
 # relative
 from .cassandra import Cassandra

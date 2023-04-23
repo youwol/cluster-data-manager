@@ -8,8 +8,8 @@ Notes:
 # typing
 from typing import Callable, Optional
 
-# data-manager configuration
-from configuration import ConfigEnvVars, env_utils
+# application configuration
+from youwol.data_manager.configuration import ConfigEnvVars, env_utils
 
 # relative
 from .archiver import Archiver

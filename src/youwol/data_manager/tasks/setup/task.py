@@ -8,13 +8,13 @@ from pathlib import Path
 # typing
 from typing import Optional
 
-# data-manager assets
-from assets import KnownAssets, copy_asset_to_file
+# application assets
+from youwol.data_manager.assets import KnownAssets, copy_asset_to_file
 
-# data-manager services
-from services.archiver import Archiver
-from services.google_drive import GoogleDrive
-from services.reporting import Report
+# application services
+from youwol.data_manager.services.archiver import Archiver
+from youwol.data_manager.services.google_drive import GoogleDrive
+from youwol.data_manager.services.reporting import Report
 
 
 @dataclass(frozen=True, kw_only=True)

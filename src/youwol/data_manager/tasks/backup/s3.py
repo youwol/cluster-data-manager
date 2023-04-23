@@ -5,9 +5,9 @@ from pathlib import Path
 # typing
 from typing import Any
 
-# data-manager services
-from services.mc_commands import McCommands
-from services.reporting import Report
+# application services
+from youwol.data_manager.services.mc_commands import McCommands
+from youwol.data_manager.services.reporting import Report
 
 # relative
 from ..common import CommonS3, OnPathDirMissing

@@ -10,7 +10,7 @@ from pathlib import Path
 # typing
 from typing import Any, Optional
 
-# third parties
+# Google
 from google.auth.identity_pool import Credentials
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
