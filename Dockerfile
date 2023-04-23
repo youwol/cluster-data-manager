@@ -44,7 +44,7 @@ COPY --from=python-builder /opt/minio-client /opt/minio-client
 COPY --from=python-builder /opt/pipx /opt/pipx
 ENV PATH=/opt/pipx/bin:$PATH
 
-# Create user
+# Create user & user home directory
 RUN useradd -m -d /opt/app data-manager
 WORKDIR /opt/app
 
@@ -60,6 +60,8 @@ ENV PATH_MINIO_CLIENT_CONFIG="/opt/minio-client/config"
 ENV CQLSH_COMMAND="/opt/pipx/bin/cqlsh"
 ENV PATH_LOG_FILE="/var/tmp/app/entry_point.log"
 ENV PATH_WORK_DIR="/var/tmp/app"
+ENV PATH_KEYCLOAK_STATUS_FILE="/var/tmp/app/kc/kc_status"
+ENV PATH_KEYCLOAK_SCRIPT="/var/tmp/app/kc/kc_script.sh"
 
 USER data-manager
 # Start our script, installed by pipx
