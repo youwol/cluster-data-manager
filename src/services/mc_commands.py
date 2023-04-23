@@ -5,6 +5,7 @@ import json
 import subprocess
 import time
 
+from dataclasses import dataclass, field
 from pathlib import Path
 
 # typing
@@ -14,72 +15,35 @@ from typing import Any, Callable, Optional
 from .reporting import Report
 
 
+@dataclass(frozen=True)
 class S3Credentials:
     """Represent credentials for S3."""
 
-    def __init__(self, access_key: str, secret_key: str):
-        """Simple constructor.
-
-        Args:
-            access_key (str): the S3 credential access_key
-            secret_key (str): the S3 credential secret_key
-        """
-        self._access_key = access_key
-        self._secret_key = secret_key
-
-    def access_key(self) -> str:
-        """Simple getter.
-
-        Returns:
-            str: the access key.
-        """
-        return self._access_key
-
-    def secret_key(self) -> str:
-        """Simple getter.
-
-        Returns:
-            str: the secret key.
-        """
-        return self._secret_key
+    access_key: str
+    secret_key: str
 
 
+@dataclass(frozen=True, kw_only=True)
 class S3Instance:
     """Represent a S3 service to connect to."""
 
-    def __init__(
-        self, credentials: S3Credentials, host: str, tls: bool = True, port: int = 9000
-    ):
-        """Simple constructor.
+    credentials: S3Credentials
+    host: str
+    tls: bool = True
+    port: int = 9000
+    url: str = field(init=False)
 
-        Args:
-            credentials (S3Credentials): the credentials
-            host (str): the host part of the instance url
-            tls (bool): if True, the scheme part of the instance url is https
-            port (int): the port part of the instance url
+    def __post_init__(self) -> None:
+        """Construct URL from initial attributes.
+
+        Notes:
+            Use object.__setattr__() to bypass @dataclass(frozen=True)
         """
-        self._credentials = credentials
-        self._host = host
-        self._tls = tls
-        self._port = port
-
-    def url(self) -> str:
-        """Simple getter.
-
-        Returns:
-            str: the URL, constructed from the host, tls and port attributes.
-        """
-        return f"http{'s' if self._tls else ''}://{self._host}:{self._port}"
-
-    def credentials(self) -> S3Credentials:
-        """Simple getter.
-
-        Returns:
-            S3Credentials: the credentials.
-        """
-        return self._credentials
+        url = f"http{'s' if self.tls else ''}://{self.host}:{self.port}"
+        object.__setattr__(self, "url", url)
 
 
+@dataclass(frozen=True, init=False)
 class MinioLocalInstance(S3Instance):
     """Represent a local S3 service to connect, with host hardcoded to localhost."""
 
@@ -95,41 +59,19 @@ class MinioLocalInstance(S3Instance):
             port (int): the local minio instance port
         """
         super().__init__(
-            credentials=S3Credentials(access_key, secret_key),
+            credentials=S3Credentials(access_key=access_key, secret_key=secret_key),
             host="localhost",
             tls=False,
             port=port,
         )
 
 
+@dataclass(frozen=True, kw_only=True)
 class MinioClientPaths:
     """Represent the paths for a Minio client (mc) binary."""
 
-    def __init__(self, path_bin: Path, path_config: Path):
-        """Simple constructor.
-
-        Args:
-            path_bin (Path): the path to mc binary
-            path_config (Path): the path to mc config directory
-        """
-        self._path_bin = path_bin
-        self._path_config = path_config
-
-    def path_bin(self) -> Path:
-        """Simple getter.
-
-        Returns:
-            Path: the path of the binary mc.
-        """
-        return self._path_bin
-
-    def path_config(self) -> Path:
-        """Simple getter.
-
-        Returns:
-            Path: the path of mc config directory.
-        """
-        return self._path_config
+    path_bin: Path
+    path_config: Path
 
 
 class McCommands:
@@ -157,9 +99,9 @@ class McCommands:
         self._report = report.get_sub_report(
             task="McCommands", init_status="InitializingComponent"
         )
-        self._path_mc = mc_paths.path_bin()
+        self._path_mc = mc_paths.path_bin
         self._report.debug(f"using binary {self._path_mc}")
-        self._path_mc_config = mc_paths.path_config()
+        self._path_mc_config = mc_paths.path_config
         self._report.debug(f"using config {self._path_mc_config}")
         self._local = minio_instance
         self._cluster = s3_instance
@@ -172,7 +114,7 @@ class McCommands:
         Returns:
             str: the cluster instance URL.
         """
-        return self._cluster.url()
+        return self._cluster.url
 
     def cluster_info(self) -> Any:
         """Return information about the cluster instance.
@@ -361,9 +303,9 @@ class McCommands:
             "alias",
             "set",
             alias,
-            instance.url(),
-            instance.credentials().access_key(),
-            instance.credentials().secret_key(),
+            instance.url,
+            instance.credentials.access_key,
+            instance.credentials.secret_key,
         )
         report.set_status("exit function")
 

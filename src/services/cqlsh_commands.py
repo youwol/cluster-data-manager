@@ -3,6 +3,7 @@
 import datetime
 import subprocess
 
+from dataclasses import dataclass
 from pathlib import Path
 
 # typing
@@ -17,32 +18,19 @@ MSG_INVALID_REQUEST_COL_IDX_TOKEN = (
 )
 
 
+@dataclass(frozen=True, kw_only=True)
 class CqlInstance:
     """Represent the Cassandre host to connect to."""
 
-    def __init__(self, host: Optional[str]):
-        """Simple constructor.
-
-        Args:
-            host (Optional[str]): the host
-        """
-        self._host = host
-
-    def get_host(self) -> Optional[str]:
-        """Simple getter.
-
-        Returns:
-            str: the hostname.
-        """
-        return self._host
+    host: Optional[str]
 
     def as_args_array(self) -> list[str]:
-        """Data as an array that can be passed as arguments to a subprocess call.
+        """Get Data as an array that can be passed as arguments to a subprocess call.
 
         Returns:
             [str]: the data split in an array
         """
-        return [self._host] if self._host is not None else []
+        return [self.host] if self.host is not None else []
 
 
 class CqlshCommands:
@@ -61,7 +49,7 @@ class CqlshCommands:
         )
         self._cqlsh = cqlsh.split(" ")
         self._instance = cql_instance
-        self._report.debug(f"using instance {cql_instance.get_host()}")
+        self._report.debug(f"using instance {cql_instance.host}")
 
     def show_host(self) -> str:
         """Run statement 'SHOW HOST;' and return the output.

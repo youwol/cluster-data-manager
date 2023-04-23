@@ -20,11 +20,20 @@ tasks_builder = {
     "restore": build_task_restore,
 }
 
-if __name__ == "__main__":
-    TASK_NAME = env_utils.arg_task_name()
 
-    if TASK_NAME not in tasks_builder:
-        raise RuntimeError(f"Unknown task {TASK_NAME}")
+def run() -> None:
+    """Run a task.
 
-    task = tasks_builder[TASK_NAME]()
+    Will run the task passed as the first positional command line parameter.
+    """
+    task_name = env_utils.arg_task_name()
+
+    if task_name not in tasks_builder:
+        raise RuntimeError(f"Unknown task {task_name}")
+
+    task = tasks_builder[task_name]()
     task.run()
+
+
+if __name__ == "__main__":
+    run()

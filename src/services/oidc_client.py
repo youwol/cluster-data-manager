@@ -4,6 +4,8 @@ import json
 import urllib.parse
 import urllib.request
 
+from dataclasses import dataclass
+
 # typing
 from typing import Any, Optional
 
@@ -11,48 +13,13 @@ from typing import Any, Optional
 from .reporting import Report
 
 
+@dataclass(frozen=True, kw_only=True)
 class OidcClientConfig:
     """Represent the configuration of an OIDC client."""
 
-    def __init__(self, issuer: str, client_id: str, client_secret: Optional[str]):
-        """Simple constructor.
-
-        Notes:
-            if no client_secret is provided, configure a public client
-            If client_secret is provided, configure a confidential client
-
-        Args:
-            issuer (str): the base url for the issuer
-            client_id (str): the client_id for a public or confidential client
-            client_secret (Optional[str]): if provided, the client_secret for a confidential client
-        """
-        self._issuer = issuer
-        self._client_id = client_id
-        self._client_secret = client_secret
-
-    def issuer(self) -> str:
-        """Simple getter.
-
-        Returns:
-            str: the issuer.
-        """
-        return self._issuer
-
-    def client_id(self) -> str:
-        """Simple getter.
-
-        Returns:
-            str: the client_id.
-        """
-        return self._client_id
-
-    def client_secret(self) -> Optional[str]:
-        """Simple getter.
-
-        Returns:
-            str: the client_secret.
-        """
-        return self._client_secret
+    issuer: str
+    client_id: str
+    client_secret: Optional[str]
 
 
 class OidcClient:
@@ -65,9 +32,9 @@ class OidcClient:
             report (Report): the report
             oidc_client_config (OidcClientConfig): the client configuration
         """
-        self._issuer_url = oidc_client_config.issuer()
-        self._client_id = oidc_client_config.client_id()
-        self._client_secret = oidc_client_config.client_secret()
+        self._issuer_url = oidc_client_config.issuer
+        self._client_id = oidc_client_config.client_id
+        self._client_secret = oidc_client_config.client_secret
         self._openid_configuration = None
         self._report = report.get_sub_report(
             task="OidcClient", init_status="Component Initialized"

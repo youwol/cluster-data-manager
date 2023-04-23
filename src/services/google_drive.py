@@ -4,6 +4,7 @@ import datetime
 import io
 import json
 
+from dataclasses import dataclass
 from pathlib import Path
 
 # typing
@@ -33,36 +34,13 @@ class NonUniqResult(RuntimeError):
         super().__init__("Non uniq result")
 
 
+@dataclass(frozen=True, kw_only=True)
 class FileInformation:
     """Represent Google Drive file informations (id, name and mimeType)."""
 
-    def __init__(self, file_id: str, name: str, mime_type: str):
-        """Simple constructor.
-
-        Args:
-            file_id (str): the file id
-            name (str): the file name
-            mime_type (str): the mime type
-        """
-        self._file_id = file_id
-        self._name = name
-        self._mime_type = mime_type
-
-    def file_id(self) -> str:
-        """Sinple getter.
-
-        Returns:
-            str: the file ID.
-        """
-        return self._file_id
-
-    def name(self) -> str:
-        """Simple getter.
-
-        Returns:
-            str: the file name.
-        """
-        return self._name
+    file_id: str
+    name: str
+    mime_type: str
 
 
 class GoogleDrive:
@@ -336,7 +314,7 @@ class GoogleDrive:
             .execute()
         )
         files_informations = [
-            FileInformation(f["id"], f["name"], f["mimeType"])
+            FileInformation(file_id=f["id"], name=f["name"], mime_type=f["mimeType"])
             for f in (results.get("files", []))
         ]
         return files_informations, results.get("nextPageToken", None)
@@ -352,4 +330,4 @@ class GoogleDrive:
         if next_page_token is not None:
             raise NonUniqResult()
 
-        return files[0].file_id()
+        return files[0].file_id

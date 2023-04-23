@@ -1,8 +1,8 @@
 """Main class for setup task."""
-
 # standard library
 import os
 
+from dataclasses import dataclass
 from pathlib import Path
 
 # typing
@@ -17,34 +17,12 @@ from services.google_drive import GoogleDrive
 from services.reporting import Report
 
 
+@dataclass(frozen=True, kw_only=True)
 class KeycloakDetails:
     """Represent details (path to status file, script) for keycloak setup."""
 
-    def __init__(self, path_keycloak_status_file: Path, path_keycloak_script: Path):
-        """Simple constructor.
-
-        Args:
-            path_keycloak_status_file (str): the path to the keycloak status file in keycloak container directory
-            path_keycloak_script (str): the path to keycloak script to execute in keycloak container
-        """
-        self._path_keycloak_status_file = path_keycloak_status_file
-        self._path_keycloak_script = path_keycloak_script
-
-    def path_keycloak_status_file(self) -> Path:
-        """Simple getter.
-
-        Returns:
-            Path: the path of the keycloak status file
-        """
-        return self._path_keycloak_status_file
-
-    def path_keycloak_script(self) -> Path:
-        """Sinple getter.
-
-        Returns:
-            Path: the path of the keycloak script
-        """
-        return self._path_keycloak_script
+    path_keycloak_status_file: Path
+    path_keycloak_script: Path
 
 
 class Task:
@@ -97,20 +75,18 @@ class Task:
         if self._keycloak_setup_details is not None:
             report_kc = report.get_sub_report("setup keycloak", init_status="in block")
             report_kc.debug(
-                f"Set up status file '{self._keycloak_setup_details.path_keycloak_status_file()}'"
+                f"Set up status file '{self._keycloak_setup_details.path_keycloak_status_file}'"
             )
-            self._keycloak_setup_details.path_keycloak_status_file().parent.mkdir(
+            self._keycloak_setup_details.path_keycloak_status_file.parent.mkdir(
                 exist_ok=True, parents=True
             )
-            self._keycloak_setup_details.path_keycloak_status_file().write_text(
-                "SETUP\n"
-            )
+            self._keycloak_setup_details.path_keycloak_status_file.write_text("SETUP\n")
             report_kc.debug(
-                f"Copying kc script to '{self._keycloak_setup_details.path_keycloak_script()}'"
+                f"Copying kc script to '{self._keycloak_setup_details.path_keycloak_script}'"
             )
             copy_asset_to_file(
                 KnownAssets.KC_EXPORT_SH,
-                self._keycloak_setup_details.path_keycloak_script(),
+                self._keycloak_setup_details.path_keycloak_script,
             )
             report_kc.debug("Done")
 
@@ -126,11 +102,11 @@ class Task:
             self._report.warning("No archive found. Skipping setup")
             return
 
-        last_archive = sorted(archives, key=lambda arc: arc.name())[len(archives) - 1]
+        last_archive = sorted(archives, key=lambda arc: arc.name)[len(archives) - 1]
         self._report.notify(
-            f"using last archive : {last_archive.name()} ({last_archive.file_id()})"
+            f"using last archive : {last_archive.name} ({last_archive.file_id})"
         )
-        self.__setup_archive(last_archive.file_id())
+        self.__setup_archive(last_archive.file_id)
 
     def _setup_explicit_archive(self, archive_name: str) -> None:
         archive_id = self._google_drive.get_archive_id(archive_name)

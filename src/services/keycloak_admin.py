@@ -4,6 +4,8 @@ import datetime
 import json
 import urllib.request
 
+from dataclasses import dataclass
+
 # typing
 from typing import Any, Optional
 
@@ -12,44 +14,13 @@ from .oidc_client import OidcClient, OidcClientConfig
 from .reporting import Report
 
 
+@dataclass(frozen=True, kw_only=True)
 class KeycloakAdminCredentials:
     """Represent the credentials (realm, user and password) for keycloak client."""
 
-    def __init__(self, realm: str, username: str, password: str):
-        """Simple constructor.
-
-        Args:
-            realm (str): the account realm name
-            username (str): the account username
-            password (): the account password
-        """
-        self._realm = realm
-        self._username = username
-        self._password = password
-
-    def realm(self) -> str:
-        """Simple getter.
-
-        Returns:
-            str: the realm
-        """
-        return self._realm
-
-    def username(self) -> str:
-        """Simple getter.
-
-        Returns:
-            str: the username
-        """
-        return self._username
-
-    def password(self) -> str:
-        """Simple getter.
-
-        Returns:
-            str: the password
-        """
-        return self._password
+    realm: str
+    username: str
+    password: str
 
 
 class TokensManager:
@@ -176,14 +147,14 @@ class KeycloakAdmin:
         self._base_url = base_url
         self._tokens_manager = TokensManager(
             report=sub_report,
-            username=credentials.username(),
-            password=credentials.password(),
+            username=credentials.username,
+            password=credentials.password,
             oidc_client=OidcClient(
                 report=sub_report,
                 oidc_client_config=OidcClientConfig(
                     client_id="admin-cli",
                     client_secret=None,
-                    issuer=f"{base_url}/realms/{credentials.realm()}",
+                    issuer=f"{base_url}/realms/{credentials.realm}",
                 ),
             ),
         )

@@ -7,6 +7,7 @@ to a custom maintenance page.
 import time
 
 from contextlib import AbstractContextManager
+from dataclasses import dataclass
 
 # typing
 from typing import Any, Optional
@@ -20,60 +21,14 @@ from .kubernetes_api import (
 from .reporting import Report
 
 
+@dataclass(frozen=True, kw_only=True)
 class MaintenanceDetails:
     """Represent the k8s objects references and maintenance values."""
 
-    def __init__(
-        self,
-        ingress_ref: KubernetesIngressRef,
-        ingress_class_name: str,
-        config_map_value_ref: KubernetesConfigMapValueRef,
-        config_map_value: str,
-    ):
-        """Simple constructor.
-
-        Args:
-            ingress_ref (KubernetesIngressRef): the reference of the Ingress
-            ingress_class_name (str): the className of the Ingress for maintenance
-            config_map_value_ref (KubernetesConfigMapValueRef): the reference of the ConfigMap data entry
-            config_map_value: the value of the ConfigMap data entry for maintenance
-        """
-        self._ingress_ref = ingress_ref
-        self._ingress_class_name = ingress_class_name
-        self._config_map_value_ref = config_map_value_ref
-        self._config_map_value = config_map_value
-
-    def ingress_ref(self) -> KubernetesIngressRef:
-        """Simple getter.
-
-        Returns:
-            KubernetesIngressRef: the reference for the k8s Ingress.
-        """
-        return self._ingress_ref
-
-    def ingress_class_name(self) -> str:
-        """Simple getter.
-
-        Returns:
-            str: the k8s Ingress className for maintenance.
-        """
-        return self._ingress_class_name
-
-    def config_map_value_ref(self) -> KubernetesConfigMapValueRef:
-        """Simple getter.
-
-        Returns:
-            ConfigMapValueRef: the reference for the k8s ConfigMap data entry.
-        """
-        return self._config_map_value_ref
-
-    def config_map_value(self) -> str:
-        """Simple getter.
-
-        Returns:
-            str: the value of the k8s ConfigMap data entry for maintenance.
-        """
-        return self._config_map_value
+    ingress_ref: KubernetesIngressRef
+    ingress_class_name: str
+    config_map_value_ref: KubernetesConfigMapValueRef
+    config_map_value: str
 
 
 class ClusterMaintenance(AbstractContextManager[None]):
@@ -119,16 +74,16 @@ class ClusterMaintenance(AbstractContextManager[None]):
         """
         self._report.set_status("MaintenanceModeON")
         self._original_config_map_value = self._k8s_api.get_config_map_value(
-            self._details.config_map_value_ref()
+            self._details.config_map_value_ref
         )
         self._original_ingress_class_name = self._k8s_api.get_ingress_class_name(
-            self._details.ingress_ref()
+            self._details.ingress_ref
         )
         self._k8s_api.set_config_map_value(
-            self._details.config_map_value_ref(), self._details.config_map_value()
+            self._details.config_map_value_ref, self._details.config_map_value
         )
         self._k8s_api.set_ingress_class_name(
-            self._details.ingress_ref(), self._details.ingress_class_name()
+            self._details.ingress_ref, self._details.ingress_class_name
         )
         time.sleep(5)
 
@@ -139,8 +94,8 @@ class ClusterMaintenance(AbstractContextManager[None]):
         """
         self._report.set_status("MaintenanceModeOFF")
         self._k8s_api.set_config_map_value(
-            self._details.config_map_value_ref(), self._original_config_map_value
+            self._details.config_map_value_ref, self._original_config_map_value
         )
         self._k8s_api.set_ingress_class_name(
-            self._details.ingress_ref(), self._original_ingress_class_name
+            self._details.ingress_ref, self._original_ingress_class_name
         )

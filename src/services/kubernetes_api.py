@@ -2,102 +2,51 @@
 
 Manipulate k8s Ingress className and ConfigMap data entry value.
 """
+# standard library
+from dataclasses import dataclass
+
 # typing
 from typing import Optional
 
 # third parties
-from kubernetes import client
+from kubernetes import client, config
 from kubernetes.client.exceptions import ApiException
-from kubernetes.config import load_incluster_config, load_kube_config
 
 # relative
 from .reporting import Report
 
 
+@dataclass(frozen=True, kw_only=True)
 class KubernetesIngressRef:
     """Represent an Ingress reference."""
 
-    def __init__(self, name: str, namespace: str):
-        """Simple constructor.
+    name: str
+    namespace: str
 
-        Args:
-            name (str): the name of the Ingress
-            namespace (str): the namespace of the Ingress
-        """
-        self._name = name
-        self._namespace = namespace
-
-    def name(self) -> str:
-        """Simple getter.
-
-        Returns:
-            str: Ingress name
-        """
-        return self._name
-
-    def namespace(self) -> str:
-        """Simple getter.
-
-        Returns:
-            str: Ingress namespace.
-        """
-        return self._namespace
-
-    def __str__(self) -> str:
+    def __repr__(self) -> str:
         """Stringify.
 
         Returns:
             str: <name>.<namespace>
         """
-        return f"{self._name}.{self._namespace}"
+        return f"{self.name}.{self.namespace}"
 
 
+@dataclass(frozen=True, kw_only=True)
 class KubernetesConfigMapValueRef:
     """Represent an ConfigMap data value reference."""
 
-    def __init__(self, name: str, namespace: str, key: str):
-        """Simple constructor.
+    name: str
+    namespace: str
+    key: str
 
-        Args:
-            name (str): the name of the ConfigMap
-            namespace (str): the namespace of the ConfigMap
-            key (str): the key of the ConfigMap data entry
-        """
-        self._name = name
-        self._namespace = namespace
-        self._key = key
-
-    def name(self) -> str:
-        """Simple getter.
-
-        Returns:
-            str: ConfigMap name.
-        """
-        return self._name
-
-    def namespace(self) -> str:
-        """Simple getter.
-
-        Returns:
-            str: ConfigMap namespace.
-        """
-        return self._namespace
-
-    def key(self) -> str:
-        """Simple getter.
-
-        Returns:
-            str: the attribute key in the data attribute of the ConfigMap.
-        """
-        return self._key
-
-    def __str__(self) -> str:
+    def __repr__(self) -> str:
         """Stringify.
 
         Returns:
             str: <name>.<namespace>#<key>
         """
-        return f"{self._name}.{self._namespace}#{self._key}"
+        return f"{self.name}.{self.namespace}#{self.key}"
 
 
 class KubernetesApi:
@@ -131,7 +80,7 @@ class KubernetesApi:
                     " no kubernetes config file is configured"
                 )
             self._report.notify("using Pod service account")
-            load_incluster_config()
+            config.incluster_config.load_incluster_config()
         else:
             if kube_config_context is None:
                 ctx_msg = "without specific context"
@@ -140,7 +89,7 @@ class KubernetesApi:
             self._report.notify(
                 f"using kubernetes config file '{kube_config}' {ctx_msg}"
             )
-            load_kube_config(
+            config.kube_config.load_kube_config(
                 config_file=kube_config,
                 context=kube_config_context,
                 persist_config=False,
@@ -165,8 +114,8 @@ class KubernetesApi:
 
         try:
             api_response = api_networking.read_namespaced_ingress(
-                namespace=ingress_ref.namespace(),
-                name=ingress_ref.name(),
+                namespace=ingress_ref.namespace,
+                name=ingress_ref.name,
             )
         except ApiException as error:
             msg = f"Exception when calling NetworkingV1Api->patch_namespaced_ingress: {error}"
@@ -196,8 +145,8 @@ class KubernetesApi:
 
         try:
             _ = api_networking.patch_namespaced_ingress(
-                namespace=ingress_ref.namespace(),
-                name=ingress_ref.name(),
+                namespace=ingress_ref.namespace,
+                name=ingress_ref.name,
                 body={"spec": {"ingressClassName": ingress_class_name}},
             )
         except ApiException as error:
@@ -225,15 +174,15 @@ class KubernetesApi:
 
         try:
             api_response = api_core.read_namespaced_config_map(
-                namespace=config_map_value_ref.namespace(),
-                name=config_map_value_ref.name(),
+                namespace=config_map_value_ref.namespace,
+                name=config_map_value_ref.name,
             )
         except ApiException as error:
             msg = f"Exception when calling CoreV1Api->patch_namespaced_config_map: {error}"
             report.fatal(msg)
             raise RuntimeError(msg) from error
 
-        result: Optional[str] = api_response.data[config_map_value_ref.key()]
+        result: Optional[str] = api_response.data[config_map_value_ref.key]
         report.debug(f"Result: {result}")
         return result
 
@@ -254,9 +203,9 @@ class KubernetesApi:
 
         try:
             _ = api_core.patch_namespaced_config_map(
-                namespace=config_map_value_ref.namespace(),
-                name=config_map_value_ref.name(),
-                body={"data": {config_map_value_ref.key(): value}},
+                namespace=config_map_value_ref.namespace,
+                name=config_map_value_ref.name,
+                body={"data": {config_map_value_ref.key: value}},
             )
         except ApiException as error:
             msg = f"Exception when calling CoreV1Api->patch_namespaced_config_map: {error}"
