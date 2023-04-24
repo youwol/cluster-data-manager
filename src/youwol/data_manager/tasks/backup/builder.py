@@ -21,6 +21,9 @@ from youwol.data_manager.services import (
     get_service_mc_commands_builder,
     get_service_report_builder,
 )
+from youwol.data_manager.services.builder import (
+    get_containers_readiness_kc_and_minio_builder,
+)
 from youwol.data_manager.services.keycloak_admin import (
     KeycloakAdmin,
     KeycloakAdminCredentials,
@@ -156,6 +159,7 @@ def build() -> Task:
         return context.task
 
     report_builder = get_service_report_builder()
+    containers_readiness_builder = get_containers_readiness_kc_and_minio_builder()
     s3_builder = get_s3_builder()
     cassandra_builder = get_cassandra_builder()
     keycloak_builder = get_keycloak_builder()
@@ -172,6 +176,7 @@ def build() -> Task:
     google_drive_upload_folder = type_backup
 
     context.task = Task(
+        containers_readiness=containers_readiness_builder(),
         task_backup_s3=s3_builder(),
         task_backup_cassandra=cassandra_builder(),
         task_backup_keycloak=keycloak_builder(),

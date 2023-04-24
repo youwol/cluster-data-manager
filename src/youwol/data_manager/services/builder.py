@@ -14,6 +14,7 @@ from youwol.data_manager.configuration import ConfigEnvVars, env_utils
 # relative
 from .archiver import Archiver
 from .cluster_maintenance import ClusterMaintenance, MaintenanceDetails
+from .containers_readiness import ContainersReadiness, ProbeKeycloak, ProbeMinio
 from .cqlsh_commands import CqlInstance, CqlshCommands
 from .google_drive import GoogleDrive
 from .kubernetes_api import (
@@ -44,6 +45,7 @@ class Context:
     google_drive: Optional[GoogleDrive] = None
     cluster_maintenance: Optional[ClusterMaintenance] = None
     kubernetes_api: Optional[KubernetesApi] = None
+    containers_readiness: Optional[ContainersReadiness] = None
 
 
 context = Context()
@@ -318,5 +320,82 @@ def get_kubernetes_api_builder() -> Callable[[], KubernetesApi]:
             )
 
         return context.kubernetes_api
+
+    return builder
+
+
+def get_containers_readiness_kc_and_minio_builder() -> (
+    Callable[[], ContainersReadiness]
+):
+    """Get a builder for a configured instance of the containers readiness service.
+
+    Returns:
+        Callable[[], ContainersReadiness]: a nullary builder for the containers readiness service.
+    """
+    if context.containers_readiness is not None:
+        containers_readiness = context.containers_readiness
+        return lambda: containers_readiness
+
+    report_builder = get_report_builder()
+    path_keycloak_status_file = env_utils.existing_path(
+        ConfigEnvVars.PATH_KEYCLOAK_STATUS_FILE
+    )
+    local_access_key = env_utils.not_empty_string(ConfigEnvVars.MINIO_LOCAL_ACCESS_KEY)
+    local_secret_key = env_utils.not_empty_string(ConfigEnvVars.MINIO_LOCAL_SECRET_KEY)
+    local_port = env_utils.integer(ConfigEnvVars.MINIO_LOCAL_PORT, 9000)
+
+    def builder() -> ContainersReadiness:
+        if context.containers_readiness is None:
+            probe_keycloak = ProbeKeycloak(
+                report=report_builder(),
+                path_keycloak_status_file=path_keycloak_status_file,
+            )
+            minio_local_instance = MinioLocalInstance(
+                access_key=local_access_key,
+                secret_key=local_secret_key,
+                port=local_port,
+            )
+            probe_minio = ProbeMinio(
+                report=report_builder(), s3_instance=minio_local_instance
+            )
+            context.containers_readiness = ContainersReadiness(
+                report=report_builder(), probes=[probe_keycloak, probe_minio]
+            )
+
+        return context.containers_readiness
+
+    return builder
+
+
+def get_containers_readiness_minio_builder() -> Callable[[], ContainersReadiness]:
+    """Get a builder for a configured instance of the containers readiness service.
+
+    Returns:
+        Callable[[], ContainersReadiness]: a nullary builder for the containers readiness service.
+    """
+    if context.containers_readiness is not None:
+        containers_readiness = context.containers_readiness
+        return lambda: containers_readiness
+
+    report_builder = get_report_builder()
+    local_access_key = env_utils.not_empty_string(ConfigEnvVars.MINIO_LOCAL_ACCESS_KEY)
+    local_secret_key = env_utils.not_empty_string(ConfigEnvVars.MINIO_LOCAL_SECRET_KEY)
+    local_port = env_utils.integer(ConfigEnvVars.MINIO_LOCAL_PORT, 9000)
+
+    def builder() -> ContainersReadiness:
+        if context.containers_readiness is None:
+            minio_local_instance = MinioLocalInstance(
+                access_key=local_access_key,
+                secret_key=local_secret_key,
+                port=local_port,
+            )
+            probe_minio = ProbeMinio(
+                report=report_builder(), s3_instance=minio_local_instance
+            )
+            context.containers_readiness = ContainersReadiness(
+                report=report_builder(), probes=[probe_minio]
+            )
+
+        return context.containers_readiness
 
     return builder

@@ -5,6 +5,7 @@ from pathlib import Path
 # application services
 from youwol.data_manager.services.archiver import ArchiveCreator
 from youwol.data_manager.services.cluster_maintenance import ClusterMaintenance
+from youwol.data_manager.services.containers_readiness import ContainersReadiness
 from youwol.data_manager.services.google_drive import GoogleDrive
 
 # relative
@@ -21,6 +22,7 @@ class Task:
 
     def __init__(
         self,
+        containers_readiness: ContainersReadiness,
         task_backup_s3: S3,
         task_backup_cassandra: Cassandra,
         task_backup_keycloak: Keycloak,
@@ -34,6 +36,7 @@ class Task:
         """Simple constructor.
 
         Args:
+            containers_readiness: the containers readiness service
             task_backup_s3 (S3): the backup S3 task
             task_backup_cassandra (Cassandra): the backup cassandra task
             task_backup_keycloak (Keycloak): the backup keycloak task
@@ -44,6 +47,7 @@ class Task:
             cluster_maintenance (ClusterMaintenance): the cluster maintenance service
             path_log_file (Path): the path to the log file
         """
+        self._containers_readiness = containers_readiness
         self._task_backup_s3 = task_backup_s3
         self._task_backup_cassandra = task_backup_cassandra
         self._task_backup_keycloak = task_backup_keycloak
@@ -56,6 +60,7 @@ class Task:
 
     def run(self) -> None:
         """Run the task."""
+        self._containers_readiness.wait()
         self._archive.add_metadata("cql", self._task_backup_cassandra.metadata())
         self._archive.add_metadata("s3", self._task_backup_s3.metadata())
         self._archive.add_metadata("kc", self._task_backup_keycloak.metadata())

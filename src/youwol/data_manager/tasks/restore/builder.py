@@ -15,6 +15,7 @@ from youwol.data_manager.services import (
     get_service_mc_commands_builder,
     get_service_report_builder,
 )
+from youwol.data_manager.services.builder import get_containers_readiness_minio_builder
 
 # relative
 from .cassandra import Cassandra
@@ -110,8 +111,10 @@ def build() -> Task:
 
     task_restore_cassandre_builder = get_cassandra_builder()
     task_restore_s3_builder = get_s3_builder()
+    containers_readiness_builder = get_containers_readiness_minio_builder()
 
     context.task = Task(
+        containers_readiness=containers_readiness_builder(),
         task_restore_s3=task_restore_s3_builder(),
         task_restore_cassandra=task_restore_cassandre_builder(),
     )

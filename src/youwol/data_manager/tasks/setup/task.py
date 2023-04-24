@@ -80,6 +80,7 @@ class Task:
             self._keycloak_setup_details.path_keycloak_status_file.parent.mkdir(
                 exist_ok=True, parents=True
             )
+            # TODO: define a constant, shared with containers readiness
             self._keycloak_setup_details.path_keycloak_status_file.write_text("SETUP\n")
             report_kc.debug(
                 f"Copying kc script to '{self._keycloak_setup_details.path_keycloak_script}'"
