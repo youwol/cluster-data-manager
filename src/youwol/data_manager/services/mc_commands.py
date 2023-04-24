@@ -31,7 +31,8 @@ class S3Instance:
     host: str
     tls: bool = True
     port: int = 9000
-    url: str = field(init=False)
+    base_url: str = field(init=False)
+    health_live_url: str = field(init=False)
 
     def __post_init__(self) -> None:
         """Construct URL from initial attributes.
@@ -39,8 +40,10 @@ class S3Instance:
         Notes:
             Use object.__setattr__() to bypass @dataclass(frozen=True)
         """
-        url = f"http{'s' if self.tls else ''}://{self.host}:{self.port}"
-        object.__setattr__(self, "url", url)
+        base_url = f"http{'s' if self.tls else ''}://{self.host}:{self.port}"
+        object.__setattr__(self, "base_url", base_url)
+        health_live_url = f"{base_url}/minio/health/live"
+        object.__setattr__(self, "health_live_url", health_live_url)
 
 
 @dataclass(frozen=True, init=False)
@@ -114,7 +117,7 @@ class McCommands:
         Returns:
             str: the cluster instance URL.
         """
-        return self._cluster.url
+        return self._cluster.base_url
 
     def cluster_info(self) -> Any:
         """Return information about the cluster instance.
@@ -303,7 +306,7 @@ class McCommands:
             "alias",
             "set",
             alias,
-            instance.url,
+            instance.base_url,
             instance.credentials.access_key,
             instance.credentials.secret_key,
         )
