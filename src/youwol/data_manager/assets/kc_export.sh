@@ -6,6 +6,7 @@ exec > >(tee "$PATH_WORK_DIR/script_out.log")
 
 # INT on error, debug everything
 set -ex
+set -o pipefail
 
 trap "echo 'Trapping SIGINT. The script ended with errors'; echo 'ERROR' > '$PATH_KEYCLOAK_STATUS_FILE'; exit 1" INT
 trap "echo 'Trapping SIGTERM . The script ended with errors'; echo 'ERROR' > '$PATH_KEYCLOAK_STATUS_FILE'; exit 1" TERM
