@@ -177,7 +177,7 @@ class ArchiveExtractor:
 class Archiver:
     """Class to instantiate ArchiveCreator or ArchiveExtractor."""
 
-    METADATA_FILENAME = "metadata.txt"
+    METADATA_FILENAME = "metadata.json"
 
     def __init__(self, report: Report, path_work_dir: Path, job_uuid: str):
         """Simple constructor.
