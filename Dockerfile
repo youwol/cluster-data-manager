@@ -1,68 +1,153 @@
-#######################
-## Builder Image
-#  image to build cqlsh (COPY commands optimized with cython), install minio client and install our application
+##############################################################################
+### Builder Image
+##
+#
+# Will install the following software in /opt :
+# - minio client binary
+# - cqlsh from source using pipx
+# - our application from source using pipx
 FROM python:3.11-bullseye AS python-builder
 
+
+###############################################################################
+## Arguments
+#
+# URL for downloading the minio client binary
+ARG mc_bin_url="https://dl.min.io/client/mc/release/linux-amd64/archive/mc.RELEASE.2023-04-12T02-21-51Z"
+# git repository to clone to get cqlsh source
+ARG cqlsh_repository=https://github.com/youwol-jdecharne/scylla-cqlsh.git
+# git commitish to checkout for cqlsh source
+ARG cqlsh_tag=v6.0.7-youwol
+# gcc version for apt package
+ARG gcc_version=4:10.2.1-1
+# git version for apt packagae
+ARG git_version=1:2.30.2-1+deb11u2
+# pip version for pypi
+ARG pip_version=23.1.2
+# pipx version for pypi
+ARG pipx_version=1.2.0
 # Does not matter that much, just hold the downloaded sources for installation
 WORKDIR /usr/src/apps
 
-# Install OS-level dependencies
-RUN apt-get update && apt-get install --assume-yes git gcc
-RUN pip install --upgrade pip
 
-# Download minio-client binary
-ARG mc_bin_url="https://dl.min.io/client/mc/release/linux-amd64/mc"
-RUN mkdir -p /opt/minio-client/bin && \
-    mkdir -p /opt/minio-client/config && \
-    curl "$mc_bin_url" -o /opt/minio-client/bin/mc && \
-    chmod a+x /opt/minio-client/bin/mc
-
-# Install pipx
+###############################################################################
+## OS-level dependencies
+#
+# Prevent some packages from prompting interactive input
+ENV DEBIAN_FRONTEND=noninteractive
+# * Update & install dependencies with the package manager
+#   - git : clone cqlsh repository
+#   - gcc : for cqlsh cythonication
+# * Update pip to the latest
+# * pipx is not available in bullseye, install it with pip
+RUN    apt-get update \
+    && apt-get install \
+       --no-install-recommends \
+       --assume-yes \
+       gcc=$gcc_version \
+       git=$git_version \
+    && rm -rf /val/lib/apt/lists/* \
+    && pip install \
+       pip==$pip_version \
+       pipx==$pipx_version
+# pipx venvs & apps directories in /opt
 ENV PIPX_HOME=/opt/pipx/home
 ENV PIPX_BIN_DIR=/opt/pipx/bin
-RUN pip install pipx
 
-# Install cqlsh from sources
-ARG cqlsh_repository=https://github.com/youwol-jdecharne/scylla-cqlsh.git
-ARG cqlsh_tag=v6.0.7-youwol
-RUN git clone $cqlsh_repository cqlsh
-RUN git -C cqlsh checkout $cqlsh_tag
-RUN pipx install ./cqlsh
 
-# Install our app
+###############################################################################
+## Minio client & Cqlsh
+#
+# * Bin directory in /opt
+# * Download minio-client binary in /opt/minio-client/bin
+#     and set executable permissions
+# * Get cqlsh the source from repository
+#     and install it with pipx
+RUN    mkdir -p /opt/minio-client/bin \
+    && curl "$mc_bin_url" \
+       -o /opt/minio-client/bin/mc \
+    && chmod a+x /opt/minio-client/bin/mc \
+    && git clone --depth 1 \
+       --branch $cqlsh_tag \
+       $cqlsh_repository cqlsh \
+    && pipx install ./cqlsh
+
+
+###############################################################################
+## Our application
+#
+# Get the source from build context
 COPY . cluster-data-manager
+# Install with pipx from source
 RUN pipx install ./cluster-data-manager
 
-##############
-## Final image
+
+
+###############################################################################
+### Final image
+##
 #
-FROM python:3.11-slim
-# Copy previously downloaded minio-client
-COPY --from=python-builder /opt/minio-client /opt/minio-client
+# - create user data-manager
+# - set up application environment variables
+# - create working directories & define VOLUME
+# - copy installed softwares from builder image
+# - define ENTRYPOINT
+FROM python:3.11-slim as final
 
-# Copy previously pipx intallations (must have the same path) and use it
-COPY --from=python-builder /opt/pipx /opt/pipx
-ENV PATH=/opt/pipx/bin:$PATH
 
+###############################################################################
+## Arguments
+#
+# the root working directory path & VOLUME
+ARG path_work_dir=/var/opt/data-manager
+# the HOME dirctory for data-manager
+ARG path_data_manager_home=/opt/data-manager
+
+###############################################################################
+## Create user data-manager
+#
 # Create user & user home directory
-RUN useradd -m -d /opt/app data-manager
-WORKDIR /opt/app
+RUN useradd -m -d $path_data_manager_home data-manager
+# Use user HOME as the image WORKDIR
+WORKDIR $path_data_manager_home
 
-# Our working directories
-RUN mkdir -p /var/tmp/app
-RUN chown -R data-manager /var/tmp/app
-RUN chown -R data-manager /opt/minio-client/config
-VOLUME ["/var/tmp/app"]
 
-# Environment for our application
-ENV PATH_MINIO_CLIENT="/opt/minio-client/bin/mc"
-ENV PATH_MINIO_CLIENT_CONFIG="/opt/minio-client/config"
-ENV CQLSH_COMMAND="/opt/pipx/bin/cqlsh"
-ENV PATH_LOG_FILE="/var/tmp/app/entry_point.log"
-ENV PATH_WORK_DIR="/var/tmp/app"
-ENV PATH_KEYCLOAK_STATUS_FILE="/var/tmp/app/kc/kc_status"
-ENV PATH_KEYCLOAK_SCRIPT="/var/tmp/app/kc/kc_script.sh"
+###############################################################################
+## Environment variables for our application
+#
+# Binaries paths
+ENV PATH=/opt/pipx/bin:$PATH
+ENV PATH_MINIO_CLIENT=/opt/minio-client/bin/mc
+ENV CQLSH_COMMAND=/opt/pipx/bin/cqlsh
+# Working directories paths
+ENV PATH_WORK_DIR=$path_work_dir
+ENV PATH_LOG_FILE=$PATH_WORK_DIR/entry_point.log
+ENV PATH_KEYCLOAK_STATUS_FILE=$PATH_WORK_DIR/kc/kc_status
+ENV PATH_KEYCLOAK_SCRIPT=$PATH_WORK_DIR/kc/kc_script.sh
+# configuration directory for minio client
+ENV PATH_MINIO_CLIENT_CONFIG=$path_data_manager_home/.mc
 
+
+###############################################################################
+## Create application working directories
+#
+# Our working directory
+RUN mkdir -p $PATH_WORK_DIR && \
+    chown -R data-manager $PATH_WORK_DIR
+# Define the image VOLUME
+VOLUME $path_work_dir
+
+
+###############################################################################
+## Copy previously installed softwares
+#
+COPY --from=python-builder /opt /opt
+
+
+###############################################################################
+## Image entry point
+#
+# Run as user data-manager
 USER data-manager
-# Start our script, installed by pipx
+# Start our script, from pipx installation
 ENTRYPOINT ["data-manager"]

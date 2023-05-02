@@ -194,16 +194,25 @@ def non_existing_path(env_name: EnvironmentVars) -> Path:
     return result
 
 
-def empty_dir(env_name: EnvironmentVars) -> Path:
+def empty_dir(env_name: EnvironmentVars, create: bool = True) -> Path:
     """Get a Path to an empty dir from an environment variable.
 
     Args:
         env_name (EnvVars): environment variable name.
+        create (bool): if directory does not exist, it will be created
 
     Returns:
         Path: the directory path.
     """
-    result = existing_path(env_name)
+    result = Path(not_empty_string(env_name))
+
+    if create and not result.exists():
+        result.mkdir(parents=True)
+
+    if not result.exists():
+        raise FileNotFoundError(
+            f"Path '{result}' defined in env {env_name.value} does not exist"
+        )
 
     if not result.is_dir():
         raise NotADirectoryError(

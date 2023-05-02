@@ -111,7 +111,7 @@ def get_mc_commands_builder() -> Callable[[], McCommands]:
 
     report_builder = get_report_builder()
     path_mc = env_utils.existing_path(ConfigEnvVars.PATH_MC)
-    path_mc_config = env_utils.existing_path(ConfigEnvVars.PATH_MC_CONFIG)
+    path_mc_config = env_utils.empty_dir(ConfigEnvVars.PATH_MC_CONFIG)
     local_access_key = env_utils.not_empty_string(ConfigEnvVars.MINIO_LOCAL_ACCESS_KEY)
     local_secret_key = env_utils.not_empty_string(ConfigEnvVars.MINIO_LOCAL_SECRET_KEY)
     local_port = env_utils.integer(ConfigEnvVars.MINIO_LOCAL_PORT, 9000)
