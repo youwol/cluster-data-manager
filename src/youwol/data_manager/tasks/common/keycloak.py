@@ -3,6 +3,7 @@
 from pathlib import Path
 
 # relative
+from ...configuration import ArchiveItem
 from .task import OnPathDirMissing, Task
 
 
@@ -12,12 +13,12 @@ class Keycloak(Task):
     Define relative path for tasks.
     """
 
-    RELATIVE_PATH = "kc"
-
     def _task_path_dir_and_archive_item(
         self, on_missing: OnPathDirMissing
-    ) -> tuple[Path, str]:
+    ) -> tuple[Path, ArchiveItem]:
         return (
-            self._path_dir_maybe_exists(Keycloak.RELATIVE_PATH, on_missing=on_missing),
-            Keycloak.RELATIVE_PATH,
+            self._path_dir_maybe_exists(
+                ArchiveItem.KEYCLOAK.value, on_missing=on_missing
+            ),
+            ArchiveItem.KEYCLOAK,
         )

@@ -10,7 +10,12 @@ import datetime
 from typing import Callable, Optional
 
 # application configuration
-from youwol.data_manager.configuration import ConfigEnvVars, env_utils
+from youwol.data_manager.configuration import (
+    Deployment,
+    Installation,
+    JobParams,
+    env_utils,
+)
 
 # application services
 from youwol.data_manager.services import (
@@ -60,8 +65,8 @@ def get_s3_builder() -> Callable[[], S3]:
 
     report_builder = get_service_report_builder()
     mc_commands_builder = get_service_mc_commands_builder()
-    path_work_dir = env_utils.existing_path(ConfigEnvVars.PATH_WORK_DIR)
-    buckets = env_utils.strings_list(ConfigEnvVars.S3_BUCKETS)
+    path_work_dir = env_utils.existing_path(Installation.PATH_WORK_DIR)
+    buckets = env_utils.strings_list(JobParams.S3_BUCKETS)
 
     def builder() -> S3:
         if context.s3 is None:
@@ -88,9 +93,9 @@ def get_cassandra_builder() -> Callable[[], Cassandra]:
 
     report_builder = get_service_report_builder()
     cqlsh_commands_builder = get_service_cqlsh_commands_builder()
-    path_work_dir = env_utils.existing_path(ConfigEnvVars.PATH_WORK_DIR)
-    keyspaces = env_utils.strings_list(ConfigEnvVars.CQL_KEYSPACES)
-    tables = env_utils.strings_list(ConfigEnvVars.CQL_TABLES)
+    path_work_dir = env_utils.existing_path(Installation.PATH_WORK_DIR)
+    keyspaces = env_utils.strings_list(JobParams.CQL_KEYSPACES)
+    tables = env_utils.strings_list(JobParams.CQL_TABLES)
 
     def builder() -> Cassandra:
         if context.cassandra is None:
@@ -118,13 +123,13 @@ def get_keycloak_builder() -> Callable[[], Keycloak]:
         return lambda: keycloak
 
     report_builder = get_service_report_builder()
-    path_work_dir = env_utils.existing_path(ConfigEnvVars.PATH_WORK_DIR)
+    path_work_dir = env_utils.existing_path(Installation.PATH_WORK_DIR)
     path_keycloak_status_file = env_utils.existing_path(
-        ConfigEnvVars.PATH_KEYCLOAK_STATUS_FILE
+        Installation.PATH_KEYCLOAK_STATUS_FILE
     )
-    keycloak_username = env_utils.not_empty_string(ConfigEnvVars.KEYCLOAK_USERNAME)
-    keycloak_password = env_utils.not_empty_string(ConfigEnvVars.KEYCLOAK_PASSWORD)
-    keycloak_base_url = env_utils.not_empty_string(ConfigEnvVars.KEYCLOAK_BASE_URL)
+    keycloak_username = env_utils.not_empty_string(Deployment.KEYCLOAK_USERNAME)
+    keycloak_password = env_utils.not_empty_string(Deployment.KEYCLOAK_PASSWORD)
+    keycloak_base_url = env_utils.not_empty_string(Deployment.KEYCLOAK_BASE_URL)
 
     def keycloak_admin_builder() -> KeycloakAdmin:
         return KeycloakAdmin(
@@ -167,9 +172,9 @@ def build() -> Task:
     google_drive_builder = get_service_google_drive_builder()
     cluster_maintenance_builder = get_service_cluster_maintenance_builder()
 
-    path_log_file = env_utils.existing_path(ConfigEnvVars.PATH_LOG_FILE)
-    job_uuid = env_utils.not_empty_string(ConfigEnvVars.JOB_UUID)
-    type_backup = env_utils.not_empty_string(ConfigEnvVars.TYPE_BACKUP)
+    path_log_file = env_utils.existing_path(Installation.PATH_LOG_FILE)
+    job_uuid = env_utils.not_empty_string(JobParams.JOB_UUID)
+    type_backup = env_utils.not_empty_string(JobParams.TYPE_BACKUP)
     google_drive_upload_file_name = (
         f"{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}_{job_uuid}.tgz"
     )
@@ -181,7 +186,7 @@ def build() -> Task:
         task_backup_cassandra=cassandra_builder(),
         task_backup_keycloak=keycloak_builder(),
         google_drive=google_drive_builder(),
-        archive=archiver_builder().new_archive(),
+        archive=archiver_builder().new_archive(job_uuid=job_uuid),
         google_drive_upload_file_name=google_drive_upload_file_name,
         google_drive_upload_folder=google_drive_upload_folder,
         cluster_maintenance=cluster_maintenance_builder(),

@@ -14,6 +14,7 @@ from pathlib import Path
 from typing import Any
 
 # relative
+from ..configuration import ArchiveItem
 from .reporting import Report
 
 
@@ -52,7 +53,7 @@ class ArchiveCreator:
     def _get_path_metadata_file(self) -> Path:
         return (
             self._path_work_dir
-            / f"{self._job_uuid}_{self._archive_uuid}_{Archiver.METADATA_FILENAME}"
+            / f"{self._job_uuid}_{self._archive_uuid}_{ArchiveItem.METADATA.value}"
         )
 
     def _write_metadata(self) -> None:
@@ -78,12 +79,12 @@ class ArchiveCreator:
                 archive.add(path, arcname=archive_item)
             report.notify("Adding metadata informations")
             archive.add(
-                self._get_path_metadata_file(), arcname=Archiver.METADATA_FILENAME
+                self._get_path_metadata_file(), arcname=ArchiveItem.METADATA.value
             )
         report.set_status("exit function")
         return self._path_archive
 
-    def add_dir_item(self, path_dir: Path, archive_item: str) -> None:
+    def add_dir_item(self, path_dir: Path, archive_item: ArchiveItem) -> None:
         """Add a directory entry.
 
         Add a new directory to the archive to be created.
@@ -93,7 +94,7 @@ class ArchiveCreator:
             archive_item (str): the name of the item in the archive.
 
         """
-        self.add_file_item(path_file=path_dir, archive_item=archive_item)
+        self.add_file_item(path_file=path_dir, archive_item=archive_item.value)
 
     def add_file_item(self, path_file: Path, archive_item: str) -> None:
         """Add a file entry.
@@ -177,9 +178,7 @@ class ArchiveExtractor:
 class Archiver:
     """Class to instantiate ArchiveCreator or ArchiveExtractor."""
 
-    METADATA_FILENAME = "metadata.json"
-
-    def __init__(self, report: Report, path_work_dir: Path, job_uuid: str):
+    def __init__(self, report: Report, path_work_dir: Path):
         """Simple constructor.
 
         Args:
@@ -191,10 +190,9 @@ class Archiver:
             "Archiver", init_status="InitializingComponent"
         )
         self._path_work_dir = path_work_dir
-        self._job_uuid = job_uuid
         report.set_status("ComponentInitialized")
 
-    def new_archive(self) -> ArchiveCreator:
+    def new_archive(self, job_uuid: str) -> ArchiveCreator:
         """Get an instance of ArchiveCreator.
 
         Returns:
@@ -203,7 +201,7 @@ class Archiver:
         return ArchiveCreator(
             report=self._report,
             path_work_dir=self._path_work_dir,
-            job_uuid=self._job_uuid,
+            job_uuid=job_uuid,
         )
 
     def existing_archive(self, path_archive: Path) -> ArchiveExtractor:

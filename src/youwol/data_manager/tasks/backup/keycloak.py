@@ -12,6 +12,7 @@ from youwol.data_manager.services.keycloak_admin import KeycloakAdmin
 from youwol.data_manager.services.reporting import Report
 
 # relative
+from ...configuration import ArchiveItem, KeycloakStatus
 from ..common import CommonKeycloak, OnPathDirMissing
 
 
@@ -49,10 +50,12 @@ class Keycloak(CommonKeycloak):
         report = self._report.get_sub_report(task="run", init_status="in function")
         status = self._path_status_file.read_text("UTF-8").strip()
         previous_status = None
-        while status != "DONE":
-            if status == "ERROR":
-                report.fatal("Status file is ERROR")
-                raise RuntimeError("Status file is ERROR : see keycloak container logs")
+        while status != KeycloakStatus.DONE.value:
+            if status == KeycloakStatus.ERROR.value:
+                report.fatal(f"Status file is {status}")
+                raise RuntimeError(
+                    f"Status file is {status} : see keycloak container logs"
+                )
             if status != previous_status:
                 previous_status = status
                 report.notify(f"New status '{status}'")
@@ -62,7 +65,7 @@ class Keycloak(CommonKeycloak):
             status = self._path_status_file.read_text("UTF-8").strip()
         report.notify("Done")
 
-    def task_path_dir_and_archive_item(self) -> tuple[Path, str]:
+    def task_path_dir_and_archive_item(self) -> tuple[Path, ArchiveItem]:
         """Simple getter.
 
         Returns:

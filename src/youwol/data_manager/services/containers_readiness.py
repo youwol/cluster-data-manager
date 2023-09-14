@@ -9,6 +9,7 @@ from pathlib import Path
 from urllib.error import URLError
 
 # relative
+from ..configuration import KeycloakStatus
 from .mc_commands import S3Instance
 from .reporting import Report
 
@@ -60,8 +61,7 @@ class ProbeKeycloak(Probe):
         report.notify(
             f"status file {self.path_keycloak_status_file} content is {status}"
         )
-        # TODO: define a constant, shared with setup task
-        return status != "SETUP"
+        return status != KeycloakStatus.SETUP.value
 
 
 @dataclass(frozen=True, kw_only=True)

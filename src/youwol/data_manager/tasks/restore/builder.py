@@ -7,7 +7,7 @@ Use get_restore_task() to obtain a configured instance for TaskRestore.
 from typing import Callable, Optional
 
 # application configuration
-from youwol.data_manager.configuration import ConfigEnvVars, env_utils
+from youwol.data_manager.configuration import Installation, JobParams, env_utils
 
 # application services
 from youwol.data_manager.services import (
@@ -47,9 +47,9 @@ def get_s3_builder() -> Callable[[], S3]:
     report_builder = get_service_report_builder()
     mc_commands_builder = get_service_mc_commands_builder()
 
-    path_work_dir = env_utils.existing_path(ConfigEnvVars.PATH_WORK_DIR)
-    s3_buckets = env_utils.strings_list(ConfigEnvVars.S3_BUCKETS)
-    overwrite = env_utils.boolean(ConfigEnvVars.RESTORE_OVERWRITE, False)
+    path_work_dir = env_utils.existing_path(Installation.PATH_WORK_DIR)
+    s3_buckets = env_utils.strings_list(JobParams.S3_BUCKETS)
+    overwrite = env_utils.boolean(JobParams.RESTORE_OVERWRITE, False)
 
     def builder() -> S3:
         if context.s3 is None:
@@ -79,10 +79,10 @@ def get_cassandra_builder() -> Callable[[], Cassandra]:
     report_builder = get_service_report_builder()
     cqlsh_commands_builder = get_service_cqlsh_commands_builder()
 
-    path_work_dir = env_utils.existing_path(ConfigEnvVars.PATH_WORK_DIR)
-    keyspaces = env_utils.strings_list(ConfigEnvVars.CQL_KEYSPACES)
-    tables = env_utils.strings_list(ConfigEnvVars.CQL_TABLES)
-    overwrite = env_utils.boolean(ConfigEnvVars.RESTORE_OVERWRITE, False)
+    path_work_dir = env_utils.existing_path(Installation.PATH_WORK_DIR)
+    keyspaces = env_utils.strings_list(JobParams.CQL_KEYSPACES)
+    tables = env_utils.strings_list(JobParams.CQL_TABLES)
+    overwrite = env_utils.boolean(JobParams.RESTORE_OVERWRITE, False)
 
     def builder() -> Cassandra:
         if context.cassandra is None:

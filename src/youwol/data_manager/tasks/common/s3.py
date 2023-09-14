@@ -6,6 +6,7 @@ from pathlib import Path
 from youwol.data_manager.services.mc_commands import McCommands
 
 # relative
+from ...configuration import ArchiveItem
 from .task import OnPathDirMissing, Task
 
 
@@ -14,8 +15,6 @@ class S3(Task):
 
     Define relative path for tasks.
     """
-
-    RELATIVE_PATH = "minio"
 
     def __init__(
         self, path_work_dir: Path, mc_commands: McCommands, buckets: list[str]
@@ -35,8 +34,8 @@ class S3(Task):
 
     def _task_path_dir_and_archive_item(
         self, on_missing: OnPathDirMissing
-    ) -> tuple[Path, str]:
+    ) -> tuple[Path, ArchiveItem]:
         return (
-            self._path_dir_maybe_exists(S3.RELATIVE_PATH, on_missing=on_missing),
-            S3.RELATIVE_PATH,
+            self._path_dir_maybe_exists(ArchiveItem.MINIO.value, on_missing=on_missing),
+            ArchiveItem.MINIO,
         )

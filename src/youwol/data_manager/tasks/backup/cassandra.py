@@ -10,6 +10,7 @@ from youwol.data_manager.services.cqlsh_commands import CqlshCommands
 from youwol.data_manager.services.reporting import Report
 
 # relative
+from ...configuration import ArchiveItem
 from ..common import CommonCassandra, OnPathDirMissing
 
 
@@ -75,7 +76,7 @@ class Cassandra(CommonCassandra):
 
         self._report.set_status("Done")
 
-    def task_path_dir_and_archive_item(self) -> tuple[Path, str]:
+    def task_path_dir_and_archive_item(self) -> tuple[Path, ArchiveItem]:
         """Simple getter.
 
         Returns:

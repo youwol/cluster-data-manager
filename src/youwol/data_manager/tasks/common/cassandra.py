@@ -6,6 +6,7 @@ from pathlib import Path
 from youwol.data_manager.services.cqlsh_commands import CqlshCommands
 
 # relative
+from ...configuration import ArchiveItem
 from .task import OnPathDirMissing, Task
 
 
@@ -15,9 +16,9 @@ class Cassandra(Task):
     Define relative paths for the tasks.
     """
 
-    RELATIVE_PATH = "cql"
-    RELATIVE_PATH_SCHEMA = "cql/schema"
-    RELATIVE_PATH_DATA = "cql/data"
+    RELATIVE_PATH = ArchiveItem.CQL.value
+    RELATIVE_PATH_SCHEMA = f"{RELATIVE_PATH}/schema"
+    RELATIVE_PATH_DATA = f"{RELATIVE_PATH}/data"
 
     def __init__(
         self,
@@ -43,10 +44,10 @@ class Cassandra(Task):
 
     def _task_path_dir_and_archive_item(
         self, on_missing: OnPathDirMissing
-    ) -> tuple[Path, str]:
+    ) -> tuple[Path, ArchiveItem]:
         return (
             self._path_dir_maybe_exists(Cassandra.RELATIVE_PATH, on_missing=on_missing),
-            Cassandra.RELATIVE_PATH,
+            ArchiveItem.CQL,
         )
 
     def _path_cql_ddl_dir(self, on_missing: OnPathDirMissing) -> Path:

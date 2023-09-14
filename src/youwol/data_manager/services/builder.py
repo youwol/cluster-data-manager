@@ -9,7 +9,7 @@ Notes:
 from typing import Callable, Optional
 
 # application configuration
-from youwol.data_manager.configuration import ConfigEnvVars, env_utils
+from youwol.data_manager.configuration import Deployment, Installation, env_utils
 
 # relative
 from .archiver import Archiver
@@ -61,7 +61,7 @@ def get_report_builder() -> Callable[[], Report]:
         report = context.report
         return lambda: report
 
-    path_log_file = env_utils.file(ConfigEnvVars.PATH_LOG_FILE)
+    path_log_file = env_utils.file(Installation.PATH_LOG_FILE)
     task_name = env_utils.arg_task_name()
 
     def builder() -> Report:
@@ -85,8 +85,8 @@ def get_cqlsh_commands_builder() -> Callable[[], CqlshCommands]:
         return lambda: cqlsh_commands
 
     report_builder = get_report_builder()
-    cqlsh_command = env_utils.not_empty_string(ConfigEnvVars.CQLSH_COMMAND)
-    cql_instance_host = env_utils.maybe_string(ConfigEnvVars.CQL_HOST)
+    cqlsh_command = env_utils.not_empty_string(Installation.CQLSH_COMMAND)
+    cql_instance_host = env_utils.maybe_string(Deployment.CQL_HOST)
 
     def builder() -> CqlshCommands:
         if context.cqlsh_commands is None:
@@ -110,16 +110,16 @@ def get_mc_commands_builder() -> Callable[[], McCommands]:
         return lambda: mc_commands
 
     report_builder = get_report_builder()
-    path_mc = env_utils.existing_path(ConfigEnvVars.PATH_MC)
-    path_mc_config = env_utils.empty_dir(ConfigEnvVars.PATH_MC_CONFIG)
-    local_access_key = env_utils.not_empty_string(ConfigEnvVars.MINIO_LOCAL_ACCESS_KEY)
-    local_secret_key = env_utils.not_empty_string(ConfigEnvVars.MINIO_LOCAL_SECRET_KEY)
-    local_port = env_utils.integer(ConfigEnvVars.MINIO_LOCAL_PORT, 9000)
-    s3_access_key = env_utils.not_empty_string(ConfigEnvVars.S3_ACCESS_KEY)
-    s3_secret_key = env_utils.not_empty_string(ConfigEnvVars.S3_SECRET_KEY)
-    s3_host = env_utils.not_empty_string(ConfigEnvVars.S3_HOST)
-    s3_port = env_utils.integer(ConfigEnvVars.S3_PORT, 9000)
-    s3_tls = env_utils.boolean(ConfigEnvVars.S3_TLS, True)
+    path_mc = env_utils.existing_path(Installation.PATH_MC)
+    path_mc_config = env_utils.empty_dir(Installation.PATH_MC_CONFIG)
+    local_access_key = env_utils.not_empty_string(Deployment.MINIO_LOCAL_ACCESS_KEY)
+    local_secret_key = env_utils.not_empty_string(Deployment.MINIO_LOCAL_SECRET_KEY)
+    local_port = env_utils.integer(Deployment.MINIO_LOCAL_PORT, 9000)
+    s3_access_key = env_utils.not_empty_string(Deployment.S3_ACCESS_KEY)
+    s3_secret_key = env_utils.not_empty_string(Deployment.S3_SECRET_KEY)
+    s3_host = env_utils.not_empty_string(Deployment.S3_HOST)
+    s3_port = env_utils.integer(Deployment.S3_PORT, 9000)
+    s3_tls = env_utils.boolean(Deployment.S3_TLS, True)
 
     def builder() -> McCommands:
         if context.mc_commands is None:
@@ -164,9 +164,9 @@ def get_oidc_client_builder() -> Callable[[], OidcClient]:
         return lambda: oidc_client
 
     report_builder = get_report_builder()
-    issuer = env_utils.not_empty_string(ConfigEnvVars.OIDC_ISSUER)
-    client_id = env_utils.not_empty_string(ConfigEnvVars.OIDC_CLIENT_ID)
-    client_secret = env_utils.not_empty_string(ConfigEnvVars.OIDC_CLIENT_SECRET)
+    issuer = env_utils.not_empty_string(Deployment.OIDC_ISSUER)
+    client_id = env_utils.not_empty_string(Deployment.OIDC_CLIENT_ID)
+    client_secret = env_utils.not_empty_string(Deployment.OIDC_CLIENT_SECRET)
 
     def builder() -> OidcClient:
         if context.oidc_client is None:
@@ -193,7 +193,7 @@ def get_google_drive_builder() -> Callable[[], GoogleDrive]:
 
     report_builder = get_report_builder()
     oidc_client_builder = get_oidc_client_builder()
-    drive_id = env_utils.not_empty_string(ConfigEnvVars.GOOGLE_DRIVE_ID)
+    drive_id = env_utils.not_empty_string(Deployment.GOOGLE_DRIVE_ID)
 
     def builder() -> GoogleDrive:
         if context.google_drive is None:
@@ -219,13 +219,12 @@ def get_archiver_builder() -> Callable[[], Archiver]:
         return lambda: archiver
 
     report_builder = get_report_builder()
-    path_work_dir = env_utils.existing_path(ConfigEnvVars.PATH_WORK_DIR)
-    job_uuid = env_utils.not_empty_string(ConfigEnvVars.JOB_UUID)
+    path_work_dir = env_utils.existing_path(Installation.PATH_WORK_DIR)
 
     def builder() -> Archiver:
         if context.archiver is None:
             context.archiver = Archiver(
-                report=report_builder(), path_work_dir=path_work_dir, job_uuid=job_uuid
+                report=report_builder(), path_work_dir=path_work_dir
             )
 
         return context.archiver
@@ -245,23 +244,21 @@ def get_cluster_maintenance_builder() -> Callable[[], ClusterMaintenance]:
 
     report_builder = get_report_builder()
     k8s_api_builder = get_kubernetes_api_builder()
-    maintenance_namespace = env_utils.not_empty_string(
-        ConfigEnvVars.MAINTENANCE_NAMESPACE
-    )
+    maintenance_namespace = env_utils.not_empty_string(Deployment.MAINTENANCE_NAMESPACE)
     maintenance_ingress_name = env_utils.not_empty_string(
-        ConfigEnvVars.MAINTENANCE_INGRESS_NAME
+        Deployment.MAINTENANCE_INGRESS_NAME
     )
     maintenance_ingress_class_name = env_utils.not_empty_string(
-        ConfigEnvVars.MAINTENANCE_INGRESS_CLASS_NAME
+        Deployment.MAINTENANCE_INGRESS_CLASS_NAME
     )
     maintenance_config_map_name = env_utils.not_empty_string(
-        ConfigEnvVars.MAINTENANCE_CONFIG_MAP_NAME
+        Deployment.MAINTENANCE_CONFIG_MAP_NAME
     )
     maintenance_config_map_key = env_utils.not_empty_string(
-        ConfigEnvVars.MAINTENANCE_CONFIG_MAP_KEY
+        Deployment.MAINTENANCE_CONFIG_MAP_KEY
     )
     maintenance_config_map_value = env_utils.not_empty_string(
-        ConfigEnvVars.MAINTENANCE_CONFIG_MAP_VALUE
+        Deployment.MAINTENANCE_CONFIG_MAP_VALUE
     )
 
     def builder() -> ClusterMaintenance:
@@ -306,9 +303,9 @@ def get_kubernetes_api_builder() -> Callable[[], KubernetesApi]:
         return lambda: kubernetes_api
 
     report_builder = get_report_builder()
-    kube_config = env_utils.maybe_string(ConfigEnvVars.MAINTENANCE_KUBE_CONFIG)
+    kube_config = env_utils.maybe_string(Deployment.MAINTENANCE_KUBE_CONFIG)
     kube_config_context = env_utils.maybe_string(
-        ConfigEnvVars.MAINTENANCE_KUBE_CONFIG_CONTEXT
+        Deployment.MAINTENANCE_KUBE_CONFIG_CONTEXT
     )
 
     def builder() -> KubernetesApi:
@@ -338,11 +335,11 @@ def get_containers_readiness_kc_and_minio_builder() -> (
 
     report_builder = get_report_builder()
     path_keycloak_status_file = env_utils.existing_path(
-        ConfigEnvVars.PATH_KEYCLOAK_STATUS_FILE
+        Installation.PATH_KEYCLOAK_STATUS_FILE
     )
-    local_access_key = env_utils.not_empty_string(ConfigEnvVars.MINIO_LOCAL_ACCESS_KEY)
-    local_secret_key = env_utils.not_empty_string(ConfigEnvVars.MINIO_LOCAL_SECRET_KEY)
-    local_port = env_utils.integer(ConfigEnvVars.MINIO_LOCAL_PORT, 9000)
+    local_access_key = env_utils.not_empty_string(Deployment.MINIO_LOCAL_ACCESS_KEY)
+    local_secret_key = env_utils.not_empty_string(Deployment.MINIO_LOCAL_SECRET_KEY)
+    local_port = env_utils.integer(Deployment.MINIO_LOCAL_PORT, 9000)
 
     def builder() -> ContainersReadiness:
         if context.containers_readiness is None:
@@ -378,9 +375,9 @@ def get_containers_readiness_minio_builder() -> Callable[[], ContainersReadiness
         return lambda: containers_readiness
 
     report_builder = get_report_builder()
-    local_access_key = env_utils.not_empty_string(ConfigEnvVars.MINIO_LOCAL_ACCESS_KEY)
-    local_secret_key = env_utils.not_empty_string(ConfigEnvVars.MINIO_LOCAL_SECRET_KEY)
-    local_port = env_utils.integer(ConfigEnvVars.MINIO_LOCAL_PORT, 9000)
+    local_access_key = env_utils.not_empty_string(Deployment.MINIO_LOCAL_ACCESS_KEY)
+    local_secret_key = env_utils.not_empty_string(Deployment.MINIO_LOCAL_SECRET_KEY)
+    local_port = env_utils.integer(Deployment.MINIO_LOCAL_PORT, 9000)
 
     def builder() -> ContainersReadiness:
         if context.containers_readiness is None:

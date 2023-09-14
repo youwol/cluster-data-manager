@@ -8,6 +8,9 @@ from pathlib import Path
 # typing
 from typing import Optional
 
+# application configuration
+from youwol.data_manager.configuration import ArchiveItem, KeycloakStatus
+
 # application assets
 from youwol.data_manager.assets import KnownAssets, copy_asset_to_file
 
@@ -40,7 +43,7 @@ class Task:
         path_work_dir: Path,
         google_drive: GoogleDrive,
         archiver: Archiver,
-        extract_items: list[str],
+        extract_items: list[ArchiveItem],
         keycloak_setup_details: Optional[KeycloakDetails] = None,
         archive_name: Optional[str] = None,
     ):
@@ -80,8 +83,9 @@ class Task:
             self._keycloak_setup_details.path_keycloak_status_file.parent.mkdir(
                 exist_ok=True, parents=True
             )
-            # TODO: define a constant, shared with containers readiness
-            self._keycloak_setup_details.path_keycloak_status_file.write_text("SETUP\n")
+            self._keycloak_setup_details.path_keycloak_status_file.write_text(
+                f"{KeycloakStatus.SETUP.value}\n"
+            )
             report_kc.debug(
                 f"Copying kc script to '{self._keycloak_setup_details.path_keycloak_script}'"
             )
@@ -123,5 +127,5 @@ class Task:
         self._google_drive.download(archive_id, path_file=path_archive)
         archive = self._archiver.existing_archive(path_archive=path_archive)
         for item in self._extract_items:
-            archive.extract_dir_item(item)
+            archive.extract_dir_item(item.value)
         os.unlink(path_archive)

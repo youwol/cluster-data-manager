@@ -7,6 +7,7 @@ from youwol.data_manager.services.mc_commands import McCommands
 from youwol.data_manager.services.reporting import Report
 
 # relative
+from ...configuration import ArchiveItem
 from ..common.s3 import S3 as CommonS3
 from ..common.task import OnPathDirMissing
 
@@ -60,7 +61,7 @@ class S3(CommonS3):
         mc_commands.set_reporter(self._report)
         mc_commands.stop_local()
 
-    def task_path_dir_and_archive_item(self) -> tuple[Path, str]:
+    def task_path_dir_and_archive_item(self) -> tuple[Path, ArchiveItem]:
         """Simple getter.
 
         Return:

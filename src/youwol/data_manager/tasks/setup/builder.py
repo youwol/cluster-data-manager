@@ -6,7 +6,12 @@ Use get_<task>() to obtain a configured instance of TaskSetup for a given task.
 from typing import Any, Optional
 
 # application configuration
-from youwol.data_manager.configuration import ConfigEnvVars, env_utils
+from youwol.data_manager.configuration import (
+    ArchiveItem,
+    Installation,
+    JobParams,
+    env_utils,
+)
 
 # application services
 from youwol.data_manager.services import (
@@ -46,15 +51,13 @@ def backup() -> Task:
     archiver_builder = get_service_archiver_builder()
     google_drive_builder = get_service_google_drive_builder()
 
-    path_work_dir = env_utils.existing_path(ConfigEnvVars.PATH_WORK_DIR)
+    path_work_dir = env_utils.existing_path(Installation.PATH_WORK_DIR)
 
     keycloak_setup_details = KeycloakDetails(
         path_keycloak_status_file=env_utils.creating_file(
-            ConfigEnvVars.PATH_KEYCLOAK_STATUS_FILE
+            Installation.PATH_KEYCLOAK_STATUS_FILE
         ),
-        path_keycloak_script=env_utils.creating_file(
-            ConfigEnvVars.PATH_KEYCLOAK_SCRIPT
-        ),
+        path_keycloak_script=env_utils.creating_file(Installation.PATH_KEYCLOAK_SCRIPT),
     )
 
     context.backup = Task(
@@ -63,7 +66,7 @@ def backup() -> Task:
         keycloak_setup_details=keycloak_setup_details,
         archiver=archiver_builder(),
         google_drive=google_drive_builder(),
-        extract_items=["minio"],
+        extract_items=[ArchiveItem.MINIO],
     )
 
     return context.backup
@@ -86,15 +89,15 @@ def restore() -> Any:
     archiver_builder = get_service_archiver_builder()
     google_drive_builder = get_service_google_drive_builder()
 
-    path_work_dir = env_utils.existing_path(ConfigEnvVars.PATH_WORK_DIR)
-    archive_name = env_utils.not_empty_string(ConfigEnvVars.RESTORE_ARCHIVE_NAME)
+    path_work_dir = env_utils.existing_path(Installation.PATH_WORK_DIR)
+    archive_name = env_utils.not_empty_string(JobParams.RESTORE_ARCHIVE_NAME)
 
     context.restore = Task(
         report=report_builder(),
         path_work_dir=path_work_dir,
         archiver=archiver_builder(),
         google_drive=google_drive_builder(),
-        extract_items=["minio", "cql"],
+        extract_items=[ArchiveItem.MINIO, ArchiveItem.CQL, ArchiveItem.KEYCLOAK],
         archive_name=archive_name,
     )
 
