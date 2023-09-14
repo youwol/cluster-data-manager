@@ -9,14 +9,12 @@ from youwol.data_manager.configuration import env_utils
 from youwol.data_manager.tasks import (
     build_task_backup,
     build_task_restore,
-    build_task_setup_backup,
-    build_task_setup_restore,
+    build_task_setup,
 )
 
 tasks_builder = {
-    "setup_backup": build_task_setup_backup,
+    "setup": build_task_setup,
     "backup": build_task_backup,
-    "setup_restore": build_task_setup_restore,
     "restore": build_task_restore,
 }
 

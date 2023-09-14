@@ -3,7 +3,7 @@
 Use get_<task>() to obtain a configured instance of TaskSetup for a given task.
 """
 # typing
-from typing import Any, Optional
+from typing import Optional
 
 # application configuration
 from youwol.data_manager.configuration import (
@@ -27,14 +27,13 @@ from .task import KeycloakDetails, Task
 class Context:
     """Hold tasks instances."""
 
-    backup: Optional[Task] = None
-    restore: Optional[Task] = None
+    task: Optional[Task] = None
 
 
 context = Context()
 
 
-def backup() -> Task:
+def build() -> Task:
     """Build an instance of TaskSetup configured for setup_backup.
 
     Configured with:
@@ -44,14 +43,16 @@ def backup() -> Task:
     Returns:
         TaskSetup: a instance of TaskSetup configured for setup_backup.
     """
-    if context.backup is not None:
-        return context.backup
+
+    if context.task is not None:
+        return context.task
 
     report_builder = get_service_report_builder()
     archiver_builder = get_service_archiver_builder()
     google_drive_builder = get_service_google_drive_builder()
 
     path_work_dir = env_utils.existing_path(Installation.PATH_WORK_DIR)
+    archive_name = env_utils.maybe_string(JobParams.RESTORE_ARCHIVE_NAME)
 
     keycloak_setup_details = KeycloakDetails(
         path_keycloak_status_file=env_utils.creating_file(
@@ -60,45 +61,14 @@ def backup() -> Task:
         path_keycloak_script=env_utils.creating_file(Installation.PATH_KEYCLOAK_SCRIPT),
     )
 
-    context.backup = Task(
+    context.task = Task(
         report=report_builder(),
         path_work_dir=path_work_dir,
         keycloak_setup_details=keycloak_setup_details,
         archiver=archiver_builder(),
         google_drive=google_drive_builder(),
-        extract_items=[ArchiveItem.MINIO],
-    )
-
-    return context.backup
-
-
-def restore() -> Any:
-    """Build an instance of TaskSetup configured for setup_restore.
-
-    Configured with:
-      * archive name from environment.
-      * extract everythinng.
-
-    Returns:
-        TaskSetup: a instance of TaskSetup configured for setup_restore
-    """
-    if context.restore is not None:
-        return context.restore
-
-    report_builder = get_service_report_builder()
-    archiver_builder = get_service_archiver_builder()
-    google_drive_builder = get_service_google_drive_builder()
-
-    path_work_dir = env_utils.existing_path(Installation.PATH_WORK_DIR)
-    archive_name = env_utils.not_empty_string(JobParams.RESTORE_ARCHIVE_NAME)
-
-    context.restore = Task(
-        report=report_builder(),
-        path_work_dir=path_work_dir,
-        archiver=archiver_builder(),
-        google_drive=google_drive_builder(),
-        extract_items=[ArchiveItem.MINIO, ArchiveItem.CQL, ArchiveItem.KEYCLOAK],
+        extract_items=[ArchiveItem.MINIO, ArchiveItem.KEYCLOAK, ArchiveItem.CQL],
         archive_name=archive_name,
     )
 
-    return context.restore
+    return context.task

@@ -44,7 +44,7 @@ class Task:
         google_drive: GoogleDrive,
         archiver: Archiver,
         extract_items: list[ArchiveItem],
-        keycloak_setup_details: Optional[KeycloakDetails] = None,
+        keycloak_setup_details: KeycloakDetails,
         archive_name: Optional[str] = None,
     ):
         """Simple constructor.
@@ -75,25 +75,24 @@ class Task:
         Create keycloak directory & file status if keycloak_setup_details has been passed.
         """
         report = self._report.get_sub_report(task="run", init_status="in function")
-        if self._keycloak_setup_details is not None:
-            report_kc = report.get_sub_report("setup keycloak", init_status="in block")
-            report_kc.debug(
-                f"Set up status file '{self._keycloak_setup_details.path_keycloak_status_file}'"
-            )
-            self._keycloak_setup_details.path_keycloak_status_file.parent.mkdir(
-                exist_ok=True, parents=True
-            )
-            self._keycloak_setup_details.path_keycloak_status_file.write_text(
-                f"{KeycloakStatus.SETUP.value}\n"
-            )
-            report_kc.debug(
-                f"Copying kc script to '{self._keycloak_setup_details.path_keycloak_script}'"
-            )
-            copy_asset_to_file(
-                KnownAssets.KC_EXPORT_SH,
-                self._keycloak_setup_details.path_keycloak_script,
-            )
-            report_kc.debug("Done")
+        report_kc = report.get_sub_report("setup keycloak", init_status="in block")
+        report_kc.debug(
+            f"Set up status file '{self._keycloak_setup_details.path_keycloak_status_file}'"
+        )
+        self._keycloak_setup_details.path_keycloak_status_file.parent.mkdir(
+            exist_ok=True, parents=True
+        )
+        self._keycloak_setup_details.path_keycloak_status_file.write_text(
+            f"{KeycloakStatus.SETUP.value}\n"
+        )
+        report_kc.debug(
+            f"Copying kc script to '{self._keycloak_setup_details.path_keycloak_script}'"
+        )
+        copy_asset_to_file(
+            KnownAssets.KC_EXPORT_SH,
+            self._keycloak_setup_details.path_keycloak_script,
+        )
+        report_kc.debug("Done")
 
         if self._archive_name is None:
             self._setup_last_archive()
