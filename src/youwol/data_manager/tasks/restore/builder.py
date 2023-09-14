@@ -49,7 +49,6 @@ def get_s3_builder() -> Callable[[], S3]:
 
     path_work_dir = env_utils.existing_path(Installation.PATH_WORK_DIR)
     s3_buckets = env_utils.strings_list(JobParams.S3_BUCKETS)
-    overwrite = env_utils.boolean(JobParams.RESTORE_OVERWRITE, False)
 
     def builder() -> S3:
         if context.s3 is None:
@@ -58,7 +57,6 @@ def get_s3_builder() -> Callable[[], S3]:
                 path_work_dir=path_work_dir,
                 mc_commands=mc_commands_builder(),
                 buckets=s3_buckets,
-                overwrite=overwrite,
             )
 
         return context.s3
@@ -82,7 +80,6 @@ def get_cassandra_builder() -> Callable[[], Cassandra]:
     path_work_dir = env_utils.existing_path(Installation.PATH_WORK_DIR)
     keyspaces = env_utils.strings_list(JobParams.CQL_KEYSPACES)
     tables = env_utils.strings_list(JobParams.CQL_TABLES)
-    overwrite = env_utils.boolean(JobParams.RESTORE_OVERWRITE, False)
 
     def builder() -> Cassandra:
         if context.cassandra is None:
@@ -92,7 +89,6 @@ def get_cassandra_builder() -> Callable[[], Cassandra]:
                 cqlsh_commands=cqlsh_commands_builder(),
                 keyspaces=keyspaces,
                 tables=tables,
-                overwrite=overwrite,
             )
 
         return context.cassandra

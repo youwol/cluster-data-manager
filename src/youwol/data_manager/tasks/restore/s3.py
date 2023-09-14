@@ -24,7 +24,6 @@ class S3(CommonS3):
         path_work_dir: Path,
         mc_commands: McCommands,
         buckets: list[str],
-        overwrite: bool,
     ):
         """Simple constructor.
 
@@ -38,7 +37,6 @@ class S3(CommonS3):
             overwrite (bool): overwrite behavior when restoring buckets
         """
         super().__init__(path_work_dir, mc_commands, buckets)
-        self._overwrite = overwrite
         self._report = report.get_sub_report(
             "RestoreS3",
             default_status_level="NOTIFY",
@@ -55,7 +53,7 @@ class S3(CommonS3):
                 f"restore_minio_{bucket}", default_status_level="NOTIFY"
             )
             mc_commands.set_reporter(bucket_report)
-            mc_commands.restore_bucket(bucket, self._overwrite)
+            mc_commands.restore_bucket(bucket, remove_existing_bucket=True)
             bucket_report.set_status("Done")
 
         mc_commands.set_reporter(self._report)

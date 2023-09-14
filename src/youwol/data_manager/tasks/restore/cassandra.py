@@ -25,7 +25,6 @@ class Cassandra(CommonCassandra):
         cqlsh_commands: CqlshCommands,
         keyspaces: list[str],
         tables: list[str],
-        overwrite: bool,
     ):
         """Simple Constructor.
 
@@ -40,7 +39,6 @@ class Cassandra(CommonCassandra):
             overwrite (bool): overwrite behavior when restoring keyspaces and tables
         """
         super().__init__(path_work_dir, cqlsh_commands, keyspaces, tables)
-        self._overwrite = overwrite
         self._report = report.get_sub_report(
             "RestoreCassandra",
             default_status_level="NOTIFY",
@@ -60,7 +58,7 @@ class Cassandra(CommonCassandra):
                 keyspace,
                 self._path_cql_ddl_dir(on_missing=OnPathDirMissing.ERROR)
                 / f"{keyspace}.cql",
-                self._overwrite,
+                drop_if_exists=True,
             )
             keyspace_report.set_status("Done")
 
@@ -73,7 +71,7 @@ class Cassandra(CommonCassandra):
                 table,
                 self._path_cql_data_dir(on_missing=OnPathDirMissing.ERROR)
                 / f"{table}.csv",
-                self._overwrite,
+                truncate=True,
             )
             table_report.set_status("Done")
 

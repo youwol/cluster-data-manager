@@ -82,8 +82,6 @@ class JobEnvironmentVars(EnvironmentVars):
     # Job Restoration
     # Default to “latest” if not set
     RESTORE_ARCHIVE_NAME = "RESTORE_ARCHIVE_NAME"
-    # TO BE DELETED
-    RESTORE_OVERWRITE = "RESTORE_OVERWRITE"
 
     # Task CQL
     CQL_KEYSPACES = "CQL_KEYSPACES"
