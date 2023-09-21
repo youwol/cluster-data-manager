@@ -75,14 +75,15 @@ def get_report_builder() -> Callable[[], Report]:
         report = context.report
         return lambda: report
 
-    path_log_file = env_utils.file(Installation.PATH_LOG_FILE)
-    task_name = env_utils.arg_task_name()
-
     def builder() -> Report:
         if context.report is None:
+            path_log_file = env_utils.file(Installation.PATH_LOG_FILE)
+            task_name = env_utils.arg_task_name()
+
             context.report = Reporting(
                 path_log_file=path_log_file, initial_task=task_name
             ).get_root_report()
+
         return context.report
 
     return builder
@@ -99,15 +100,17 @@ def get_cqlsh_commands_builder() -> Callable[[], CqlshCommands]:
         return lambda: cqlsh_commands
 
     report_builder = get_report_builder()
-    cqlsh_command = env_utils.not_empty_string(Installation.CQLSH_COMMAND)
-    cql_instance_host = env_utils.maybe_string(Deployment.CQL_HOST)
 
     def builder() -> CqlshCommands:
         if context.cqlsh_commands is None:
+            cqlsh_command = env_utils.not_empty_string(Installation.CQLSH_COMMAND)
+            cql_instance_host = env_utils.maybe_string(Deployment.CQL_HOST)
             cql_instance = CqlInstance(host=cql_instance_host)
+
             context.cqlsh_commands = CqlshCommands(
                 report=report_builder(), cql_instance=cql_instance, cqlsh=cqlsh_command
             )
+
         return context.cqlsh_commands
 
     return builder
@@ -124,19 +127,24 @@ def get_mc_commands_builder() -> Callable[[], McCommands]:
         return lambda: mc_commands
 
     report_builder = get_report_builder()
-    path_mc = env_utils.existing_path(Installation.PATH_MC)
-    path_mc_config = env_utils.empty_dir(Installation.PATH_MC_CONFIG)
-    local_access_key = env_utils.not_empty_string(Deployment.MINIO_LOCAL_ACCESS_KEY)
-    local_secret_key = env_utils.not_empty_string(Deployment.MINIO_LOCAL_SECRET_KEY)
-    local_port = env_utils.integer(Deployment.MINIO_LOCAL_PORT, 9000)
-    s3_access_key = env_utils.not_empty_string(Deployment.S3_ACCESS_KEY)
-    s3_secret_key = env_utils.not_empty_string(Deployment.S3_SECRET_KEY)
-    s3_host = env_utils.not_empty_string(Deployment.S3_HOST)
-    s3_port = env_utils.integer(Deployment.S3_PORT, 9000)
-    s3_tls = env_utils.boolean(Deployment.S3_TLS, True)
 
     def builder() -> McCommands:
         if context.mc_commands is None:
+            path_mc = env_utils.existing_path(Installation.PATH_MC)
+            path_mc_config = env_utils.empty_dir(Installation.PATH_MC_CONFIG)
+            local_access_key = env_utils.not_empty_string(
+                Deployment.MINIO_LOCAL_ACCESS_KEY
+            )
+            local_secret_key = env_utils.not_empty_string(
+                Deployment.MINIO_LOCAL_SECRET_KEY
+            )
+            local_port = env_utils.integer(Deployment.MINIO_LOCAL_PORT, 9000)
+            s3_access_key = env_utils.not_empty_string(Deployment.S3_ACCESS_KEY)
+            s3_secret_key = env_utils.not_empty_string(Deployment.S3_SECRET_KEY)
+            s3_host = env_utils.not_empty_string(Deployment.S3_HOST)
+            s3_port = env_utils.integer(Deployment.S3_PORT, 9000)
+            s3_tls = env_utils.boolean(Deployment.S3_TLS, True)
+
             local = MinioLocalInstance(
                 access_key=local_access_key,
                 secret_key=local_secret_key,
@@ -178,18 +186,21 @@ def get_oidc_client_builder() -> Callable[[], OidcClient]:
         return lambda: oidc_client
 
     report_builder = get_report_builder()
-    issuer = env_utils.not_empty_string(Deployment.OIDC_ISSUER)
-    client_id = env_utils.not_empty_string(Deployment.OIDC_CLIENT_ID)
-    client_secret = env_utils.not_empty_string(Deployment.OIDC_CLIENT_SECRET)
 
     def builder() -> OidcClient:
         if context.oidc_client is None:
+            issuer = env_utils.not_empty_string(Deployment.OIDC_ISSUER)
+            client_id = env_utils.not_empty_string(Deployment.OIDC_CLIENT_ID)
+            client_secret = env_utils.not_empty_string(Deployment.OIDC_CLIENT_SECRET)
+
             oidc_client_config = OidcClientConfig(
                 issuer=issuer, client_id=client_id, client_secret=client_secret
             )
+
             context.oidc_client = OidcClient(
                 report=report_builder(), oidc_client_config=oidc_client_config
             )
+
         return context.oidc_client
 
     return builder
@@ -207,10 +218,11 @@ def get_google_drive_builder() -> Callable[[], GoogleDrive]:
 
     report_builder = get_report_builder()
     oidc_client_builder = get_oidc_client_builder()
-    drive_id = env_utils.not_empty_string(Deployment.GOOGLE_DRIVE_ID)
 
     def builder() -> GoogleDrive:
         if context.google_drive is None:
+            drive_id = env_utils.not_empty_string(Deployment.GOOGLE_DRIVE_ID)
+
             context.google_drive = GoogleDrive(
                 report=report_builder(),
                 drive_id=drive_id,
@@ -233,10 +245,11 @@ def get_archiver_builder() -> Callable[[], Archiver]:
         return lambda: archiver
 
     report_builder = get_report_builder()
-    path_work_dir = env_utils.existing_path(Installation.PATH_WORK_DIR)
 
     def builder() -> Archiver:
         if context.archiver is None:
+            path_work_dir = env_utils.existing_path(Installation.PATH_WORK_DIR)
+
             context.archiver = Archiver(
                 report=report_builder(), path_work_dir=path_work_dir
             )
@@ -257,15 +270,16 @@ def get_context_maintenance_builder() -> Callable[[], ContextMaintenance]:
         return lambda: context_maintenance
 
     report_builder = get_report_builder()
-
-    cluster_maintenance_enable = env_utils.boolean(
-        Deployment.MAINTENANCE_ENABLE, default=True
-    )
+    cluster_maintenance_builder = get_cluster_maintenance_builder()
 
     def builder() -> ContextMaintenance:
         if context.context_maintenance is None:
+            cluster_maintenance_enable = env_utils.boolean(
+                Deployment.MAINTENANCE_ENABLE, default=True
+            )
+
             context.context_maintenance = (
-                get_cluster_maintenance_builder()()
+                cluster_maintenance_builder()
                 if cluster_maintenance_enable
                 else NoopMaintenanceMode(report=report_builder())
             )
@@ -287,25 +301,28 @@ def get_cluster_maintenance_builder() -> Callable[[], ClusterMaintenance]:
 
     report_builder = get_report_builder()
     k8s_api_builder = get_kubernetes_api_builder()
-    maintenance_namespace = env_utils.not_empty_string(Deployment.MAINTENANCE_NAMESPACE)
-    maintenance_ingress_name = env_utils.not_empty_string(
-        Deployment.MAINTENANCE_INGRESS_NAME
-    )
-    maintenance_ingress_class_name = env_utils.not_empty_string(
-        Deployment.MAINTENANCE_INGRESS_CLASS_NAME
-    )
-    maintenance_config_map_name = env_utils.not_empty_string(
-        Deployment.MAINTENANCE_CONFIG_MAP_NAME
-    )
-    maintenance_config_map_key = env_utils.not_empty_string(
-        Deployment.MAINTENANCE_CONFIG_MAP_KEY
-    )
-    maintenance_config_map_value = env_utils.not_empty_string(
-        Deployment.MAINTENANCE_CONFIG_MAP_VALUE
-    )
 
     def builder() -> ClusterMaintenance:
         if context.cluster_maintenance is None:
+            maintenance_namespace = env_utils.not_empty_string(
+                Deployment.MAINTENANCE_NAMESPACE
+            )
+            maintenance_ingress_name = env_utils.not_empty_string(
+                Deployment.MAINTENANCE_INGRESS_NAME
+            )
+            maintenance_ingress_class_name = env_utils.not_empty_string(
+                Deployment.MAINTENANCE_INGRESS_CLASS_NAME
+            )
+            maintenance_config_map_name = env_utils.not_empty_string(
+                Deployment.MAINTENANCE_CONFIG_MAP_NAME
+            )
+            maintenance_config_map_key = env_utils.not_empty_string(
+                Deployment.MAINTENANCE_CONFIG_MAP_KEY
+            )
+            maintenance_config_map_value = env_utils.not_empty_string(
+                Deployment.MAINTENANCE_CONFIG_MAP_VALUE
+            )
+
             context.cluster_maintenance = ClusterMaintenance(
                 report=report_builder(),
                 k8s_api=k8s_api_builder(),
@@ -346,13 +363,14 @@ def get_kubernetes_api_builder() -> Callable[[], KubernetesApi]:
         return lambda: kubernetes_api
 
     report_builder = get_report_builder()
-    kube_config = env_utils.maybe_string(Deployment.MAINTENANCE_KUBE_CONFIG)
-    kube_config_context = env_utils.maybe_string(
-        Deployment.MAINTENANCE_KUBE_CONFIG_CONTEXT
-    )
 
     def builder() -> KubernetesApi:
         if context.kubernetes_api is None:
+            kube_config = env_utils.maybe_string(Deployment.MAINTENANCE_KUBE_CONFIG)
+            kube_config_context = env_utils.maybe_string(
+                Deployment.MAINTENANCE_KUBE_CONFIG_CONTEXT
+            )
+
             context.kubernetes_api = KubernetesApi(
                 report=report_builder(),
                 kube_config=kube_config,
@@ -376,12 +394,13 @@ def get_probe_keycloak_builder() -> Callable[[], Probe]:
         return lambda: probe_kc
 
     report_builder = get_report_builder()
-    path_keycloak_status_file = env_utils.existing_path(
-        Installation.PATH_KEYCLOAK_STATUS_FILE
-    )
 
     def builder() -> Probe:
         if context.probe_keycloak is None:
+            path_keycloak_status_file = env_utils.existing_path(
+                Installation.PATH_KEYCLOAK_STATUS_FILE
+            )
+
             context.probe_keycloak = ProbeKeycloak(
                 report=report_builder(),
                 path_keycloak_status_file=path_keycloak_status_file,
@@ -403,17 +422,23 @@ def get_probe_minio_builder() -> Callable[[], Probe]:
         return lambda: probe_minio
 
     report_builder = get_report_builder()
-    local_access_key = env_utils.not_empty_string(Deployment.MINIO_LOCAL_ACCESS_KEY)
-    local_secret_key = env_utils.not_empty_string(Deployment.MINIO_LOCAL_SECRET_KEY)
-    local_port = env_utils.integer(Deployment.MINIO_LOCAL_PORT, 9000)
 
     def builder() -> Probe:
         if context.probe_minio is None:
+            local_access_key = env_utils.not_empty_string(
+                Deployment.MINIO_LOCAL_ACCESS_KEY
+            )
+            local_secret_key = env_utils.not_empty_string(
+                Deployment.MINIO_LOCAL_SECRET_KEY
+            )
+            local_port = env_utils.integer(Deployment.MINIO_LOCAL_PORT, 9000)
+
             minio_local_instance = MinioLocalInstance(
                 access_key=local_access_key,
                 secret_key=local_secret_key,
                 port=local_port,
             )
+
             context.probe_minio = ProbeMinio(
                 report=report_builder(), s3_instance=minio_local_instance
             )
@@ -434,24 +459,28 @@ def get_containers_readiness_builder() -> Callable[[], ContainersReadiness]:
         return lambda: containers_readiness
 
     report_builder = get_report_builder()
-    probes_builders: List[Callable[[], Probe]] = []
-
-    job_subtasks = env_utils.maybe_strings_list(JobParams.JOB_SUBTASKS, ["all"])
-    if JobSubtasks.ALL.value in job_subtasks and len(job_subtasks) != 1:
-        raise RuntimeError(
-            f"Env {JobParams.JOB_SUBTASKS} contains both 'all' and other elements"
-        )
-
-    if JobSubtasks.ALL.value in job_subtasks or JobSubtasks.S3.value in job_subtasks:
-        probes_builders.append(get_probe_minio_builder())
-    if (
-        JobSubtasks.ALL.value in job_subtasks
-        or JobSubtasks.KEYCLOAK.value in job_subtasks
-    ):
-        probes_builders.append(get_probe_keycloak_builder())
 
     def builder() -> ContainersReadiness:
         if context.containers_readiness is None:
+            probes_builders: List[Callable[[], Probe]] = []
+
+            job_subtasks = env_utils.maybe_strings_list(JobParams.JOB_SUBTASKS, ["all"])
+            if JobSubtasks.ALL.value in job_subtasks and len(job_subtasks) != 1:
+                raise RuntimeError(
+                    f"Env {JobParams.JOB_SUBTASKS} contains both 'all' and other elements"
+                )
+
+            if (
+                JobSubtasks.ALL.value in job_subtasks
+                or JobSubtasks.S3.value in job_subtasks
+            ):
+                probes_builders.append(get_probe_minio_builder())
+            if (
+                JobSubtasks.ALL.value in job_subtasks
+                or JobSubtasks.KEYCLOAK.value in job_subtasks
+            ):
+                probes_builders.append(get_probe_keycloak_builder())
+
             context.containers_readiness = ContainersReadiness(
                 report=report_builder(), probes=[build() for build in probes_builders]
             )

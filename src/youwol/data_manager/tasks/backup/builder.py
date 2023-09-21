@@ -60,11 +60,12 @@ def get_s3_builder() -> Callable[[], S3]:
 
     report_builder = get_service_report_builder()
     mc_commands_builder = get_service_mc_commands_builder()
-    path_work_dir = env_utils.existing_path(Installation.PATH_WORK_DIR)
-    buckets = env_utils.strings_list(JobParams.S3_BUCKETS)
 
     def builder() -> S3:
         if context.s3 is None:
+            path_work_dir = env_utils.existing_path(Installation.PATH_WORK_DIR)
+            buckets = env_utils.strings_list(JobParams.S3_BUCKETS)
+
             context.s3 = S3(
                 report=report_builder(),
                 path_work_dir=path_work_dir,
@@ -88,12 +89,13 @@ def get_cassandra_builder() -> Callable[[], Cassandra]:
 
     report_builder = get_service_report_builder()
     cqlsh_commands_builder = get_service_cqlsh_commands_builder()
-    path_work_dir = env_utils.existing_path(Installation.PATH_WORK_DIR)
-    keyspaces = env_utils.strings_list(JobParams.CQL_KEYSPACES)
-    tables = env_utils.strings_list(JobParams.CQL_TABLES)
 
     def builder() -> Cassandra:
         if context.cassandra is None:
+            path_work_dir = env_utils.existing_path(Installation.PATH_WORK_DIR)
+            keyspaces = env_utils.strings_list(JobParams.CQL_KEYSPACES)
+            tables = env_utils.strings_list(JobParams.CQL_TABLES)
+
             context.cassandra = Cassandra(
                 report=report_builder(),
                 path_work_dir=path_work_dir,
