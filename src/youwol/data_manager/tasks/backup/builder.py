@@ -21,8 +21,8 @@ from youwol.data_manager.configuration import (
 # application services
 from youwol.data_manager.services import (
     get_service_archiver_builder,
-    get_service_cluster_maintenance_builder,
     get_service_containers_readiness_builder,
+    get_service_context_maintenance_builder,
     get_service_cqlsh_commands_builder,
     get_service_google_drive_builder,
     get_service_mc_commands_builder,
@@ -162,11 +162,10 @@ def build() -> Task:
     if context.task is not None:
         return context.task
 
-    report_builder = get_service_report_builder()
     archiver_builder = get_service_archiver_builder()
     google_drive_builder = get_service_google_drive_builder()
     containers_readiness_builder = get_service_containers_readiness_builder()
-    cluster_maintenance_builder = get_service_cluster_maintenance_builder()
+    context_maintenance_builder = get_service_context_maintenance_builder()
 
     path_log_file = env_utils.existing_path(Installation.PATH_LOG_FILE)
     job_uuid = env_utils.not_empty_string(JobParams.JOB_UUID)
@@ -206,7 +205,7 @@ def build() -> Task:
         archive=archiver_builder().new_archive(job_uuid=job_uuid),
         google_drive_upload_file_name=google_drive_upload_file_name,
         google_drive_upload_folder=google_drive_upload_folder,
-        cluster_maintenance=cluster_maintenance_builder(),
+        context_maintenance=context_maintenance_builder(),
         path_log_file=path_log_file,
     )
 

@@ -11,7 +11,7 @@ from youwol.data_manager.configuration import ArchiveItem
 
 # application services
 from youwol.data_manager.services.archiver import ArchiveCreator
-from youwol.data_manager.services.cluster_maintenance import ClusterMaintenance
+from youwol.data_manager.services.cluster_maintenance import ContextMaintenance
 from youwol.data_manager.services.containers_readiness import ContainersReadiness
 from youwol.data_manager.services.google_drive import GoogleDrive
 
@@ -53,7 +53,7 @@ class Task:
         google_drive: GoogleDrive,
         google_drive_upload_file_name: str,
         google_drive_upload_folder: str,
-        cluster_maintenance: ClusterMaintenance,
+        context_maintenance: ContextMaintenance,
         path_log_file: Path,
     ):
         """Simple constructor.
@@ -74,7 +74,7 @@ class Task:
         self._google_drive = google_drive
         self._upload_file_name = google_drive_upload_file_name
         self._upload_folder = google_drive_upload_folder
-        self._cluster_maintenance = cluster_maintenance
+        self._context_maintenance = context_maintenance
         self._path_log_file = path_log_file
 
     def run(self) -> None:
@@ -94,7 +94,7 @@ class Task:
         for subtask in self._subtasks:
             subtask.prepare()
 
-        with self._cluster_maintenance:
+        with self._context_maintenance:
             for subtask in self._subtasks:
                 subtask.run()
 

@@ -30,6 +30,7 @@ class DeploymentEnvironmentVars(EnvironmentVars):
     """Environment variables names defined when deploying"""
 
     # Service Cluster Maintenance
+    MAINTENANCE_ENABLE = "MAINTENANCE_ENABLE"  # True if not set
     MAINTENANCE_NAMESPACE = "MAINTENANCE_NAMESPACE"
     MAINTENANCE_INGRESS_NAME = "MAINTENANCE_INGRESS_NAME"
     MAINTENANCE_INGRESS_CLASS_NAME = "MAINTENANCE_INGRESS_CLASS_NAME"

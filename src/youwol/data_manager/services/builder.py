@@ -19,7 +19,12 @@ from youwol.data_manager.configuration import (
 
 # relative
 from .archiver import Archiver
-from .cluster_maintenance import ClusterMaintenance, MaintenanceDetails
+from .cluster_maintenance import (
+    ClusterMaintenance,
+    ContextMaintenance,
+    MaintenanceDetails,
+    NoopMaintenanceMode,
+)
 from .containers_readiness import ContainersReadiness, Probe, ProbeKeycloak, ProbeMinio
 from .cqlsh_commands import CqlInstance, CqlshCommands
 from .google_drive import GoogleDrive
@@ -50,6 +55,7 @@ class Context:
     oidc_client: Optional[OidcClient] = None
     google_drive: Optional[GoogleDrive] = None
     cluster_maintenance: Optional[ClusterMaintenance] = None
+    context_maintenance: Optional[ContextMaintenance] = None
     kubernetes_api: Optional[KubernetesApi] = None
     probe_keycloak: Optional[Probe] = None
     probe_minio: Optional[Probe] = None
@@ -236,6 +242,35 @@ def get_archiver_builder() -> Callable[[], Archiver]:
             )
 
         return context.archiver
+
+    return builder
+
+
+def get_context_maintenance_builder() -> Callable[[], ContextMaintenance]:
+    """Get a builder for a configured instance of a context_maintenance service.
+
+    Returns:
+        Callable[[], ClusterMaintenance]: a nullary builder for the context_maintenance service.
+    """
+    if context.context_maintenance is not None:
+        context_maintenance = context.context_maintenance
+        return lambda: context_maintenance
+
+    report_builder = get_report_builder()
+
+    cluster_maintenance_enable = env_utils.boolean(
+        Deployment.MAINTENANCE_ENABLE, default=True
+    )
+
+    def builder() -> ContextMaintenance:
+        if context.context_maintenance is None:
+            context.context_maintenance = (
+                get_cluster_maintenance_builder()()
+                if cluster_maintenance_enable
+                else NoopMaintenanceMode(report=report_builder())
+            )
+
+        return context.context_maintenance
 
     return builder
 
