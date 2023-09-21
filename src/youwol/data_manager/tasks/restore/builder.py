@@ -23,7 +23,9 @@ from youwol.data_manager.services import (
 )
 
 # relative
+from ..common.keycloak import get_keycloak_admin_builder
 from .cassandra import Cassandra
+from .keycloak import Keycloak
 from .s3 import S3
 from .task import RestoreSubtask, Task
 
@@ -33,6 +35,7 @@ class Context:
 
     s3: Optional[S3] = None
     cassandra: Optional[Cassandra] = None
+    keycloak: Optional[Keycloak] = None
     task: Optional[Task] = None
 
 
@@ -101,6 +104,37 @@ def get_cassandra_builder() -> Callable[[], Cassandra]:
     return builder
 
 
+def get_keycloak_builder() -> Callable[[], Keycloak]:
+    """Get a builder for a configured instance of the subtask backup_keycloak.
+
+    Returns:
+        Callable[[], TaskBackupKeycloak]: a nullary builder for TaskBackupKeycloak
+    """
+    if context.keycloak is not None:
+        keycloak = context.keycloak
+        return lambda: keycloak
+
+    report_builder = get_service_report_builder()
+    keycloak_admin_builder = get_keycloak_admin_builder()
+    path_work_dir = env_utils.existing_path(Installation.PATH_WORK_DIR)
+    path_keycloak_status_file = env_utils.existing_path(
+        Installation.PATH_KEYCLOAK_STATUS_FILE
+    )
+
+    def builder() -> Keycloak:
+        if context.keycloak is None:
+            context.keycloak = Keycloak(
+                report=report_builder(),
+                path_work_dir=path_work_dir,
+                keycloak_admin=keycloak_admin_builder(),
+                path_keycloak_status_file=path_keycloak_status_file,
+            )
+
+        return context.keycloak
+
+    return builder
+
+
 def build() -> Task:
     """Get a configured instance of TaskRestore.
 
@@ -118,6 +152,7 @@ def build() -> Task:
 
     subtask_s3_builder = get_s3_builder()
     subtask_cassandre_builder = get_cassandra_builder()
+    subtask_keycloak_builder = get_keycloak_builder()
     containers_readiness_builder = get_service_containers_readiness_builder()
     subtasks: List[RestoreSubtask] = []
     if JobSubtasks.ALL.value in job_subtasks or JobSubtasks.S3.value in job_subtasks:
@@ -127,6 +162,11 @@ def build() -> Task:
         or JobSubtasks.CASSANDRA.value in job_subtasks
     ):
         subtasks.append(subtask_cassandre_builder())
+    if (
+        JobSubtasks.ALL.value in job_subtasks
+        or JobSubtasks.KEYCLOAK.value in job_subtasks
+    ):
+        subtasks.append(subtask_keycloak_builder())
 
     context.task = Task(
         containers_readiness=containers_readiness_builder(), subtasks=subtasks

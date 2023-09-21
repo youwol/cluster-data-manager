@@ -28,7 +28,7 @@ qa = ["pylint",
     "types-httplib2"]
 
 [tool.setuptools.package-data]
-"youwol.data_manager.assets" = ["kc_export.sh"]
+"youwol.data_manager.assets" = ["kc_import.sh", "kc_export.sh", "kc_common.sh"]
 
 [tool.pylint.main]
 # Analyse import fallback blocks. This can be used to support both Python 2 and 3

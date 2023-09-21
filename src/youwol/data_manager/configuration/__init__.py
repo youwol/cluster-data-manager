@@ -7,7 +7,7 @@ from .env_vars import ContainerImageEnvironmentVars as Installation
 from .env_vars import DeploymentEnvironmentVars as Deployment
 from .env_vars import JobEnvironmentVars as JobParams
 from .env_vars import JobSubtasks
-from .keycloak import KeycloakStatus
+from .keycloak import KeycloakScript, KeycloakStatus
 
 __all__ = [
     "Installation",
@@ -16,4 +16,5 @@ __all__ = [
     "ArchiveItem",
     "KeycloakStatus",
     "JobSubtasks",
+    "KeycloakScript",
 ]

@@ -11,7 +11,6 @@ from typing import Callable, List, Optional
 
 # application configuration
 from youwol.data_manager.configuration import (
-    Deployment,
     Installation,
     JobParams,
     JobSubtasks,
@@ -28,12 +27,9 @@ from youwol.data_manager.services import (
     get_service_mc_commands_builder,
     get_service_report_builder,
 )
-from youwol.data_manager.services.keycloak_admin import (
-    KeycloakAdmin,
-    KeycloakAdminCredentials,
-)
 
 # relative
+from ..common.keycloak import get_keycloak_admin_builder
 from .cassandra import Cassandra
 from .keycloak import Keycloak
 from .s3 import S3
@@ -122,25 +118,15 @@ def get_keycloak_builder() -> Callable[[], Keycloak]:
         return lambda: keycloak
 
     report_builder = get_service_report_builder()
-    path_work_dir = env_utils.existing_path(Installation.PATH_WORK_DIR)
-    path_keycloak_status_file = env_utils.existing_path(
-        Installation.PATH_KEYCLOAK_STATUS_FILE
-    )
-    keycloak_username = env_utils.not_empty_string(Deployment.KEYCLOAK_USERNAME)
-    keycloak_password = env_utils.not_empty_string(Deployment.KEYCLOAK_PASSWORD)
-    keycloak_base_url = env_utils.not_empty_string(Deployment.KEYCLOAK_BASE_URL)
-
-    def keycloak_admin_builder() -> KeycloakAdmin:
-        return KeycloakAdmin(
-            report=report_builder(),
-            credentials=KeycloakAdminCredentials(
-                realm="master", username=keycloak_username, password=keycloak_password
-            ),
-            base_url=keycloak_base_url,
-        )
+    keycloak_admin_builder = get_keycloak_admin_builder()
 
     def builder() -> Keycloak:
         if context.keycloak is None:
+            path_work_dir = env_utils.existing_path(Installation.PATH_WORK_DIR)
+            path_keycloak_status_file = env_utils.existing_path(
+                Installation.PATH_KEYCLOAK_STATUS_FILE
+            )
+
             context.keycloak = Keycloak(
                 report=report_builder(),
                 path_work_dir=path_work_dir,

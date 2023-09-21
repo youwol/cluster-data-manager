@@ -3,13 +3,18 @@
 import os
 
 from dataclasses import dataclass
+from enum import Enum
 from pathlib import Path
 
 # typing
-from typing import Optional
+from typing import Dict, Optional
 
 # application configuration
-from youwol.data_manager.configuration import ArchiveItem, KeycloakStatus
+from youwol.data_manager.configuration import (
+    ArchiveItem,
+    KeycloakScript,
+    KeycloakStatus,
+)
 
 # application assets
 from youwol.data_manager.assets import KnownAssets, copy_asset_to_file
@@ -20,12 +25,25 @@ from youwol.data_manager.services.google_drive import GoogleDrive
 from youwol.data_manager.services.reporting import Report
 
 
+class KeycloakDetailsTask(Enum):
+    IMPORT = "import"
+    EXPORT = "export"
+
+
 @dataclass(frozen=True, kw_only=True)
 class KeycloakDetails:
     """Represent details (path to status file, script) for keycloak setup."""
 
     path_keycloak_status_file: Path
+    path_keycloak_common_script: Path
     path_keycloak_script: Path
+    keycloak_script: KeycloakScript
+
+
+keycloak_script: Dict[str, KnownAssets] = {
+    KeycloakScript.IMPORT.value: KnownAssets.KC_IMPORT_SH,
+    KeycloakScript.EXPORT.value: KnownAssets.KC_EXPORT_SH,
+}
 
 
 class Task:
@@ -75,6 +93,12 @@ class Task:
         Create keycloak directory & file status if keycloak_setup_details has been passed.
         """
         report = self._report.get_sub_report(task="run", init_status="in function")
+
+        if self._archive_name is None:
+            self._setup_last_archive()
+        else:
+            self._setup_explicit_archive(self._archive_name)
+
         report_kc = report.get_sub_report("setup keycloak", init_status="in block")
         report_kc.debug(
             f"Set up status file '{self._keycloak_setup_details.path_keycloak_status_file}'"
@@ -86,18 +110,25 @@ class Task:
             f"{KeycloakStatus.SETUP.value}\n"
         )
         report_kc.debug(
-            f"Copying kc script to '{self._keycloak_setup_details.path_keycloak_script}'"
+            f"Copying {KnownAssets.KC_COMMON_SH.value} to '{self._keycloak_setup_details.path_keycloak_common_script}'"
         )
         copy_asset_to_file(
-            KnownAssets.KC_EXPORT_SH,
-            self._keycloak_setup_details.path_keycloak_script,
+            KnownAssets.KC_COMMON_SH,
+            self._keycloak_setup_details.path_keycloak_common_script,
         )
-        report_kc.debug("Done")
 
-        if self._archive_name is None:
-            self._setup_last_archive()
-        else:
-            self._setup_explicit_archive(self._archive_name)
+        kc_asset_script = keycloak_script[
+            self._keycloak_setup_details.keycloak_script.value
+        ]
+
+        report_kc.debug(
+            f"Copying {kc_asset_script.value} to '{self._keycloak_setup_details.path_keycloak_script}'"
+        )
+        copy_asset_to_file(
+            kc_asset_script, self._keycloak_setup_details.path_keycloak_script
+        )
+
+        report_kc.debug("Done")
 
     def _setup_last_archive(self) -> None:
         archives = self._google_drive.list_archives()

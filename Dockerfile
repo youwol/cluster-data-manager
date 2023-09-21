@@ -123,6 +123,7 @@ ENV CQLSH_COMMAND=/opt/pipx/bin/cqlsh
 ENV PATH_WORK_DIR=$path_work_dir
 ENV PATH_LOG_FILE=$PATH_WORK_DIR/entry_point.log
 ENV PATH_KEYCLOAK_STATUS_FILE=$PATH_WORK_DIR/kc/kc_status
+ENV PATH_KEYCLOAK_COMMON_SCRIPT=$PATH_WORK_DIR/kc/kc_common.sh
 ENV PATH_KEYCLOAK_SCRIPT=$PATH_WORK_DIR/kc/kc_script.sh
 # configuration directory for minio client
 ENV PATH_MINIO_CLIENT_CONFIG=$path_data_manager_home/.mc

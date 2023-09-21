@@ -23,6 +23,7 @@ class ContainerImageEnvironmentVars(EnvironmentVars):
 
     # Service Keycloak
     PATH_KEYCLOAK_STATUS_FILE = "PATH_KEYCLOAK_STATUS_FILE"
+    PATH_KEYCLOAK_COMMON_SCRIPT = "PATH_KEYCLOAK_COMMON_SCRIPT"
     PATH_KEYCLOAK_SCRIPT = "PATH_KEYCLOAK_SCRIPT"
 
 
@@ -93,6 +94,10 @@ class JobEnvironmentVars(EnvironmentVars):
 
     # Task S3
     S3_BUCKETS = "S3_BUCKETS"
+
+    # Task keycloak
+    # Either import or export
+    KEYCLOAK_SCRIPT = "KEYCLOAK_SCRIPT"
 
 
 class JobSubtasks(Enum):

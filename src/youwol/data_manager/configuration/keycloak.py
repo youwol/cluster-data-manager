@@ -6,3 +6,8 @@ class KeycloakStatus(Enum):
     SETUP = "SETUP"
     DONE = "DONE"
     ERROR = "ERROR"
+
+
+class KeycloakScript(Enum):
+    IMPORT = "import"
+    EXPORT = "export"

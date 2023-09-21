@@ -10,7 +10,9 @@ from pathlib import Path
 class Assets(Enum):
     """Enumeration of the available assets."""
 
+    KC_COMMON_SH = "kc_common.sh"
     KC_EXPORT_SH = "kc_export.sh"
+    KC_IMPORT_SH = "kc_import.sh"
 
 
 def copy_to_file(asset: Assets, destination: Path) -> None:

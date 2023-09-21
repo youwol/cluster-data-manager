@@ -11,6 +11,7 @@ from youwol.data_manager.configuration import (
     Installation,
     JobParams,
     JobSubtasks,
+    KeycloakScript,
     env_utils,
 )
 
@@ -55,6 +56,15 @@ def build() -> Task:
     path_work_dir = env_utils.existing_path(Installation.PATH_WORK_DIR)
     archive_name = env_utils.maybe_string(JobParams.RESTORE_ARCHIVE_NAME)
 
+    keycloak_script_value = env_utils.not_empty_string(JobParams.KEYCLOAK_SCRIPT)
+    if keycloak_script_value not in (
+        KeycloakScript.EXPORT.value,
+        KeycloakScript.IMPORT.value,
+    ):
+        raise RuntimeError(
+            f"Env {JobParams.KEYCLOAK_SCRIPT} must be either {KeycloakScript.IMPORT.value} or {KeycloakScript.EXPORT.value}"
+        )
+
     jobs_subtasks = env_utils.maybe_strings_list(
         JobParams.JOB_SUBTASKS, default=[JobSubtasks.ALL.value]
     )
@@ -76,7 +86,13 @@ def build() -> Task:
         path_keycloak_status_file=env_utils.creating_file(
             Installation.PATH_KEYCLOAK_STATUS_FILE
         ),
+        path_keycloak_common_script=env_utils.creating_file(
+            Installation.PATH_KEYCLOAK_COMMON_SCRIPT
+        ),
         path_keycloak_script=env_utils.creating_file(Installation.PATH_KEYCLOAK_SCRIPT),
+        keycloak_script=KeycloakScript.IMPORT
+        if keycloak_script_value == KeycloakScript.IMPORT.value
+        else KeycloakScript.EXPORT,
     )
 
     context.task = Task(
