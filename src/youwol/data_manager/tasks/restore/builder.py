@@ -17,6 +17,7 @@ from youwol.data_manager.configuration import (
 # application services
 from youwol.data_manager.services import (
     get_service_containers_readiness_builder,
+    get_service_context_maintenance_builder,
     get_service_cqlsh_commands_builder,
     get_service_mc_commands_builder,
     get_service_report_builder,
@@ -144,6 +145,7 @@ def build() -> Task:
     if context.task is not None:
         return context.task
 
+    context_maintenance_builder = get_service_context_maintenance_builder()
     job_subtasks = env_utils.maybe_strings_list(JobParams.JOB_SUBTASKS, ["all"])
     if JobSubtasks.ALL.value in job_subtasks and len(job_subtasks) != 1:
         raise RuntimeError(
@@ -169,7 +171,9 @@ def build() -> Task:
         subtasks.append(subtask_keycloak_builder())
 
     context.task = Task(
-        containers_readiness=containers_readiness_builder(), subtasks=subtasks
+        containers_readiness=containers_readiness_builder(),
+        subtasks=subtasks,
+        context_maintenance=context_maintenance_builder(),
     )
 
     return context.task

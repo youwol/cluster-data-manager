@@ -6,6 +6,7 @@ from abc import ABC, abstractmethod
 from typing import List
 
 # application services
+from youwol.data_manager.services.cluster_maintenance import ContextMaintenance
 from youwol.data_manager.services.containers_readiness import ContainersReadiness
 
 
@@ -22,7 +23,10 @@ class Task:
     """
 
     def __init__(
-        self, containers_readiness: ContainersReadiness, subtasks: List[RestoreSubtask]
+        self,
+        containers_readiness: ContainersReadiness,
+        subtasks: List[RestoreSubtask],
+        context_maintenance: ContextMaintenance,
     ):
         """Simple constructor.
 
@@ -31,10 +35,13 @@ class Task:
             subtasks (RestoreSubtask): list of subtasks to run
         """
         self._containers_readiness = containers_readiness
+        self._context_maintenance = context_maintenance
         self._subtasks = subtasks
 
     def run(self) -> None:
         """Run the task."""
         self._containers_readiness.wait()
-        for subtask in self._subtasks:
-            subtask.run()
+
+        with self._context_maintenance:
+            for subtask in self._subtasks:
+                subtask.run()
