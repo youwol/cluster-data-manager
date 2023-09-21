@@ -8,11 +8,12 @@ from youwol.data_manager.services.reporting import Report
 
 # relative
 from ...configuration import ArchiveItem
+from ..common import OnPathDirMissing
 from ..common.s3 import S3 as CommonS3
-from ..common.task import OnPathDirMissing
+from .task import RestoreSubtask
 
 
-class S3(CommonS3):
+class S3(CommonS3, RestoreSubtask):
     """Restoration subtask for S3.
 
     Will use mc_commands to mirror local bucket to cluster S3 instance.

@@ -7,13 +7,14 @@ Use get_<task>_builder() to obtain a nullary builder for a subtask.
 import datetime
 
 # typing
-from typing import Callable, Optional
+from typing import Callable, List, Optional
 
 # application configuration
 from youwol.data_manager.configuration import (
     Deployment,
     Installation,
     JobParams,
+    JobSubtasks,
     env_utils,
 )
 
@@ -21,13 +22,11 @@ from youwol.data_manager.configuration import (
 from youwol.data_manager.services import (
     get_service_archiver_builder,
     get_service_cluster_maintenance_builder,
+    get_service_containers_readiness_builder,
     get_service_cqlsh_commands_builder,
     get_service_google_drive_builder,
     get_service_mc_commands_builder,
     get_service_report_builder,
-)
-from youwol.data_manager.services.builder import (
-    get_containers_readiness_kc_and_minio_builder,
 )
 from youwol.data_manager.services.keycloak_admin import (
     KeycloakAdmin,
@@ -38,7 +37,7 @@ from youwol.data_manager.services.keycloak_admin import (
 from .cassandra import Cassandra
 from .keycloak import Keycloak
 from .s3 import S3
-from .task import Task
+from .task import BackupSubtask, Task
 
 
 class Context:
@@ -164,12 +163,9 @@ def build() -> Task:
         return context.task
 
     report_builder = get_service_report_builder()
-    containers_readiness_builder = get_containers_readiness_kc_and_minio_builder()
-    s3_builder = get_s3_builder()
-    cassandra_builder = get_cassandra_builder()
-    keycloak_builder = get_keycloak_builder()
     archiver_builder = get_service_archiver_builder()
     google_drive_builder = get_service_google_drive_builder()
+    containers_readiness_builder = get_service_containers_readiness_builder()
     cluster_maintenance_builder = get_service_cluster_maintenance_builder()
 
     path_log_file = env_utils.existing_path(Installation.PATH_LOG_FILE)
@@ -180,11 +176,32 @@ def build() -> Task:
     )
     google_drive_upload_folder = type_backup
 
+    job_subtasks = env_utils.maybe_strings_list(JobParams.JOB_SUBTASKS, ["all"])
+    if JobSubtasks.ALL.value in job_subtasks and len(job_subtasks) != 1:
+        raise RuntimeError(
+            f"Env {JobParams.JOB_SUBTASKS} contains both 'all' and other elements"
+        )
+
+    subtask_s3_builder = get_s3_builder()
+    subtask_cassandra_builder = get_cassandra_builder()
+    subtask_keycloak_builder = get_keycloak_builder()
+    subtasks: List[BackupSubtask] = []
+    if JobSubtasks.ALL.value in job_subtasks or JobSubtasks.S3.value in job_subtasks:
+        subtasks.append(subtask_s3_builder())
+    if (
+        JobSubtasks.ALL.value in job_subtasks
+        or JobSubtasks.CASSANDRA.value in job_subtasks
+    ):
+        subtasks.append(subtask_cassandra_builder())
+    if (
+        JobSubtasks.ALL.value in job_subtasks
+        or JobSubtasks.KEYCLOAK.value in job_subtasks
+    ):
+        subtasks.append(subtask_keycloak_builder())
+
     context.task = Task(
         containers_readiness=containers_readiness_builder(),
-        task_backup_s3=s3_builder(),
-        task_backup_cassandra=cassandra_builder(),
-        task_backup_keycloak=keycloak_builder(),
+        subtasks=subtasks,
         google_drive=google_drive_builder(),
         archive=archiver_builder().new_archive(job_uuid=job_uuid),
         google_drive_upload_file_name=google_drive_upload_file_name,

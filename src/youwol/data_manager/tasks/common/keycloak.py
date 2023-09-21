@@ -4,10 +4,10 @@ from pathlib import Path
 
 # relative
 from ...configuration import ArchiveItem
-from .task import OnPathDirMissing, Task
+from .subtask import OnPathDirMissing, Subtask
 
 
-class Keycloak(Task):
+class Keycloak(Subtask):
     """Parent class for keycloak tasks.
 
     Define relative path for tasks.

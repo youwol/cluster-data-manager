@@ -12,9 +12,10 @@ from youwol.data_manager.services.reporting import Report
 # relative
 from ...configuration import ArchiveItem
 from ..common import CommonCassandra, OnPathDirMissing
+from .task import BackupSubtask
 
 
-class Cassandra(CommonCassandra):
+class Cassandra(CommonCassandra, BackupSubtask):
     """Subtask for backup cassandra.
 
     Dump the keyspaces DDL and the tables data in CSV format.
@@ -45,6 +46,20 @@ class Cassandra(CommonCassandra):
             default_status_level="NOTIFY",
             init_status="ComponentInitialized",
         )
+
+    def metadata(self) -> tuple[str, Any]:
+        """Simple getter.
+
+        Returns:
+            tuple[str, Any]: key and value for cassandra (from cqlsh_commands)
+        """
+        return "cql", {
+            "host": self._cqlsh_commands.show_host(),
+            "versions": self._cqlsh_commands.show_version(),
+        }
+
+    def prepare(self) -> None:
+        """Nothing to do."""
 
     def run(self) -> None:
         """Run the task."""
@@ -83,14 +98,3 @@ class Cassandra(CommonCassandra):
             tuple[Path, str]: the relative dir for cassandra and 'cql'
         """
         return self._task_path_dir_and_archive_item(OnPathDirMissing.CREATE)
-
-    def metadata(self) -> Any:
-        """Simple getter.
-
-        Returns:
-            dict: metadata form cqlsh_commands
-        """
-        return {
-            "host": self._cqlsh_commands.show_host(),
-            "versions": self._cqlsh_commands.show_version(),
-        }

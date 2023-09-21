@@ -4,23 +4,28 @@ Use get_<task>_builder to obtain an nullary builder for a subtask.
 Use get_restore_task() to obtain a configured instance for TaskRestore.
 """
 # typing
-from typing import Callable, Optional
+from typing import Callable, List, Optional
 
 # application configuration
-from youwol.data_manager.configuration import Installation, JobParams, env_utils
+from youwol.data_manager.configuration import (
+    Installation,
+    JobParams,
+    JobSubtasks,
+    env_utils,
+)
 
 # application services
 from youwol.data_manager.services import (
+    get_service_containers_readiness_builder,
     get_service_cqlsh_commands_builder,
     get_service_mc_commands_builder,
     get_service_report_builder,
 )
-from youwol.data_manager.services.builder import get_containers_readiness_minio_builder
 
 # relative
 from .cassandra import Cassandra
 from .s3 import S3
-from .task import Task
+from .task import RestoreSubtask, Task
 
 
 class Context:
@@ -105,14 +110,26 @@ def build() -> Task:
     if context.task is not None:
         return context.task
 
-    task_restore_cassandre_builder = get_cassandra_builder()
-    task_restore_s3_builder = get_s3_builder()
-    containers_readiness_builder = get_containers_readiness_minio_builder()
+    job_subtasks = env_utils.maybe_strings_list(JobParams.JOB_SUBTASKS, ["all"])
+    if JobSubtasks.ALL.value in job_subtasks and len(job_subtasks) != 1:
+        raise RuntimeError(
+            f"Env {JobParams.JOB_SUBTASKS} contains both 'all' and other elements"
+        )
+
+    subtask_s3_builder = get_s3_builder()
+    subtask_cassandre_builder = get_cassandra_builder()
+    containers_readiness_builder = get_service_containers_readiness_builder()
+    subtasks: List[RestoreSubtask] = []
+    if JobSubtasks.ALL.value in job_subtasks or JobSubtasks.S3.value in job_subtasks:
+        subtasks.append(subtask_s3_builder())
+    if (
+        JobSubtasks.ALL.value in job_subtasks
+        or JobSubtasks.CASSANDRA.value in job_subtasks
+    ):
+        subtasks.append(subtask_cassandre_builder())
 
     context.task = Task(
-        containers_readiness=containers_readiness_builder(),
-        task_restore_s3=task_restore_s3_builder(),
-        task_restore_cassandra=task_restore_cassandre_builder(),
+        containers_readiness=containers_readiness_builder(), subtasks=subtasks
     )
 
     return context.task

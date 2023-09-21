@@ -3,13 +3,14 @@
 Use get_<task>() to obtain a configured instance of TaskSetup for a given task.
 """
 # typing
-from typing import Optional
+from typing import List, Optional
 
 # application configuration
 from youwol.data_manager.configuration import (
     ArchiveItem,
     Installation,
     JobParams,
+    JobSubtasks,
     env_utils,
 )
 
@@ -54,6 +55,23 @@ def build() -> Task:
     path_work_dir = env_utils.existing_path(Installation.PATH_WORK_DIR)
     archive_name = env_utils.maybe_string(JobParams.RESTORE_ARCHIVE_NAME)
 
+    jobs_subtasks = env_utils.maybe_strings_list(
+        JobParams.JOB_SUBTASKS, default=[JobSubtasks.ALL.value]
+    )
+    extract_items: List[ArchiveItem] = []
+    if JobSubtasks.ALL.value in jobs_subtasks or JobSubtasks.S3.value in jobs_subtasks:
+        extract_items.append(ArchiveItem.MINIO)
+    if (
+        JobSubtasks.ALL.value in jobs_subtasks
+        or JobSubtasks.CASSANDRA.value in jobs_subtasks
+    ):
+        extract_items.append(ArchiveItem.CQL)
+    if (
+        JobSubtasks.ALL.value in jobs_subtasks
+        or JobSubtasks.KEYCLOAK.value in jobs_subtasks
+    ):
+        extract_items.append(ArchiveItem.KEYCLOAK)
+
     keycloak_setup_details = KeycloakDetails(
         path_keycloak_status_file=env_utils.creating_file(
             Installation.PATH_KEYCLOAK_STATUS_FILE
@@ -67,7 +85,7 @@ def build() -> Task:
         keycloak_setup_details=keycloak_setup_details,
         archiver=archiver_builder(),
         google_drive=google_drive_builder(),
-        extract_items=[ArchiveItem.MINIO, ArchiveItem.KEYCLOAK, ArchiveItem.CQL],
+        extract_items=extract_items,
         archive_name=archive_name,
     )
 

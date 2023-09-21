@@ -14,9 +14,10 @@ from youwol.data_manager.services.reporting import Report
 # relative
 from ...configuration import ArchiveItem, KeycloakStatus
 from ..common import CommonKeycloak, OnPathDirMissing
+from .task import BackupSubtask
 
 
-class Keycloak(CommonKeycloak):
+class Keycloak(CommonKeycloak, BackupSubtask):
     """Sub task for keycloak backup."""
 
     def __init__(
@@ -40,6 +41,17 @@ class Keycloak(CommonKeycloak):
         self._report = report
         self._keycloak_admin = keycloak_admin
         self._path_status_file = path_keycloak_status_file
+
+    def metadata(self) -> tuple[str, Any]:
+        """Metadata from keycloak instance.
+
+        Returns:
+            tuple[str, Any]: key and value for keycloak (from /admin/serverinfo)
+        """
+        return "kc", {"server_info": self._keycloak_admin.system_info()}
+
+    def prepare(self) -> None:
+        """Nothing to da."""
 
     def run(self) -> None:
         """Run the task.
@@ -72,11 +84,3 @@ class Keycloak(CommonKeycloak):
             tuple[Path, str]: the dir path of keycloak and the constant 'kc'
         """
         return self._task_path_dir_and_archive_item(on_missing=OnPathDirMissing.CREATE)
-
-    def metadata(self) -> Any:
-        """Metadata from keycloak instance.
-
-        Returns:
-            Any: result of /admin/serverinfo
-        """
-        return {"server_info": self._keycloak_admin.system_info()}

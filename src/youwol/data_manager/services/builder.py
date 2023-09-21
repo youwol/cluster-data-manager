@@ -6,15 +6,21 @@ Notes:
     It is possible to overload the definition of any service by using the context object before calling builders.
 """
 # typing
-from typing import Callable, Optional
+from typing import Callable, List, Optional
 
 # application configuration
-from youwol.data_manager.configuration import Deployment, Installation, env_utils
+from youwol.data_manager.configuration import (
+    Deployment,
+    Installation,
+    JobParams,
+    JobSubtasks,
+    env_utils,
+)
 
 # relative
 from .archiver import Archiver
 from .cluster_maintenance import ClusterMaintenance, MaintenanceDetails
-from .containers_readiness import ContainersReadiness, ProbeKeycloak, ProbeMinio
+from .containers_readiness import ContainersReadiness, Probe, ProbeKeycloak, ProbeMinio
 from .cqlsh_commands import CqlInstance, CqlshCommands
 from .google_drive import GoogleDrive
 from .kubernetes_api import (
@@ -45,6 +51,8 @@ class Context:
     google_drive: Optional[GoogleDrive] = None
     cluster_maintenance: Optional[ClusterMaintenance] = None
     kubernetes_api: Optional[KubernetesApi] = None
+    probe_keycloak: Optional[Probe] = None
+    probe_minio: Optional[Probe] = None
     containers_readiness: Optional[ContainersReadiness] = None
 
 
@@ -321,76 +329,96 @@ def get_kubernetes_api_builder() -> Callable[[], KubernetesApi]:
     return builder
 
 
-def get_containers_readiness_kc_and_minio_builder() -> (
-    Callable[[], ContainersReadiness]
-):
-    """Get a builder for a configured instance of the containers readiness service.
+def get_probe_keycloak_builder() -> Callable[[], Probe]:
+    """Get a builder for a configured probe for keycloak container
 
     Returns:
-        Callable[[], ContainersReadiness]: a nullary builder for the containers readiness service.
+        Callable[[], Probe]: a nullary builder for a keycloak probe.
     """
-    if context.containers_readiness is not None:
-        containers_readiness = context.containers_readiness
-        return lambda: containers_readiness
+
+    if context.probe_keycloak is not None:
+        probe_kc = context.probe_keycloak
+        return lambda: probe_kc
 
     report_builder = get_report_builder()
     path_keycloak_status_file = env_utils.existing_path(
         Installation.PATH_KEYCLOAK_STATUS_FILE
     )
-    local_access_key = env_utils.not_empty_string(Deployment.MINIO_LOCAL_ACCESS_KEY)
-    local_secret_key = env_utils.not_empty_string(Deployment.MINIO_LOCAL_SECRET_KEY)
-    local_port = env_utils.integer(Deployment.MINIO_LOCAL_PORT, 9000)
 
-    def builder() -> ContainersReadiness:
-        if context.containers_readiness is None:
-            probe_keycloak = ProbeKeycloak(
+    def builder() -> Probe:
+        if context.probe_keycloak is None:
+            context.probe_keycloak = ProbeKeycloak(
                 report=report_builder(),
                 path_keycloak_status_file=path_keycloak_status_file,
             )
-            minio_local_instance = MinioLocalInstance(
-                access_key=local_access_key,
-                secret_key=local_secret_key,
-                port=local_port,
-            )
-            probe_minio = ProbeMinio(
-                report=report_builder(), s3_instance=minio_local_instance
-            )
-            context.containers_readiness = ContainersReadiness(
-                report=report_builder(), probes=[probe_keycloak, probe_minio]
-            )
 
-        return context.containers_readiness
+        return context.probe_keycloak
 
     return builder
 
 
-def get_containers_readiness_minio_builder() -> Callable[[], ContainersReadiness]:
-    """Get a builder for a configured instance of the containers readiness service.
+def get_probe_minio_builder() -> Callable[[], Probe]:
+    """Get a builder for a configured probe for minio container
 
     Returns:
-        Callable[[], ContainersReadiness]: a nullary builder for the containers readiness service.
+        Callable[[], Probe]: a nullary builder for a minio probe.
     """
-    if context.containers_readiness is not None:
-        containers_readiness = context.containers_readiness
-        return lambda: containers_readiness
+    if context.probe_minio is not None:
+        probe_minio = context.probe_minio
+        return lambda: probe_minio
 
     report_builder = get_report_builder()
     local_access_key = env_utils.not_empty_string(Deployment.MINIO_LOCAL_ACCESS_KEY)
     local_secret_key = env_utils.not_empty_string(Deployment.MINIO_LOCAL_SECRET_KEY)
     local_port = env_utils.integer(Deployment.MINIO_LOCAL_PORT, 9000)
 
-    def builder() -> ContainersReadiness:
-        if context.containers_readiness is None:
+    def builder() -> Probe:
+        if context.probe_minio is None:
             minio_local_instance = MinioLocalInstance(
                 access_key=local_access_key,
                 secret_key=local_secret_key,
                 port=local_port,
             )
-            probe_minio = ProbeMinio(
+            context.probe_minio = ProbeMinio(
                 report=report_builder(), s3_instance=minio_local_instance
             )
+
+        return context.probe_minio
+
+    return builder
+
+
+def get_containers_readiness_builder() -> Callable[[], ContainersReadiness]:
+    """Get a builder for an instance of th containers_readiness service.
+
+    Returns:
+        Callable[[], ContainersReadiness]: a nullary builder for a minio probe.
+    """
+    if context.containers_readiness is not None:
+        containers_readiness = context.containers_readiness
+        return lambda: containers_readiness
+
+    report_builder = get_report_builder()
+    probes_builders: List[Callable[[], Probe]] = []
+
+    job_subtasks = env_utils.maybe_strings_list(JobParams.JOB_SUBTASKS, ["all"])
+    if JobSubtasks.ALL.value in job_subtasks and len(job_subtasks) != 1:
+        raise RuntimeError(
+            f"Env {JobParams.JOB_SUBTASKS} contains both 'all' and other elements"
+        )
+
+    if JobSubtasks.ALL.value in job_subtasks or JobSubtasks.S3.value in job_subtasks:
+        probes_builders.append(get_probe_minio_builder())
+    if (
+        JobSubtasks.ALL.value in job_subtasks
+        or JobSubtasks.KEYCLOAK.value in job_subtasks
+    ):
+        probes_builders.append(get_probe_keycloak_builder())
+
+    def builder() -> ContainersReadiness:
+        if context.containers_readiness is None:
             context.containers_readiness = ContainersReadiness(
-                report=report_builder(), probes=[probe_minio]
+                report=report_builder(), probes=[build() for build in probes_builders]
             )
 
         return context.containers_readiness

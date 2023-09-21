@@ -7,10 +7,10 @@ from youwol.data_manager.services.cqlsh_commands import CqlshCommands
 
 # relative
 from ...configuration import ArchiveItem
-from .task import OnPathDirMissing, Task
+from .subtask import OnPathDirMissing, Subtask
 
 
-class Cassandra(Task):
+class Cassandra(Subtask):
     """Parent class for cassandra tasks.
 
     Define relative paths for the tasks.

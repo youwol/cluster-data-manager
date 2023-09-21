@@ -1,10 +1,18 @@
 """Main class for restoration task."""
+# standard library
+from abc import ABC, abstractmethod
+
+# typing
+from typing import List
+
 # application services
 from youwol.data_manager.services.containers_readiness import ContainersReadiness
 
-# relative
-from .cassandra import Cassandra
-from .s3 import S3
+
+class RestoreSubtask(ABC):
+    @abstractmethod
+    def run(self):
+        """Run the subtask"""
 
 
 class Task:
@@ -14,24 +22,19 @@ class Task:
     """
 
     def __init__(
-        self,
-        containers_readiness: ContainersReadiness,
-        task_restore_cassandra: Cassandra,
-        task_restore_s3: S3,
+        self, containers_readiness: ContainersReadiness, subtasks: List[RestoreSubtask]
     ):
         """Simple constructor.
 
         Args:
             containers_readiness (ContainersReadiness): the containers readiness service
-            task_restore_cassandra (Cassandra): the cassandra restore task
-            task_restore_s3 (S3):  the S3 restore task
+            subtasks (RestoreSubtask): list of subtasks to run
         """
         self._containers_readiness = containers_readiness
-        self._task_restore_cassandra = task_restore_cassandra
-        self._task_restore_s3 = task_restore_s3
+        self._subtasks = subtasks
 
     def run(self) -> None:
         """Run the task."""
         self._containers_readiness.wait()
-        self._task_restore_cassandra.run()
-        self._task_restore_s3.run()
+        for subtask in self._subtasks:
+            subtask.run()

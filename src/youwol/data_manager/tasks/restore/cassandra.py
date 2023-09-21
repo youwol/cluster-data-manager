@@ -8,11 +8,12 @@ from youwol.data_manager.services.reporting import Report
 
 # relative
 from ...configuration import ArchiveItem
+from ..common import OnPathDirMissing
 from ..common.cassandra import Cassandra as CommonCassandra
-from ..common.task import OnPathDirMissing
+from .task import RestoreSubtask
 
 
-class Cassandra(CommonCassandra):
+class Cassandra(CommonCassandra, RestoreSubtask):
     """Restoration subtask for cassandra.
 
     Use cqlsh_commands to restore keyspaces from DDL files and tables data from CSV files.

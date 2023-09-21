@@ -12,9 +12,10 @@ from youwol.data_manager.services.reporting import Report
 # relative
 from ...configuration import ArchiveItem
 from ..common import CommonS3, OnPathDirMissing
+from .task import BackupSubtask
 
 
-class S3(CommonS3):
+class S3(CommonS3, BackupSubtask):
     """Subtask for backup S3.
 
     Mirror the cluster buckets into the local Minio instance.
@@ -43,6 +44,17 @@ class S3(CommonS3):
             default_status_level="NOTIFY",
             init_status="ComponentInitialized",
         )
+
+    def metadata(self) -> tuple[str, Any]:
+        """Simple getter.
+
+        Returns:
+            tuple[str, Any]: key and value for s3 (from mc_commands)
+        """
+        return "s3", {
+            "url": self._mc_commands.cluster_url(),
+            "info": self._mc_commands.cluster_info(),
+        }
 
     def prepare(self) -> None:
         """Prepare S3 backup.
@@ -82,14 +94,3 @@ class S3(CommonS3):
             tuple[Path, str]: the dir path of Minio and the constant 'minio'
         """
         return self._task_path_dir_and_archive_item(on_missing=OnPathDirMissing.ERROR)
-
-    def metadata(self) -> Any:
-        """Simple getter.
-
-        Returns:
-            dict: metadata from mc_commands
-        """
-        return {
-            "url": self._mc_commands.cluster_url(),
-            "info": self._mc_commands.cluster_info(),
-        }

@@ -344,8 +344,9 @@ def strings_list(env_name: EnvironmentVars, sep: str = ":") -> list[str]:
     """Split env_name in a list of str.
 
     Notes:
-        The environment variable must be set. To pass an empty list, just set it to the separator alone :
-        ENV=":"
+        The environment variable must be set.
+        To pass an empty list, just set it to the separator alone : ENV=":"
+        To make that environment variable entirely optional, use maybe_strings_list()
 
     Args:
         env_name (EnvironmentVars): environment variable name
@@ -357,6 +358,33 @@ def strings_list(env_name: EnvironmentVars, sep: str = ":") -> list[str]:
     string_list = not_empty_string(env_name)
 
     return [item.strip() for item in string_list.split(sep) if item.strip() != ""]
+
+
+def maybe_strings_list(
+    env_name: EnvironmentVars, default: Optional[list[str]] = None, sep: str = ":"
+) -> list[str]:
+    """Split env_name in a list of str or return default if not set.
+
+    If not provided default is an empty list.
+
+    Notes:
+        To pass an empty list, just set it to the separator alone : ENV=":"
+
+    Args:
+        env_name (EnvironmentVars): environment variable name
+        default (Optional[list[str]): default value if environment is not set.
+        sep (str): the separator (':' by default)
+
+    Returns:
+        list[str]: a list of string, possibly empty
+    """
+
+    string_list = maybe_string(env_name)
+
+    if string_list is None:
+        return [] if default is None else default
+
+    return strings_list(env_name, sep)
 
 
 def arg_task_name() -> str:

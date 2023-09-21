@@ -11,8 +11,8 @@ class OnPathDirMissing(Enum):
     ERROR = "error"
 
 
-class Task:
-    """Abstract parent class for all tasks.
+class Subtask:
+    """Abstract parent class for all subtasks.
 
     Provide a method for ensuring that a relative path exist.
     """

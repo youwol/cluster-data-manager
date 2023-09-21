@@ -78,6 +78,9 @@ class JobEnvironmentVars(EnvironmentVars):
     JOB_UUID = "JOB_UUID"
     # Folder in Google Drive, either “cron" or “manual”
     TYPE_BACKUP = "TYPE_BACKUP"
+    # Subtasks to run, either a subset of ["s3", "cassandra", "keycloak"], or "all"
+    # If not define, default to "all"
+    JOB_SUBTASKS = "JOB_SUBTASKS"
 
     # Job Restoration
     # Default to “latest” if not set
@@ -89,3 +92,10 @@ class JobEnvironmentVars(EnvironmentVars):
 
     # Task S3
     S3_BUCKETS = "S3_BUCKETS"
+
+
+class JobSubtasks(Enum):
+    S3 = "s3"
+    CASSANDRA = "cassandra"
+    KEYCLOAK = "keycloak"
+    ALL = "all"

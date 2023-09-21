@@ -7,10 +7,10 @@ from youwol.data_manager.services.mc_commands import McCommands
 
 # relative
 from ...configuration import ArchiveItem
-from .task import OnPathDirMissing, Task
+from .subtask import OnPathDirMissing, Subtask
 
 
-class S3(Task):
+class S3(Subtask):
     """Parent class for S3 tasks.
 
     Define relative path for tasks.
