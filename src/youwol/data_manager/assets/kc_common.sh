@@ -36,7 +36,7 @@ kc_adm_configured=0
 config_credentials() {
   if [ "x$kc_adm_configured" != "x1" ]; then
     $kc_adm config credentials \
-      --server http://keycloak-service.infra.svc.cluster.local:8080/auth \
+      --server https://$KC_HOSTNAME/auth \
       --realm master \
       --user "$KEYCLOAK_ADMIN" \
       --password "$KEYCLOAK_ADMIN_PASSWORD"
