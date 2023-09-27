@@ -87,6 +87,91 @@ set_client_redirect_uris() {
 	update_client "$client_id" "redirectUris=[$redirect_uris]"
 }
 
+existing_providers=""
+
+list_existing_providers() {
+  config_credentials
+  existing_providers=$($kc_adm get keys \
+                        --target-realm youwol \
+                        --fields 'keys(providerId)' \
+                        --format csv \
+                        --noquotes)
+
+}
+
+deactivate_existing_keys() {
+  list_existing_providers
+  IFS="," read -ra providers <<< $existing_providers;
+  for pid in "${providers[@]}"; do
+      $kc_adm update "components/$pid" \
+        --target-realm youwol \
+        --set 'config.active=["false"]' \
+        --set 'config.priority=["-200"]'
+  done
+}
+
+delete_existing_keys() {
+  list_existing_providers
+  IFS="," read -ra providers <<< $existing_providers;
+  for pid in "${providers[@]}"; do
+      $kc_adm delete "components/$pid" \
+        --target-realm youwol
+  done
+}
+
+insert_new_keys() {
+  config_credentials
+  realm_id=$(get_realm_id)
+
+  # RSA keys provider
+  $kc_adm create components \
+    --target-realm youwol \
+    --set providerType=org.keycloak.keys.KeyProvider \
+    --set "parentId=$realm_id" \
+    --set "name=rsa-generated" \
+    --set "providerId=rsa-generated" \
+    --set 'config.enabled=["true"]' \
+    --set 'config.active=["true"]' \
+    --set 'config.priority=["100"]' \
+    --set 'config.keySize=["2048"]' \
+    --set 'config.algorithm=["RS256"]'
+
+  # HMAC keys provider
+   $kc_adm create components \
+    --target-realm youwol \
+    --set providerType=org.keycloak.keys.KeyProvider \
+    --set "parentId=$realm_id" \
+    --set "name=hmac-generated" \
+    --set "providerId=hmac-generated" \
+    --set 'config.enabled=["true"]' \
+    --set 'config.active=["true"]' \
+    --set 'config.priority=["100"]' \
+    --set 'config.algorithm=["HS256"]'
+
+  # AES keys provider
+   $kc_adm create components \
+    --target-realm youwol \
+    --set providerType=org.keycloak.keys.KeyProvider \
+    --set "parentId=$realm_id" \
+    --set "name=aes-generated" \
+    --set "providerId=aes-generated" \
+    --set 'config.enabled=["true"]' \
+    --set 'config.active=["true"]' \
+    --set 'config.priority=["100"]'
+
+  # ECDSA keys provider
+  $kc_adm create components \
+    --target-realm youwol \
+    --set providerType=org.keycloak.keys.KeyProvider \
+    --set "parentId=$realm_id" \
+    --set "name=fallback-ES256" \
+    --set "providerId=ecdsa-generated" \
+    --set 'config.enabled=["true"]' \
+    --set 'config.active=["true"]' \
+    --set 'config.priority=["-100"]' \
+    --set 'config.ecdsaEllipticCurveKey=["P-256"]'
+}
+
 kc_sh="/opt/keycloak/bin/kc.sh"
 if [ -z "$KEYCLOAK_IMAGE_OPTIMIZED" ]; then
   status BUILDING

@@ -9,6 +9,18 @@ $kc_import \
   | tee "$PATH_WORK_DIR/import.log"
 status IMPORTED
 
+if [ -n "$KEYS_ROTATION" ]; then
+  status ROTATING_KEYS
+  if [ "x$KEYS_ROTATION" == "xrotate" ]; then
+    deactivate_existing_keys
+  elif [ "x$KEYS_ROTATION" == "xreset" ]; then
+    delete_existing_keys
+  else
+    die "Env KEYS_ROTATION has invalid value '$KEYS_ROTATION'"
+  fi
+  insert_new_keys
+fi
+
 status CONFIGURING_CLIENTS
 set_client_secret admin-cli "$ADMIN_CLI_CLIENT_SECRET"
 set_client_secret integration-tests "$INTEGRATION_TESTS_CLIENT_SECRET"
