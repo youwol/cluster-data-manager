@@ -43,10 +43,22 @@ class FileInformation:
     mime_type: str
 
 
+@dataclass(frozen=True, kw_only=True)
+class ServiceAccountWorkloadFederation:
+    external_account_audience: str
+    external_account_impersonation_url: str
+
+
 class GoogleDrive:
     """Service google_drive."""
 
-    def __init__(self, report: Report, drive_id: str, oidc_client: OidcClient):
+    def __init__(
+        self,
+        report: Report,
+        drive_id: str,
+        oidc_client: OidcClient,
+        sa_wl_fed: ServiceAccountWorkloadFederation,
+    ):
         """Simple constructor.
 
         Args:
@@ -60,6 +72,7 @@ class GoogleDrive:
         self._drive_id = drive_id
         self._oidc_client = oidc_client
         self._service: Optional[Any] = None
+        self._sa_wl_fed = sa_wl_fed
         self._report.notify(f"Using drive_id {drive_id}")
         self._report.set_status("ComponentInitialized")
 
@@ -116,10 +129,10 @@ class GoogleDrive:
             creds = Credentials.from_info(
                 {
                     "type": "external_account",
-                    "audience": "//iam.googleapis.com/projects/664035388216/locations/global/workloadIdentityPools/youwol-platform/providers/youwol-int-platform-oidc",
+                    "audience": self._sa_wl_fed.external_account_audience,
                     "subject_token_type": "urn:ietf:params:oauth:token-type:jwt",
                     "token_url": "https://sts.googleapis.com/v1/token",
-                    "service_account_impersonation_url": "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/backup-to-google-drive@youwol-services-accounts.iam.gserviceaccount.com:generateAccessToken",
+                    "service_account_impersonation_url": self._sa_wl_fed.external_account_impersonation_url,
                     "credential_source": {
                         "file": self._get_path_oidc_tokens(),
                         "format": {
