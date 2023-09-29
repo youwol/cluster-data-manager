@@ -27,7 +27,7 @@ from .cluster_maintenance import (
 )
 from .containers_readiness import ContainersReadiness, Probe, ProbeKeycloak, ProbeMinio
 from .cqlsh_commands import CqlInstance, CqlshCommands
-from .google_drive import GoogleDrive
+from .google_drive import GoogleDrive, ServiceAccountWorkloadFederation
 from .kubernetes_api import (
     KubernetesApi,
     KubernetesConfigMapValueRef,
@@ -222,11 +222,21 @@ def get_google_drive_builder() -> Callable[[], GoogleDrive]:
     def builder() -> GoogleDrive:
         if context.google_drive is None:
             drive_id = env_utils.not_empty_string(Deployment.GOOGLE_DRIVE_ID)
+            external_account_audience = env_utils.not_empty_string(
+                Deployment.EXTERNAL_ACCOUNT_AUDIENCE
+            )
+            external_account_impersonation_url = env_utils.not_empty_string(
+                Deployment.EXTERNAL_ACCOUNT_IMPERSONATION_URL
+            )
 
             context.google_drive = GoogleDrive(
                 report=report_builder(),
                 drive_id=drive_id,
                 oidc_client=oidc_client_builder(),
+                sa_wl_fed=ServiceAccountWorkloadFederation(
+                    external_account_audience=external_account_audience,
+                    external_account_impersonation_url=external_account_impersonation_url,
+                ),
             )
 
         return context.google_drive
