@@ -14,6 +14,13 @@ trap "echo 'Trapping SIGABRT. The script ended with errors'; echo 'ERROR' > '$PA
 trap "echo 'Trapping SIGQUIT. The script ended with errors'; echo 'ERROR' > '$PATH_KEYCLOAK_STATUS_FILE'; exit 1" QUIT
 trap "echo 'Trapping error. The script ended with errors'; echo 'ERROR' > '$PATH_KEYCLOAK_STATUS_FILE'; exit 1" ERR
 
+# See https://github.com/keycloak/keycloak/issues/21146
+one_hour_in_seconds="3600"
+export JAVA_OPTS_APPEND="-Dquarkus.transaction-manager.default-transaction-timeout=${one_hour_in_seconds}"
+
+# Some additional outputs from kc.sh script
+export PRINT_ENV="true"
+
 status_file="$PATH_KEYCLOAK_STATUS_FILE"
 status() {
   status="$1"
