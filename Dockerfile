@@ -44,12 +44,12 @@ RUN    apt-get update \
     && apt-get install \
        --no-install-recommends \
        --assume-yes \
-       gcc=$gcc_version \
-       git=$git_version \
-    && rm -rf /val/lib/apt/lists/* \
+       gcc="$gcc_version" \
+       git="$git_version" \
+    && apt-get clean \
     && pip install \
-       pip==$pip_version \
-       pipx==$pipx_version
+       pip=="$pip_version" \
+       pipx=="$pipx_version" \
 # pipx venvs & apps directories in /opt
 ENV PIPX_HOME=/opt/pipx/home
 ENV PIPX_BIN_DIR=/opt/pipx/bin
@@ -68,8 +68,8 @@ RUN    mkdir -p /opt/minio-client/bin \
        -o /opt/minio-client/bin/mc \
     && chmod a+x /opt/minio-client/bin/mc \
     && git clone --depth 1 \
-       --branch $cqlsh_tag \
-       $cqlsh_repository cqlsh \
+       --branch "$cqlsh_tag" \
+       "$cqlsh_repository" cqlsh \
     && pipx install ./cqlsh
 
 
@@ -92,7 +92,7 @@ RUN pipx install ./cluster-data-manager
 # - create working directories & define VOLUME
 # - copy installed softwares from builder image
 # - define ENTRYPOINT
-FROM python:3.11-slim as final
+FROM python:3.11-slim AS final
 
 
 ###############################################################################
@@ -107,7 +107,7 @@ ARG path_data_manager_home=/opt/data-manager
 ## Create user data-manager
 #
 # Create user & user home directory
-RUN useradd -m -d $path_data_manager_home data-manager
+RUN useradd -m -d "$path_data_manager_home" data-manager
 # Use user HOME as the image WORKDIR
 WORKDIR $path_data_manager_home
 
@@ -133,8 +133,8 @@ ENV PATH_MINIO_CLIENT_CONFIG=$path_data_manager_home/.mc
 ## Create application working directories
 #
 # Our working directory
-RUN mkdir -p $PATH_WORK_DIR && \
-    chown -R data-manager $PATH_WORK_DIR
+RUN mkdir -p "$PATH_WORK_DIR" && \
+    chown -R data-manager "$PATH_WORK_DIR"
 # Define the image VOLUME
 VOLUME $path_work_dir
 
