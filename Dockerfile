@@ -107,7 +107,11 @@ ARG path_data_manager_home=/opt/data-manager
 ## Create user data-manager
 #
 # Create user & user home directory
-RUN useradd -m -d "$path_data_manager_home" data-manager
+RUN useradd \
+    --home-dir "$path_data_manager_home" \
+    --create-home \
+    --uid 10000 \
+    data-manager
 # Use user HOME as the image WORKDIR
 WORKDIR $path_data_manager_home
 
@@ -149,6 +153,6 @@ COPY --from=python-builder /opt /opt
 ## Image entry point
 #
 # Run as user data-manager
-USER data-manager
+USER 10000
 # Start our script, from pipx installation
 ENTRYPOINT ["data-manager"]
