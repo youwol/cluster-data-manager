@@ -49,7 +49,7 @@ RUN    apt-get update \
     && apt-get clean \
     && pip install \
        pip=="$pip_version" \
-       pipx=="$pipx_version" \
+       pipx=="$pipx_version"
 # pipx venvs & apps directories in /opt
 ENV PIPX_HOME=/opt/pipx/home
 ENV PIPX_BIN_DIR=/opt/pipx/bin
