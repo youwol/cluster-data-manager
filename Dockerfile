@@ -13,7 +13,7 @@ FROM python:3.12-bullseye AS python-builder
 ## Arguments
 #
 # URL for downloading the minio client binary
-ARG mc_bin_url="https://dl.min.io/client/mc/release/linux-amd64/archive/mc.RELEASE.2023-04-12T02-21-51Z"
+ARG mc_bin_url="https://dl.min.io/client/mc/release/linux-amd64/archive/mc.RELEASE.2024-01-28T16-23-14Z"
 # git repository to clone to get cqlsh source
 ARG cqlsh_repository=https://github.com/youwol-jdecharne/scylla-cqlsh.git
 # git commitish to checkout for cqlsh source
