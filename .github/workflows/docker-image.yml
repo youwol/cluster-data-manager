@@ -15,7 +15,7 @@ on:  # yamllint disable-line rule:truthy
 
 jobs:
   build_and_push:
-    nam: "Build & push image"
+    name: "Build & push image"
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -51,7 +51,6 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: images/webpm/Dockerfile
           push: true
           tags: ${{ steps.docker_metadata.outputs.tags }}
           labels: ${{ steps.docker_metadat.outputs.labels }}
