@@ -6,7 +6,7 @@
 # - minio client binary
 # - cqlsh from source using pipx
 # - our application from source using pipx
-FROM python:3.11-bullseye AS python-builder
+FROM python:3.12-bullseye AS python-builder
 
 
 ###############################################################################
@@ -92,7 +92,7 @@ RUN pipx install ./cluster-data-manager
 # - create working directories & define VOLUME
 # - copy installed softwares from builder image
 # - define ENTRYPOINT
-FROM python:3.11-slim AS final
+FROM python:3.12-slim AS final
 
 
 ###############################################################################
