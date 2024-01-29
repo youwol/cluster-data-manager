@@ -26,13 +26,13 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: |
-            registry.gitlab.com/youwol/platform/data-manager
+            registry.gitlab.com/youwol/platform/cluster-data-manager
           tags: |
             type=pep440,pattern={{version}}
             type=raw,enable=${{ inputs.tag != '' }},value=${{ inputs.tag }}
             type=sha
           labels: |
-            org.opencontainers.image.title=youwol/data-manager
+            org.opencontainers.image.title=youwol/cluster-data-manager
 
       - name: Setup Docker Buildx
         id: setup_docker_buildx
