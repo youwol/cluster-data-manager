@@ -13,7 +13,7 @@ FROM python:3.12-bullseye AS python-builder
 ## Arguments
 #
 # URL for downloading the minio client binary
-ARG mc_bin_url="https://dl.min.io/client/mc/release/linux-amd64/archive/mc.RELEASE.2023-04-12T02-21-51Z"
+ARG mc_bin_url="https://dl.min.io/client/mc/release/linux-amd64/archive/mc.RELEASE.2024-01-28T16-23-14Z"
 # git repository to clone to get cqlsh source
 ARG cqlsh_repository=https://github.com/youwol-jdecharne/scylla-cqlsh.git
 # git commitish to checkout for cqlsh source
@@ -49,7 +49,7 @@ RUN    apt-get update \
     && apt-get clean \
     && pip install \
        pip=="$pip_version" \
-       pipx=="$pipx_version" \
+       pipx=="$pipx_version"
 # pipx venvs & apps directories in /opt
 ENV PIPX_HOME=/opt/pipx/home
 ENV PIPX_BIN_DIR=/opt/pipx/bin
@@ -107,7 +107,11 @@ ARG path_data_manager_home=/opt/data-manager
 ## Create user data-manager
 #
 # Create user & user home directory
-RUN useradd -m -d "$path_data_manager_home" data-manager
+RUN useradd \
+    --home-dir "$path_data_manager_home" \
+    --create-home \
+    --uid 10000 \
+    data-manager
 # Use user HOME as the image WORKDIR
 WORKDIR $path_data_manager_home
 
@@ -149,6 +153,6 @@ COPY --from=python-builder /opt /opt
 ## Image entry point
 #
 # Run as user data-manager
-USER data-manager
+USER 10000
 # Start our script, from pipx installation
 ENTRYPOINT ["data-manager"]

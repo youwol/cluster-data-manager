@@ -15,7 +15,7 @@ on:  # yamllint disable-line rule:truthy
 
 jobs:
   build_and_push:
-    nam: "Build & push image"
+    name: "Build & push image"
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -26,13 +26,13 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: |
-            registry.gitlab.com/youwol/platform/data-manager
+            registry.gitlab.com/youwol/platform/cluster-data-manager
           tags: |
             type=pep440,pattern={{version}}
             type=raw,enable=${{ inputs.tag != '' }},value=${{ inputs.tag }}
             type=sha
           labels: |
-            org.opencontainers.image.title=youwol/data-manager
+            org.opencontainers.image.title=youwol/cluster-data-manager
 
       - name: Setup Docker Buildx
         id: setup_docker_buildx
@@ -51,7 +51,6 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: images/webpm/Dockerfile
           push: true
           tags: ${{ steps.docker_metadata.outputs.tags }}
           labels: ${{ steps.docker_metadat.outputs.labels }}

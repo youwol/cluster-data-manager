@@ -8,6 +8,8 @@ exec > >(tee "$PATH_WORK_DIR/script_out.log")
 set -ex
 set -o pipefail
 
+cd "$PATH_WORK_DIR"
+
 trap "echo 'Trapping SIGINT. The script ended with errors'; echo 'ERROR' > '$PATH_KEYCLOAK_STATUS_FILE'; exit 1" INT
 trap "echo 'Trapping SIGTERM . The script ended with errors'; echo 'ERROR' > '$PATH_KEYCLOAK_STATUS_FILE'; exit 1" TERM
 trap "echo 'Trapping SIGABRT. The script ended with errors'; echo 'ERROR' > '$PATH_KEYCLOAK_STATUS_FILE'; exit 1" ABRT
@@ -32,8 +34,11 @@ status INIT
 
 die() {
   msg=$1
+  die_delay=3600
   echo "Fatal: $msg"
   status "ERROR"
+  echo "Will exit with failure in $die_delay seconds"
+  sleep $die_delay
   exit 1
 }
 
