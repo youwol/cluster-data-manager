@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "cluster-data-manager"
-version = "1.2.0"
+version = "1.2.1-wip"
 authors = [{ name = "Julien Décharne", email = "jdecharne@youwol.com" }]
 description = "Backup and restore Youwol cluster data"
 readme = "README.md"
