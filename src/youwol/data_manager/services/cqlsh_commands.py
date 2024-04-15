@@ -1,4 +1,5 @@
 """Main class and ancillary classes for cqlsh_commands service."""
+
 # standard library
 import datetime
 import subprocess

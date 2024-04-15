@@ -1,4 +1,5 @@
 """Abstract parent class & ancillary classes for all tasks."""
+
 # standard library
 from enum import Enum
 from pathlib import Path

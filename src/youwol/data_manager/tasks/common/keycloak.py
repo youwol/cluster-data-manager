@@ -1,4 +1,5 @@
 """Parent class for keycloak tasks."""
+
 # standard library
 import time
 

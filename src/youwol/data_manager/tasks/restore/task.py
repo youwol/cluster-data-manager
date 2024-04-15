@@ -1,4 +1,5 @@
 """Main class for restoration task."""
+
 # standard library
 from abc import ABC, abstractmethod
 

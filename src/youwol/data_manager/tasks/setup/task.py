@@ -1,4 +1,5 @@
 """Main class for setup task."""
+
 # standard library
 import os
 

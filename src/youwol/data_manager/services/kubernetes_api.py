@@ -2,6 +2,7 @@
 
 Manipulate k8s Ingress className and ConfigMap data entry value.
 """
+
 # standard library
 from dataclasses import dataclass
 

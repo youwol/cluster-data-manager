@@ -1,4 +1,5 @@
 """Main class of the backup task of S3."""
+
 # standard library
 from pathlib import Path
 

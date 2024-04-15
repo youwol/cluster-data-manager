@@ -3,6 +3,7 @@
 Cluster maintenance service handle the set up and tear down of an Ingress redirecting cluster traffic for backends
 to a custom maintenance page.
 """
+
 # standard library
 import abc
 import time

@@ -2,6 +2,7 @@
 
 Use get_<task>() to obtain a configured instance of TaskSetup for a given task.
 """
+
 # typing
 from typing import List, Optional
 
@@ -90,9 +91,11 @@ def build() -> Task:
             Installation.PATH_KEYCLOAK_COMMON_SCRIPT
         ),
         path_keycloak_script=env_utils.creating_file(Installation.PATH_KEYCLOAK_SCRIPT),
-        keycloak_script=KeycloakScript.IMPORT
-        if keycloak_script_value == KeycloakScript.IMPORT.value
-        else KeycloakScript.EXPORT,
+        keycloak_script=(
+            KeycloakScript.IMPORT
+            if keycloak_script_value == KeycloakScript.IMPORT.value
+            else KeycloakScript.EXPORT
+        ),
     )
 
     context.task = Task(

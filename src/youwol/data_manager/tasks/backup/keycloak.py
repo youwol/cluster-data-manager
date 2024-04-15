@@ -1,4 +1,5 @@
 """Main class for subtask backup keycloak."""
+
 # standard library
 from pathlib import Path
 
