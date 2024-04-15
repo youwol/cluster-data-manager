@@ -1,4 +1,5 @@
 """Utilitary fonctions for environement variables."""
+
 # standard library
 import os
 import sys

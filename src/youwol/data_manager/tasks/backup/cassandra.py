@@ -1,4 +1,5 @@
 """Main class for the backup task of cassandra."""
+
 # standard library
 from pathlib import Path
 

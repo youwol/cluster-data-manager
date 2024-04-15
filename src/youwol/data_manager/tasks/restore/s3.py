@@ -1,4 +1,5 @@
 """Main class for restoration subtask of S3."""
+
 # standard library
 from pathlib import Path
 

@@ -1,4 +1,5 @@
 """Assets service functions."""
+
 # standard library
 import importlib.resources
 import shutil

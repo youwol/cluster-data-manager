@@ -1,4 +1,5 @@
 """Parent class for cassandra tasks."""
+
 # standard library
 from pathlib import Path
 

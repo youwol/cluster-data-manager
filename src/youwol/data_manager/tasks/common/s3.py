@@ -1,4 +1,5 @@
 """Parent class for S3 tasks."""
+
 # standard library
 from pathlib import Path
 

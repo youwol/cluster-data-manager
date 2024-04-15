@@ -1,4 +1,5 @@
 """Enumeration of the environments variables names."""
+
 # standard library
 from enum import Enum
 
@@ -46,6 +47,7 @@ class DeploymentEnvironmentVars(EnvironmentVars):
 
     # Service CQL
     CQL_HOST = "CQL_HOST"
+    CQL_TIMEOUT = "CQL_TIMEOUT"
 
     # Service Minio
     # Minio local instance
