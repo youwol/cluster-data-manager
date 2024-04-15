@@ -24,6 +24,7 @@ class CqlInstance:
     """Represent the Cassandre host to connect to."""
 
     host: Optional[str]
+    timeout: int
 
     def as_args_array(self) -> list[str]:
         """Get Data as an array that can be passed as arguments to a subprocess call.
@@ -31,7 +32,15 @@ class CqlInstance:
         Returns:
             [str]: the data split in an array
         """
-        return [self.host] if self.host is not None else []
+        args = [
+            f"--connect-timeout={self.timeout}",
+            f"--request-timeout={self.timeout}",
+        ]
+
+        if self.host is not None:
+            args.append(self.host)
+
+        return args
 
 
 class CqlshCommands:
@@ -294,14 +303,14 @@ class CqlshCommands:
         self, report: Report, cql: str, stdin: Optional[str] = None
     ) -> tuple[int, Any, Any]:
         report = report.get_sub_report("__run_command", init_status="in function")
-        args = []
+        args = self._instance.as_args_array()
         if stdin is None:
             stdin = cql
         else:
-            args = ["-e", cql]
+            args.extend(["-e", cql])
         report.debug(f"cql='{cql}', args='{args}', stdin='{stdin}'")
         result = subprocess.run(
-            [*self._cqlsh, *self._instance.as_args_array(), *args],
+            [*self._cqlsh, *args],
             input=stdin,
             capture_output=True,
             text=True,
@@ -318,9 +327,10 @@ class CqlshCommands:
         report = report.get_sub_report(
             "__run_command_with_handler", init_status="in function"
         )
-        report.debug(f"cql={cql}")
+        args = [*self._instance.as_args_array(), "-e", cql]
+        report.debug(f"cql='{cql}' args='{args}'")
         with subprocess.Popen(
-            [*self._cqlsh, *self._instance.as_args_array(), "-e", cql],
+            [*self._cqlsh, *args],
             stdout=subprocess.PIPE,
         ) as popen:
             if popen.stdout is None:

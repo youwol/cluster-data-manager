@@ -106,7 +106,8 @@ def get_cqlsh_commands_builder() -> Callable[[], CqlshCommands]:
         if context.cqlsh_commands is None:
             cqlsh_command = env_utils.not_empty_string(Installation.CQLSH_COMMAND)
             cql_instance_host = env_utils.maybe_string(Deployment.CQL_HOST)
-            cql_instance = CqlInstance(host=cql_instance_host)
+            cql_timeout = env_utils.integer(Deployment.CQL_TIMEOUT, 600)
+            cql_instance = CqlInstance(host=cql_instance_host, timeout=cql_timeout)
 
             context.cqlsh_commands = CqlshCommands(
                 report=report_builder(), cql_instance=cql_instance, cqlsh=cqlsh_command
