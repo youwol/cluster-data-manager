@@ -59,13 +59,16 @@ ENV PIPX_BIN_DIR=/opt/pipx/bin
 ###############################################################################
 ## Minio client & Cqlsh
 #
+# Get minio-client binary
+ADD $mc_bin_url /tmp/mc
+#
 # * Bin directory in /opt
-# * Download minio-client binary in /opt/minio-client/bin
+# * Move minio-client binary in /opt/minio-client/bin
 #     and set executable permissions
 # * Get cqlsh the source from repository
 #     and install it with pipx
 RUN    mkdir -p /opt/minio-client/bin \
-    && curl "$mc_bin_url" \
+    && mv /tmp/mc \
        -o /opt/minio-client/bin/mc \
     && chmod a+x /opt/minio-client/bin/mc \
     && git clone --depth 1 \
