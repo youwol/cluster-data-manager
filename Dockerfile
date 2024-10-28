@@ -43,6 +43,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN    apt-get update \
     && apt-get install \
        --no-install-recommends \
+       --allow-downgrades \
        --assume-yes \
        gcc="$gcc_version" \
        git="$git_version" \
@@ -58,13 +59,16 @@ ENV PIPX_BIN_DIR=/opt/pipx/bin
 ###############################################################################
 ## Minio client & Cqlsh
 #
+# Get minio-client binary
+ADD $mc_bin_url /tmp/mc
+#
 # * Bin directory in /opt
-# * Download minio-client binary in /opt/minio-client/bin
+# * Move minio-client binary in /opt/minio-client/bin
 #     and set executable permissions
 # * Get cqlsh the source from repository
 #     and install it with pipx
 RUN    mkdir -p /opt/minio-client/bin \
-    && curl "$mc_bin_url" \
+    && mv /tmp/mc \
        -o /opt/minio-client/bin/mc \
     && chmod a+x /opt/minio-client/bin/mc \
     && git clone --depth 1 \
@@ -110,7 +114,7 @@ ARG path_data_manager_home=/opt/data-manager
 RUN useradd \
     --home-dir "$path_data_manager_home" \
     --create-home \
-    --uid 10000 \
+    --uid 1000 \
     data-manager
 # Use user HOME as the image WORKDIR
 WORKDIR $path_data_manager_home
@@ -153,6 +157,6 @@ COPY --from=python-builder /opt /opt
 ## Image entry point
 #
 # Run as user data-manager
-USER 10000
+USER 1000
 # Start our script, from pipx installation
 ENTRYPOINT ["data-manager"]
