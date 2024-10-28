@@ -43,6 +43,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN    apt-get update \
     && apt-get install \
        --no-install-recommends \
+       --allow-downgrades \
        --assume-yes \
        gcc="$gcc_version" \
        git="$git_version" \
@@ -110,7 +111,7 @@ ARG path_data_manager_home=/opt/data-manager
 RUN useradd \
     --home-dir "$path_data_manager_home" \
     --create-home \
-    --uid 10000 \
+    --uid 1000 \
     data-manager
 # Use user HOME as the image WORKDIR
 WORKDIR $path_data_manager_home
@@ -153,6 +154,6 @@ COPY --from=python-builder /opt /opt
 ## Image entry point
 #
 # Run as user data-manager
-USER 10000
+USER 1000
 # Start our script, from pipx installation
 ENTRYPOINT ["data-manager"]
