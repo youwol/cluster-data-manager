@@ -19,7 +19,7 @@ ARG gcc_version=4:10.2.1-1
 # git version for apt packagae
 ARG git_version=1:2.30.2-1+deb11u2
 # pip version for pypi
-ARG pip_version=23.1.2
+ARG pip_version=24.3.1
 # pipx version for pypi
 ARG pipx_version=1.2.0
 # scylla-cqlsh version for pypi
