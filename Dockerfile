@@ -21,7 +21,7 @@ ARG git_version=1:2.30.2-1+deb11u2
 # pip version for pypi
 ARG pip_version=24.3.1
 # pipx version for pypi
-ARG pipx_version=1.2.0
+ARG pipx_version=1.7.1
 # scylla-cqlsh version for pypi
 ARG scylla_cqlsh_version=6.0.23
 # Does not matter that much, just hold the downloaded sources for installation
