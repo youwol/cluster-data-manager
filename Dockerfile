@@ -13,7 +13,7 @@ FROM python:3.12-bullseye AS python-builder
 ## Arguments
 #
 # URL for downloading the minio client binary
-ARG mc_bin_url="https://dl.min.io/client/mc/release/linux-amd64/archive/mc.RELEASE.2024-01-28T16-23-14Z"
+ARG mc_bin_url="https://dl.min.io/client/mc/release/linux-amd64/archive/mc.RELEASE.2024-10-29T15-34-59Z"
 # gcc version for apt package
 ARG gcc_version=4:10.2.1-1
 # git version for apt packagae
