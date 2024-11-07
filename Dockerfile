@@ -14,10 +14,6 @@ FROM python:3.12-bullseye AS python-builder
 #
 # URL for downloading the minio client binary
 ARG mc_bin_url="https://dl.min.io/client/mc/release/linux-amd64/archive/mc.RELEASE.2024-01-28T16-23-14Z"
-# git repository to clone to get cqlsh source
-ARG cqlsh_repository=https://github.com/youwol-jdecharne/scylla-cqlsh.git
-# git commitish to checkout for cqlsh source
-ARG cqlsh_tag=v6.0.7-youwol
 # gcc version for apt package
 ARG gcc_version=4:10.2.1-1
 # git version for apt packagae
@@ -26,6 +22,8 @@ ARG git_version=1:2.30.2-1+deb11u2
 ARG pip_version=23.1.2
 # pipx version for pypi
 ARG pipx_version=1.2.0
+# scylla-cqlsh version for pypi
+ARG scylla_cqlsh_version=6.0.23
 # Does not matter that much, just hold the downloaded sources for installation
 WORKDIR /usr/src/apps
 
@@ -35,20 +33,10 @@ WORKDIR /usr/src/apps
 #
 # Prevent some packages from prompting interactive input
 ENV DEBIAN_FRONTEND=noninteractive
-# * Update & install dependencies with the package manager
-#   - git : clone cqlsh repository
-#   - gcc : for cqlsh cythonication
-# * Update pip to the latest
-# * pipx is not available in bullseye, install it with pip
-RUN    apt-get update \
-    && apt-get install \
-       --no-install-recommends \
-       --allow-downgrades \
-       --assume-yes \
-       gcc="$gcc_version" \
-       git="$git_version" \
-    && apt-get clean \
-    && pip install \
+# * Update & install dependencies with pip
+#   - Update pip to the latest
+#   - pipx is not available in bullseye, install it with pip
+RUN pip install \
        pip=="$pip_version" \
        pipx=="$pipx_version"
 # pipx venvs & apps directories in /opt
@@ -65,15 +53,11 @@ ADD $mc_bin_url /tmp/mc
 # * Bin directory in /opt
 # * Move minio-client binary in /opt/minio-client/bin
 #     and set executable permissions
-# * Get cqlsh the source from repository
-#     and install it with pipx
+# * Install scylla-cqlsh with pipx
 RUN    mkdir -p /opt/minio-client/bin \
-    && mv /tmp/mc \
+    && mv /tmp/mc /opt/minio-client/bin/mc \
     && chmod a+x /opt/minio-client/bin/mc \
-    && git clone --depth 1 \
-       --branch "$cqlsh_tag" \
-       "$cqlsh_repository" cqlsh \
-    && pipx install ./cqlsh
+    && pipx install "scylla-cqlsh==$scylla_cqlsh_version"
 
 
 ###############################################################################
