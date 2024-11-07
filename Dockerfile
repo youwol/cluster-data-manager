@@ -48,14 +48,14 @@ ENV PIPX_BIN_DIR=/opt/pipx/bin
 ## Minio client & Cqlsh
 #
 # Get minio-client binary
-ADD $mc_bin_url /tmp/mc
+ADD $mc_bin_url /tmp/download/mc
 #
 # * Bin directory in /opt
 # * Move minio-client binary in /opt/minio-client/bin
 #     and set executable permissions
 # * Install scylla-cqlsh with pipx
 RUN    mkdir -p /opt/minio-client/bin \
-    && mv /tmp/mc /opt/minio-client/bin/mc \
+    && mv /tmp/download/mc /opt/minio-client/bin/mc \
     && chmod a+x /opt/minio-client/bin/mc \
     && pipx install "scylla-cqlsh==$scylla_cqlsh_version"
 
