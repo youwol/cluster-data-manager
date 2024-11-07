@@ -69,7 +69,6 @@ ADD $mc_bin_url /tmp/mc
 #     and install it with pipx
 RUN    mkdir -p /opt/minio-client/bin \
     && mv /tmp/mc \
-       -o /opt/minio-client/bin/mc \
     && chmod a+x /opt/minio-client/bin/mc \
     && git clone --depth 1 \
        --branch "$cqlsh_tag" \
